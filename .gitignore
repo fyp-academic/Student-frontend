@@ -1,0 +1,120 @@
+# ------------------------------
+# Dependencies
+# ------------------------------
+node_modules/
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ------------------------------
+# Build output
+# ------------------------------
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vercel/
+.netlify/
+
+# ------------------------------
+# Coverage / test output
+# ------------------------------
+coverage/
+.nyc_output/
+
+# ------------------------------
+# Environment files
+# Keep secrets out of Git
+# ------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Optional: if you use Vite env variants
+.env.development
+.env.test
+.env.production
+
+# ------------------------------
+# Caches
+# ------------------------------
+.cache/
+.parcel-cache/
+.vite/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# ------------------------------
+# Runtime / temp files
+# ------------------------------
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ------------------------------
+# OS generated files
+# ------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------------------------------
+# Editor / IDE files
+# ------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+.idea/
+*.iml
+
+# ------------------------------
+# Local history / misc editor files
+# ------------------------------
+.history/
+*.swp
+*.swo
+*~
+
+# ------------------------------
+# Logs
+# ------------------------------
+logs/
+*.log
+
+# ------------------------------
+# Optional framework-specific files
+# Uncomment only if needed
+# ------------------------------
+
+# SvelteKit
+# .svelte-kit/
+
+# Storybook static build
+# storybook-static/
+
+# Turbo / Nx
+# .turbo/
+# .nx/
+
+# Expo / React Native web cache
+# .expo/
+# .expo-shared/
+
+# ------------------------------
+# Do NOT ignore these normally
+# ------------------------------
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

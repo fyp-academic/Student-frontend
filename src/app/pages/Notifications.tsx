@@ -1,61 +1,81 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bell, FileText, HelpCircle, MessageCircle, Award, AlertCircle,
   CheckCircle, Trash2,
 } from "lucide-react";
+import { notificationsApi } from "../services/api";
 
-type NotifType = "assignment" | "quiz" | "message" | "achievement" | "reminder" | "announcement" | "grade";
+type NotifType = "assignment" | "quiz" | "message" | "achievement" | "reminder" | "announcement" | "grade" | "info" | "warning" | "success" | "danger" | "course_update";
 
 interface Notification {
-  id: number;
+  id: string;
   type: NotifType;
   title: string;
   body: string;
+  message?: string;
   time: string;
+  timestamp?: string;
   read: boolean;
   course?: string;
   courseColor?: string;
 }
 
-const initialNotifications: Notification[] = [
-  { id: 1, type: "reminder", title: "⚡ Assignment Due Tomorrow", body: "CS301 Assignment 3 (Pandas DataFrames) is due tomorrow Feb 25 at 11:59 PM.", time: "2 hours ago", read: false, course: "CS301", courseColor: "#2563eb" },
-  { id: 2, type: "quiz", title: "New Quiz Available", body: "MATH402 Quiz 5: Series & Sequences is now available. Due Feb 26, 2026.", time: "4 hours ago", read: false, course: "MATH402", courseColor: "#7c3aed" },
-  { id: 3, type: "announcement", title: "Midterm Exam Rescheduled", body: "Your CS301 Midterm Exam has been moved to March 10, 2026. Check the course feed for details.", time: "6 hours ago", read: false, course: "CS301", courseColor: "#2563eb" },
-  { id: 4, type: "grade", title: "Assignment Graded", body: "Assignment 2: Data Visualization received 92/100 points. Great work!", time: "1 day ago", read: false, course: "CS301", courseColor: "#2563eb" },
-  { id: 5, type: "message", title: "New Forum Reply", body: "Adelfina Mambali replied to your question about NaN handling in the CS301 Forum.", time: "1 day ago", read: true, course: "CS301", courseColor: "#2563eb" },
-  { id: 6, type: "achievement", title: "🏆 Achievement Unlocked!", body: "You've completed 5 consecutive days of studying. You earned the '5-Day Streak' badge!", time: "2 days ago", read: true },
-  { id: 7, type: "assignment", title: "New Assignment Posted", body: "BIO301 Lab Report 4: Cell Division has been posted. Due March 1, 2026.", time: "2 days ago", read: true, course: "BIO301", courseColor: "#059669" },
-  { id: 8, type: "grade", title: "Quiz Results Available", body: "CS301 Quiz 4 results are in: 14/15 (93%). Excellent performance!", time: "3 days ago", read: true, course: "CS301", courseColor: "#2563eb" },
-  { id: 9, type: "reminder", title: "Live Session Reminder", body: "CS450 Live Q&A with Dr. James Liu is tomorrow at 3PM. Join via Zoom.", time: "3 days ago", read: true, course: "CS450", courseColor: "#0891b2" },
-  { id: 10, type: "announcement", title: "Course Material Updated", body: "New lecture notes for MATH402 Chapter 8 are now available in the Materials section.", time: "4 days ago", read: true, course: "MATH402", courseColor: "#7c3aed" },
-];
-
 const typeConfig: Record<NotifType, { icon: React.ElementType; color: string; bg: string }> = {
-  assignment: { icon: FileText, color: "#2563eb", bg: "#eff6ff" },
-  quiz: { icon: HelpCircle, color: "#7c3aed", bg: "#fdf4ff" },
-  message: { icon: MessageCircle, color: "#0891b2", bg: "#f0fdfa" },
-  achievement: { icon: Award, color: "#f59e0b", bg: "#fffbeb" },
-  reminder: { icon: AlertCircle, color: "#dc2626", bg: "#fef2f2" },
-  announcement: { icon: Bell, color: "#475569", bg: "#f8fafc" },
-  grade: { icon: CheckCircle, color: "#16a34a", bg: "#f0fdf4" },
+  assignment:   { icon: FileText,       color: "#2563eb", bg: "#eff6ff" },
+  quiz:         { icon: HelpCircle,     color: "#7c3aed", bg: "#fdf4ff" },
+  message:      { icon: MessageCircle,  color: "#0891b2", bg: "#f0fdfa" },
+  achievement:  { icon: Award,          color: "#f59e0b", bg: "#fffbeb" },
+  reminder:     { icon: AlertCircle,    color: "#dc2626", bg: "#fef2f2" },
+  announcement: { icon: Bell,           color: "#475569", bg: "#f8fafc" },
+  grade:        { icon: CheckCircle,    color: "#16a34a", bg: "#f0fdf4" },
+  info:         { icon: Bell,           color: "#2563eb", bg: "#eff6ff" },
+  warning:      { icon: AlertCircle,    color: "#f59e0b", bg: "#fffbeb" },
+  success:      { icon: CheckCircle,    color: "#16a34a", bg: "#f0fdf4" },
+  danger:       { icon: AlertCircle,    color: "#dc2626", bg: "#fef2f2" },
+  course_update:{ icon: Bell,           color: "#7c3aed", bg: "#fdf4ff" },
 };
 
 export function Notifications() {
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState("All");
   const filters = ["All", "Unread", "Assignments", "Grades", "Announcements"];
 
+  useEffect(() => {
+    notificationsApi.list().then(r => {
+      const raw: Record<string, unknown>[] = r.data.data ?? r.data ?? [];
+      setNotifications(raw.map(n => ({
+        id:        String(n.id),
+        type:      (n.type as NotifType) ?? 'info',
+        title:     String(n.title     ?? ''),
+        body:      String(n.message   ?? n.body ?? ''),
+        time:      String(n.timestamp ?? n.created_at ?? ''),
+        read:      Boolean(n.read),
+        course:    n.course as string | undefined,
+        courseColor: n.course_color as string | undefined,
+      })));
+    }).catch(() => {});
+  }, []);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  const markRead = (id: number) => setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
-  const deleteNotif = (id: number) => setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    notificationsApi.markAllRead().catch(() => {});
+  };
+  const markRead = (id: string) => {
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    notificationsApi.markRead(id).catch(() => {});
+  };
+  const deleteNotif = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    notificationsApi.remove(id).catch(() => {});
+  };
 
   const filtered = notifications.filter((n) => {
     if (filter === "Unread") return !n.read;
     if (filter === "Assignments") return n.type === "assignment" || n.type === "reminder";
     if (filter === "Grades") return n.type === "grade";
-    if (filter === "Announcements") return n.type === "announcement";
+    if (filter === "Announcements") return n.type === "announcement" || n.type === "course_update";
     return true;
   });
 
@@ -114,7 +134,7 @@ export function Notifications() {
           </div>
         ) : (
           filtered.map((notif) => {
-            const cfg = typeConfig[notif.type];
+            const cfg = typeConfig[notif.type] ?? typeConfig.info;
             const NIcon = cfg.icon;
             return (
               <div

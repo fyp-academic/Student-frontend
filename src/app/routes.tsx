@@ -1,5 +1,6 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Outlet } from "react-router";
 import { Layout } from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Dashboard } from "./pages/Dashboard";
 import { LearningCatalog } from "./pages/LearningCatalog";
 import { MyCourses } from "./pages/MyCourses";
@@ -16,11 +17,29 @@ import { InteractiveActivities } from "./pages/InteractiveActivities";
 import { Notifications } from "./pages/Notifications";
 import { Chat } from "./pages/Chat";
 import { LearnerProfile } from "./pages/LearnerProfile";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import VerifyEmail from "./pages/auth/VerifyEmail";
+
+function PageWrapper() {
+  return (
+    <ProtectedRoute>
+      <Layout />
+    </ProtectedRoute>
+  );
+}
 
 export const router = createBrowserRouter([
+  { path: "/login",            element: <Login />            },
+  { path: "/register",         element: <Register />         },
+  { path: "/forgot-password",  element: <ForgotPassword />   },
+  { path: "/reset-password",   element: <ResetPassword />    },
+  { path: "/verify-email/:id/:hash", element: <VerifyEmail /> },
   {
     path: "/",
-    Component: Layout,
+    element: <PageWrapper />,
     children: [
       { index: true, Component: Dashboard },
       { path: "catalog", Component: LearningCatalog },

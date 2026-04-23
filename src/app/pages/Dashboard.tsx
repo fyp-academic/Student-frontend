@@ -1,14 +1,15 @@
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router";
+import { useAuth } from "../context/AuthContext";
+import { dashboardApi, coursesApi } from "../services/api";
 import {
   BookOpen,
   CheckCircle,
   Clock,
-  Award,
   TrendingUp,
   Calendar,
   ArrowRight,
   Flame,
-  Star,
   ChevronRight,
   FileText,
   HelpCircle,
@@ -30,105 +31,66 @@ import {
   AreaChart,
 } from "recharts";
 
-const weeklyData = [
-  { day: "Mon", hours: 2.5 },
-  { day: "Tue", hours: 3.0 },
-  { day: "Wed", hours: 1.5 },
-  { day: "Thu", hours: 4.0 },
-  { day: "Fri", hours: 3.5 },
-  { day: "Sat", hours: 2.0 },
-  { day: "Sun", hours: 1.0 },
-];
+const COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#f59e0b"];
 
-const progressData = [
-  { month: "Sep", completed: 4 },
-  { month: "Oct", completed: 9 },
-  { month: "Nov", completed: 6 },
-  { month: "Dec", completed: 11 },
-  { month: "Jan", completed: 8 },
-  { month: "Feb", completed: 14 },
-];
-
-const recentCourses = [
-  {
-    id: 1,
-    code: "CS301",
-    title: "Data Science Fundamentals",
-    instructor: "Adelfina Mambali",
-    progress: 72,
-    image: "https://images.unsplash.com/photo-1617240016072-d92174e44171?w=400&h=200&fit=crop",
-    color: "#2563eb",
-    nextLesson: "Neural Networks Basics",
-    lessonsLeft: 8,
-  },
-  {
-    id: 2,
-    code: "MATH402",
-    title: "Advanced Calculus",
-    instructor: "Prof. John Miller",
-    progress: 45,
-    image: "https://images.unsplash.com/photo-1732304719443-c3c04003bf25?w=400&h=200&fit=crop",
-    color: "#7c3aed",
-    nextLesson: "Multivariable Integration",
-    lessonsLeft: 14,
-  },
-  {
-    id: 3,
-    code: "CS450",
-    title: "AI & Machine Learning",
-    instructor: "Dr. James Liu",
-    progress: 23,
-    image: "https://images.unsplash.com/photo-1749006590639-e749e6b7d84c?w=400&h=200&fit=crop",
-    color: "#0891b2",
-    nextLesson: "Supervised Learning",
-    lessonsLeft: 22,
-  },
-];
-
-const upcomingDeadlines = [
-  { id: 1, title: "CS301 Assignment 3 — Pandas DataFrames", due: "Feb 25, 2026", type: "assignment", urgent: true },
-  { id: 2, title: "MATH402 Quiz 5 — Series & Sequences", due: "Feb 26, 2026", type: "quiz", urgent: true },
-  { id: 3, title: "BIO301 Lab Report — Cell Division", due: "Mar 1, 2026", type: "assignment", urgent: false },
-  { id: 4, title: "CS450 Mid-term Assessment", due: "Mar 3, 2026", type: "assessment", urgent: false },
-  { id: 5, title: "CS201 Project Milestone 2", due: "Mar 5, 2026", type: "assignment", urgent: false },
-];
-
-const recentActivity = [
-  { id: 1, action: "Completed", item: "Lesson: Introduction to Pandas", course: "CS301", time: "2 hours ago", icon: CheckCircle, color: "#22c55e" },
-  { id: 2, action: "Submitted", item: "Assignment 2: Data Cleaning", course: "CS301", time: "Yesterday", icon: FileText, color: "#2563eb" },
-  { id: 3, action: "Scored 88%", item: "Quiz 4: Derivatives", course: "MATH402", time: "2 days ago", icon: HelpCircle, color: "#7c3aed" },
-  { id: 4, action: "Started", item: "Lesson: Linear Regression", course: "CS450", time: "3 days ago", icon: BookOpen, color: "#0891b2" },
-];
-
-const riskSignal: "active" | "inactive" = "active";
-
-const stats = [
-  { label: "Enrolled Courses", value: "6", icon: BookOpen, color: "#2563eb", bg: "#eff6ff", trend: "+1 this semester" },
-  { label: "Lessons Completed", value: "47", icon: CheckCircle, color: "#22c55e", bg: "#f0fdf4", trend: "+5 this week" },
-  { label: "Pending Tasks", value: "8", icon: Clock, color: "#f59e0b", bg: "#fffbeb", trend: "2 due today" },
-  {
-    label: "At-Risk Check",
-    value: riskSignal === "active" ? "Active" : "Inactive",
-    icon: riskSignal === "active" ? ShieldCheck : AlertTriangle,
-    color: riskSignal === "active" ? "#10b981" : "#ef4444",
-    bg: riskSignal === "active" ? "#ecfdf5" : "#fef2f2",
-    trend: riskSignal === "active" ? "All signals normal" : "Review support plan",
-  },
-];
-
-const typeIcon: Record<string, React.ElementType> = {
-  assignment: FileText,
-  quiz: HelpCircle,
-  assessment: Zap,
-};
-
-const typeColor: Record<string, string> = {
-  assignment: "#2563eb",
-  quiz: "#7c3aed",
-  assessment: "#0891b2",
-};
+const typeIcon: Record<string, React.ElementType> = { assignment: FileText, quiz: HelpCircle, assessment: Zap };
+const typeColor: Record<string, string>            = { assignment: "#2563eb", quiz: "#7c3aed", assessment: "#0891b2" };
 
 export function Dashboard() {
+  const { user } = useAuth();
+  const [hub,     setHub]     = useState<Record<string, unknown> | null>(null);
+  const [courses, setCourses] = useState<Record<string, unknown>[]>([]);
+
+  useEffect(() => {
+    dashboardApi.studentHub()
+      .then(r => setHub(r.data.data ?? r.data))
+      .catch(() => {});
+    coursesApi.myCourses()
+      .then(r => setCourses((r.data.data ?? r.data ?? []).slice(0, 3)))
+      .catch(() => {});
+  }, []);
+
+  const weeklyData: { day: string; hours: number }[] =
+    (hub?.weekly_study_hours as { day: string; hours: number }[] | undefined) ??
+    ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day => ({ day, hours: 0 }));
+
+  const progressData: { month: string; completed: number }[] =
+    (hub?.monthly_progress as { month: string; completed: number }[] | undefined) ?? [];
+
+  const recentCourses = courses.map((c, i) => ({
+    id:         String(c.id),
+    code:       String(c.short_name ?? c.shortName ?? ''),
+    title:      String(c.name ?? ''),
+    instructor: String(c.instructor_name ?? c.instructor ?? ''),
+    progress:   Number(c.completion_rate ?? 0),
+    color:      COLORS[i % COLORS.length],
+    lessonsLeft:Number((c.total_sections ?? 0)) - Number((c.completed_sections ?? 0)),
+  }));
+
+  const upcomingDeadlines = ((hub?.upcoming_deadlines as Record<string, unknown>[] | undefined) ?? []).slice(0, 5);
+  const recentActivity    = ((hub?.recent_activity    as Record<string, unknown>[] | undefined) ?? []).slice(0, 4);
+
+  const enrolledCount  = Number(hub?.enrolled_courses   ?? courses.length);
+  const lessonsCount   = Number(hub?.lessons_completed  ?? 0);
+  const pendingCount   = Number(hub?.pending_tasks      ?? 0);
+  const riskSignal     = String(hub?.risk_signal        ?? 'active') as 'active' | 'inactive';
+
+  const stats = [
+    { label: "Enrolled Courses",  value: String(enrolledCount), icon: BookOpen,   color: "#2563eb", bg: "#eff6ff", trend: "This semester"         },
+    { label: "Lessons Completed", value: String(lessonsCount),  icon: CheckCircle, color: "#22c55e", bg: "#f0fdf4", trend: "Total completed"       },
+    { label: "Pending Tasks",     value: String(pendingCount),  icon: Clock,       color: "#f59e0b", bg: "#fffbeb", trend: "Across all courses"     },
+    {
+      label: "At-Risk Check",
+      value: riskSignal === "active" ? "Active" : "Inactive",
+      icon:  riskSignal === "active" ? ShieldCheck : AlertTriangle,
+      color: riskSignal === "active" ? "#10b981"  : "#ef4444",
+      bg:    riskSignal === "active" ? "#ecfdf5"  : "#fef2f2",
+      trend: riskSignal === "active" ? "All signals normal" : "Review support plan",
+    },
+  ];
+
+  const firstName = String((user as Record<string,unknown> | null)?.name ?? 'Student').split(' ')[0];
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
@@ -142,21 +104,23 @@ export function Dashboard() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <p style={{ fontSize: "13px", color: "#93c5fd", fontWeight: 500 }}>
-              Tuesday, February 24, 2026
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
             <h1 className="text-white mt-1" style={{ fontSize: "22px", fontWeight: 700 }}>
-              Welcome back, Hamis! 👋
+              Welcome back, {firstName}! 👋
             </h1>
             <p style={{ fontSize: "14px", color: "#bfdbfe", marginTop: "4px" }}>
-              You have <span className="text-white font-semibold">8 pending tasks</span> and{" "}
-              <span className="text-white font-semibold">2 deadlines</span> due this week.
+              You have <span className="text-white font-semibold">{pendingCount} pending tasks</span> and{" "}
+              <span className="text-white font-semibold">{upcomingDeadlines.length} upcoming deadlines</span>.
             </p>
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex items-center gap-1.5">
-                <Flame size={15} color="#fbbf24" />
-                <span style={{ fontSize: "13px", color: "#fef3c7" }}>14-day streak!</span>
-              </div>           
-            </div>
+            {hub?.streak_days && (
+              <div className="flex items-center gap-4 mt-3">
+                <div className="flex items-center gap-1.5">
+                  <Flame size={15} color="#fbbf24" />
+                  <span style={{ fontSize: "13px", color: "#fef3c7" }}>{String(hub.streak_days)}-day streak!</span>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex gap-3">
             <NavLink
@@ -171,7 +135,7 @@ export function Dashboard() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/30 text-white transition-all hover:bg-white/10"
               style={{ fontSize: "13px", fontWeight: 500 }}
             >
-              Tasks <span className="bg-white/20 rounded-full px-1.5" style={{ fontSize: "11px" }}>8</span>
+              Tasks <span className="bg-white/20 rounded-full px-1.5" style={{ fontSize: "11px" }}>{pendingCount}</span>
             </NavLink>
           </div>
         </div>
@@ -222,9 +186,8 @@ export function Dashboard() {
                 className="bg-white rounded-2xl overflow-hidden flex transition-all hover:-translate-y-0.5"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
               >
-                <div className="w-24 flex-shrink-0 relative overflow-hidden">
-                  <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${course.color}88, transparent)` }} />
+                <div className="w-24 flex-shrink-0 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}55)` }}>
+                  <span className="font-bold" style={{ fontSize: "11px", color: course.color }}>{course.code || 'COURSE'}</span>
                 </div>
                 <div className="flex-1 p-4">
                   <div className="flex items-start justify-between gap-2">
@@ -260,10 +223,10 @@ export function Dashboard() {
                     </div>
                     <div className="flex items-center justify-between mt-1.5">
                       <span style={{ fontSize: "11px", color: "#64748b" }}>
-                        Next: {course.nextLesson}
+                        {course.progress}% complete
                       </span>
                       <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-                        {course.lessonsLeft} lessons left
+                        {course.lessonsLeft > 0 ? `${course.lessonsLeft} left` : 'Done'}
                       </span>
                     </div>
                   </div>
@@ -280,7 +243,7 @@ export function Dashboard() {
                 className="px-2.5 py-1 rounded-lg"
                 style={{ fontSize: "11px", backgroundColor: "#eff6ff", color: "#2563eb", fontWeight: 600 }}
               >
-                This Week: 17.5 hrs
+                This Week: {weeklyData.reduce((s, d) => s + d.hours, 0).toFixed(1)} hrs
               </span>
             </div>
             <ResponsiveContainer width="100%" height={160}>
@@ -307,26 +270,31 @@ export function Dashboard() {
               <Calendar size={16} color="#2563eb" />
             </div>
             <div className="space-y-2.5">
-              {upcomingDeadlines.map((item) => {
-                const Icon = typeIcon[item.type];
+{upcomingDeadlines.length === 0 && (
+                <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center", padding: "12px 0" }}>No upcoming deadlines</p>
+              )}
+              {upcomingDeadlines.map((item, idx) => {
+                const t     = String(item.type ?? 'assignment');
+                const urgent = Boolean(item.urgent);
+                const Icon  = typeIcon[t] ?? FileText;
                 return (
                   <div
-                    key={item.id}
+                    key={String(item.id ?? idx)}
                     className="flex items-start gap-3 p-2.5 rounded-xl transition-colors hover:bg-slate-50"
-                    style={{ borderLeft: item.urgent ? "3px solid #ef4444" : "3px solid #e2e8f0" }}
+                    style={{ borderLeft: urgent ? "3px solid #ef4444" : "3px solid #e2e8f0" }}
                   >
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ backgroundColor: `${typeColor[item.type]}15` }}
+                      style={{ backgroundColor: `${typeColor[t] ?? '#2563eb'}15` }}
                     >
-                      <Icon size={13} color={typeColor[item.type]} />
+                      <Icon size={13} color={typeColor[t] ?? '#2563eb'} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-slate-700 truncate" style={{ fontSize: "12px", fontWeight: 500 }}>
-                        {item.title}
+                        {String(item.title ?? item.name ?? '')}
                       </p>
-                      <p style={{ fontSize: "11px", color: item.urgent ? "#ef4444" : "#94a3b8", marginTop: "2px", fontWeight: item.urgent ? 600 : 400 }}>
-                        {item.urgent && "⚡ "}Due {item.due}
+                      <p style={{ fontSize: "11px", color: urgent ? "#ef4444" : "#94a3b8", marginTop: "2px", fontWeight: urgent ? 600 : 400 }}>
+                        {urgent && "⚡ "}Due {String(item.due ?? item.due_date ?? '')}
                       </p>
                     </div>
                   </div>
@@ -372,20 +340,23 @@ export function Dashboard() {
           <div className="bg-white rounded-2xl p-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <h2 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b", marginBottom: "12px" }}>Recent Activity</h2>
             <div className="space-y-3">
-              {recentActivity.map((act) => (
-                <div key={act.id} className="flex items-start gap-3">
+{recentActivity.length === 0 && (
+                <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>No recent activity</p>
+              )}
+              {recentActivity.map((act, idx) => (
+                <div key={String(act.id ?? idx)} className="flex items-start gap-3">
                   <div
                     className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style={{ backgroundColor: `${act.color}15` }}
+                    style={{ backgroundColor: "#eff6ff" }}
                   >
-                    <act.icon size={13} color={act.color} />
+                    <BookOpen size={13} color="#2563eb" />
                   </div>
                   <div>
                     <p style={{ fontSize: "12px", color: "#475569" }}>
-                      <span style={{ fontWeight: 600, color: "#1e293b" }}>{act.action}</span> {act.item}
+                      <span style={{ fontWeight: 600, color: "#1e293b" }}>{String(act.action ?? '')}</span>{' '}{String(act.item ?? act.description ?? '')}
                     </p>
                     <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
-                      {act.course} · {act.time}
+                      {String(act.course ?? '')} · {String(act.time ?? act.created_at ?? '')}
                     </p>
                   </div>
                 </div>

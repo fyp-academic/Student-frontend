@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router";
+import { notificationsApi, assignmentsApi } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import {
   LayoutDashboard,
   BookOpen,
@@ -25,6 +27,7 @@ import {
   Menu,
   X,
   BookMarked,
+  LogOut,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -82,7 +85,7 @@ const navGroups: NavGroup[] = [
       { label: "Lessons", icon: BookMarked, path: "/lessons" },
       { label: "Activities", icon: Activity, path: "/activities" },
       { label: "Assessments", icon: ClipboardList, path: "/assessments" },
-      { label: "Assignments", icon: FileText, path: "/assignments", badge: 3 },
+      { label: "Assignments", icon: FileText, path: "/assignments", badge: 0 },
       { label: "Quizzes", icon: HelpCircle, path: "/quizzes" },
       { label: "Practice", icon: Target, path: "/practice" },
       { label: "Interactive Activities", icon: MousePointerClick, path: "/interactive" },
@@ -94,7 +97,7 @@ const navGroups: NavGroup[] = [
     icon: Bell,
     defaultOpen: true,
     items: [
-      { label: "Notifications", icon: Bell, path: "/notifications", badge: 5 },
+      { label: "Notifications", icon: Bell, path: "/notifications", badge: 0 },
       { label: "Chat", icon: MessageCircle, path: "/chat" },
     ],
   },
@@ -109,9 +112,29 @@ const navGroups: NavGroup[] = [
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation();
+  const { user, logout } = useAuth();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
     navGroups.reduce((acc, g) => ({ ...acc, [g.id]: g.defaultOpen ?? true }), {})
   );
+  const [notifBadge, setNotifBadge]   = useState(0);
+  const [assignBadge, setAssignBadge] = useState(0);
+
+  useEffect(() => {
+    notificationsApi.list().then(r => {
+      const items: Record<string, unknown>[] = r.data.data ?? r.data ?? [];
+      setNotifBadge(items.filter(n => !n.read).length);
+    }).catch(() => {});
+    assignmentsApi.mySubmissions({ status: 'pending' }).then(r => {
+      const items: unknown[] = r.data.data ?? r.data ?? [];
+      setAssignBadge(items.length);
+    }).catch(() => {});
+  }, []);
+
+  const getDynamicBadge = (path: string, staticBadge?: number): number | undefined => {
+    if (path === '/notifications') return notifBadge || undefined;
+    if (path === '/assignments')   return assignBadge || undefined;
+    return staticBadge || undefined;
+  };
 
   const toggleGroup = (id: string) => {
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -252,14 +275,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                         >
                           {item.label}
                         </span>
-                        {item.badge && (
+                        {getDynamicBadge(item.path, item.badge) ? (
                           <span
                             className="flex-shrink-0 text-white rounded-full px-1.5 py-0.5"
                             style={{ fontSize: "10px", backgroundColor: "#22c55e", fontWeight: 700, minWidth: "18px", textAlign: "center" }}
                           >
-                            {item.badge}
+                            {getDynamicBadge(item.path, item.badge)}
                           </span>
-                        )}
+                        ) : null}
                       </>
                     )}
                   </NavLink>
@@ -283,14 +306,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     {({ isActive }) => (
                       <div className="relative">
                         <item.icon size={17} color={isActive ? "#22c55e" : "#93c5fd"} />
-                        {item.badge && (
+                        {getDynamicBadge(item.path, item.badge) ? (
                           <span
                             className="absolute -top-1 -right-1 text-white rounded-full flex items-center justify-center"
                             style={{ fontSize: "8px", backgroundColor: "#22c55e", width: "13px", height: "13px" }}
                           >
-                            {item.badge}
+                            {getDynamicBadge(item.path, item.badge)}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     )}
                   </NavLink>
@@ -302,27 +325,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* User Footer */}
-      <div
-        className="border-t p-3"
-        style={{ borderColor: "rgba(255,255,255,0.08)" }}
-      >
+      <div className="border-t p-3" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
         <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
-          <img
-            src="https://images.unsplash.com/photo-1573145532966-3cefadb09b82?w=80&h=80&fit=crop&crop=face"
-            alt="Student"
-            className="w-9 h-9 rounded-full border-2 flex-shrink-0"
-            style={{ borderColor: "#22c55e" }}
-          />
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 border-2" style={{ borderColor: "#22c55e" }}>
+            {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+          </div>
           {!collapsed && (
-            <div className="min-w-0">
-              <p className="text-white truncate" style={{ fontSize: "12px", fontWeight: 600 }}>
-                Hamis Kalira
-              </p>
-              <p className="truncate" style={{ fontSize: "11px", color: "#60a5fa" }}>
-                IDIT · YEAR-3
-              </p>
+            <div className="min-w-0 flex-1">
+              <p className="text-white truncate" style={{ fontSize: "12px", fontWeight: 600 }}>{user?.name ?? 'Student'}</p>
+              <p className="truncate" style={{ fontSize: "11px", color: "#60a5fa" }}>{user?.department ?? user?.role ?? 'Student'}</p>
             </div>
           )}
+          <button
+            onClick={logout}
+            title="Logout"
+            className="p-2 rounded-lg hover:bg-white/10 text-blue-300 transition-colors"
+          >
+            <LogOut size={18} />
+          </button>
         </div>
       </div>
     </aside>

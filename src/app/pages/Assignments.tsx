@@ -1,52 +1,8 @@
-import { useState } from "react";
-import { FileText, Clock, CheckCircle, AlertCircle, Upload, Eye, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, Clock, CheckCircle, AlertCircle, Upload, Eye, Calendar, Loader2 } from "lucide-react";
+import { assignmentsApi } from "../services/api";
 
 const tabs = ["All", "Pending", "Submitted", "Graded", "Overdue"];
-
-const assignments = [
-  {
-    id: 1, code: "CS301", title: "Assignment 3: Pandas DataFrames & Data Cleaning",
-    dueDate: "Feb 25, 2026", dueTime: "11:59 PM", points: 100, earned: null,
-    status: "pending", urgent: true, color: "#2563eb",
-    description: "Clean and analyze the provided dataset using Pandas. Handle missing values, outliers, and perform exploratory data analysis.",
-    attachments: 2, submittedAt: null,
-  },
-  {
-    id: 2, code: "BIO301", title: "Lab Report 4: Cell Division & Mitosis",
-    dueDate: "Mar 1, 2026", dueTime: "11:59 PM", points: 80, earned: null,
-    status: "pending", urgent: false, color: "#059669",
-    description: "Document your observations from the mitosis lab. Include diagrams, data tables, and analysis of cell division stages.",
-    attachments: 0, submittedAt: null,
-  },
-  {
-    id: 3, code: "CS301", title: "Assignment 2: Data Visualization with Matplotlib",
-    dueDate: "Feb 15, 2026", dueTime: "11:59 PM", points: 100, earned: 92,
-    status: "graded", urgent: false, color: "#2563eb",
-    description: "Create a comprehensive visualization dashboard using Matplotlib and Seaborn.",
-    attachments: 3, submittedAt: "Feb 14, 2026 10:32 PM",
-  },
-  {
-    id: 4, code: "MATH402", title: "Problem Set 5: Series & Sequences",
-    dueDate: "Feb 20, 2026", dueTime: "11:59 PM", points: 60, earned: 54,
-    status: "graded", urgent: false, color: "#7c3aed",
-    description: "Complete exercises on convergence tests, power series, and Taylor/Maclaurin expansions.",
-    attachments: 1, submittedAt: "Feb 19, 2026 09:15 PM",
-  },
-  {
-    id: 5, code: "CS450", title: "Assignment 1: Linear Regression Implementation",
-    dueDate: "Feb 18, 2026", dueTime: "11:59 PM", points: 100, earned: null,
-    status: "submitted", urgent: false, color: "#0891b2",
-    description: "Implement linear regression from scratch using NumPy and compare with scikit-learn.",
-    attachments: 2, submittedAt: "Feb 17, 2026 11:45 PM",
-  },
-  {
-    id: 6, code: "CS201", title: "Project Milestone 1: UI Mockups",
-    dueDate: "Feb 10, 2026", dueTime: "11:59 PM", points: 50, earned: null,
-    status: "overdue", urgent: true, color: "#f59e0b",
-    description: "Submit wireframes and UI mockups for your final project using Figma.",
-    attachments: 0, submittedAt: null,
-  },
-];
 
 const statusConfig = {
   pending: { label: "Pending", color: "#f59e0b", bg: "#fffbeb", icon: Clock },
@@ -55,8 +11,34 @@ const statusConfig = {
   overdue: { label: "Overdue", color: "#dc2626", bg: "#fef2f2", icon: AlertCircle },
 };
 
+const COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#f59e0b", "#e11d48"];
+
 export function Assignments() {
   const [activeTab, setActiveTab] = useState("All");
+  const [raw, setRaw]             = useState<Record<string, unknown>[]>([]);
+  const [loading, setLoading]     = useState(true);
+
+  useEffect(() => {
+    assignmentsApi.mySubmissions()
+      .then(r => setRaw(r.data.data ?? r.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const assignments = raw.map((a, i) => ({
+    id:          String(a.id),
+    code:        String(a.course_code   ?? a.code        ?? ''),
+    title:       String(a.activity_name ?? a.title       ?? ''),
+    dueDate:     String(a.due_date      ?? ''),
+    dueTime:     String(a.due_time      ?? ''),
+    points:      Number(a.grade_max     ?? a.points      ?? 0),
+    earned:      a.grade !== null && a.grade !== undefined ? Number(a.grade) : null,
+    status:      String(a.submission_status ?? a.status ?? 'pending'),
+    urgent:      Boolean(a.urgent),
+    color:       COLORS[i % COLORS.length],
+    description: String(a.description   ?? ''),
+    submittedAt: a.submitted_at ? String(a.submitted_at) : null,
+  }));
 
   const filtered = activeTab === "All"
     ? assignments
@@ -115,9 +97,20 @@ export function Assignments() {
       </div>
 
       {/* Assignment Cards */}
+      {loading && (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={28} className="animate-spin text-blue-400" />
+        </div>
+      )}
+      {!loading && filtered.length === 0 && (
+        <div className="bg-white rounded-2xl p-12 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+          <FileText size={36} className="mx-auto mb-3 text-slate-200" />
+          <p style={{ fontSize: "14px", color: "#94a3b8" }}>No assignments found</p>
+        </div>
+      )}
       <div className="space-y-4">
-        {filtered.map((assignment) => {
-          const status = statusConfig[assignment.status as keyof typeof statusConfig];
+        {!loading && filtered.map((assignment) => {
+          const status = statusConfig[assignment.status as keyof typeof statusConfig] ?? statusConfig.pending;
           const StatusIcon = status.icon;
           return (
             <div

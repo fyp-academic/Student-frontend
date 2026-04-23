@@ -1,41 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Mail, Phone, MapPin, BookOpen, Award, Star, Edit3, Camera, GraduationCap, Calendar, Globe, Github, Linkedin, TrendingUp, CheckCircle, Clock } from "lucide-react";
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
+import { useAuth } from "../context/AuthContext";
+import { profileApi, coursesApi } from "../services/api";
 
-const skillData = [
-  { subject: "React", value: 85 },
-  { subject: "Laravel", value: 78 },
-  { subject: "Mobile app", value: 62 },
-  { subject: "Sql", value: 80 },
-  { subject: "Web Dev", value: 90 },
-  { subject: "Networking", value: 76 },
-  { subject: "Design", value: 76 },
-];
-
-const achievements = [
-  { id: 1, icon: "🔥", title: "14-Day Streak", desc: "Studied 14 days in a row", date: "Feb 24, 2026", color: "#f59e0b" },
-  { id: 2, icon: "🏆", title: "Top Performer", desc: "Ranked top 10% in CS301", date: "Feb 10, 2026", color: "#2563eb" },
-  { id: 3, icon: "⚡", title: "Quick Learner", desc: "Completed 5 lessons in one day", date: "Jan 28, 2026", color: "#7c3aed" },
-  { id: 4, icon: "💯", title: "Perfect Score", desc: "100% on Python Fundamentals drill", date: "Jan 20, 2026", color: "#059669" },
-  { id: 5, icon: "🎯", title: "Assignment Pro", desc: "10 assignments submitted on time", date: "Jan 15, 2026", color: "#0891b2" },
-  { id: 6, icon: "📚", title: "Bookworm", desc: "Read 50+ learning materials", date: "Dec 12, 2025", color: "#dc2626" },
-];
-
-const enrolledCourses = [
-  { code: "CS301", name: "Data Science Fundamentals", progress: 72, grade: "A-", color: "#2563eb" },
-  { code: "MATH402", name: "Advanced Calculus", progress: 45, grade: "B+", color: "#7c3aed" },
-  { code: "BIO301", name: "Molecular Biology", progress: 88, grade: "A", color: "#059669" },
-  { code: "CS450", name: "AI & Machine Learning", progress: 23, grade: "B", color: "#0891b2" },
-  { code: "CS201", name: "Web Development", progress: 100, grade: "A+", color: "#22c55e" },
-];
+const COURSE_COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#22c55e", "#f59e0b"];
 
 export function LearnerProfile() {
+  const { user } = useAuth();
+  const u = user as Record<string, unknown> | null;
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const tabs = ["overview", "courses", "achievements", "skills", "learning style"];
   const [selectedModes, setSelectedModes] = useState<string[]>(["video", "multimedia"]);
   const [pacePreference, setPacePreference] = useState("guided");
-  const [supportNotes, setSupportNotes] = useState("Blend short videos with interactive case studies.");
+  const [supportNotes, setSupportNotes] = useState("");
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [enrolledCourses, setEnrolledCourses] = useState<Record<string, unknown>[]>([]);
+  const [skillData, setSkillData] = useState<{ subject: string; value: number }[]>([]);
+  const [achievements, setAchievements] = useState<Record<string, unknown>[]>([]);
+
+  useEffect(() => {
+    profileApi.get().then(r => {
+      const p: Record<string, unknown> = r.data.data ?? r.data;
+      setProfile(p);
+      if (p.preferred_modes)  setSelectedModes(p.preferred_modes as string[]);
+      if (p.pace_preference)  setPacePreference(String(p.pace_preference));
+      if (p.support_notes)    setSupportNotes(String(p.support_notes));
+      if (p.skills)           setSkillData(p.skills as { subject: string; value: number }[]);
+      if (p.achievements)     setAchievements(p.achievements as Record<string, unknown>[]);
+    }).catch(() => {});
+    coursesApi.myCourses().then(r => {
+      setEnrolledCourses(r.data.data ?? r.data ?? []);
+    }).catch(() => {});
+  }, []);
 
   const learningModes = [
     { id: "video", label: "Video", detail: "Narrated walkthroughs & demos" },
@@ -96,16 +94,16 @@ export function LearnerProfile() {
 
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
-              <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>Hamis Kalira</h1>
-              <p style={{ fontSize: "14px", color: "#2563eb", fontWeight: 500 }}>Instructional Design and Information Technology (IDIT)</p>
+              <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>{String(u?.name ?? profile?.name ?? 'Student')}</h1>
+              <p style={{ fontSize: "14px", color: "#2563eb", fontWeight: 500 }}>{String(profile?.department ?? u?.department ?? '')}</p>
               <div className="flex flex-wrap items-center gap-3 mt-2 text-slate-500" style={{ fontSize: "12px" }}>
-                <div className="flex items-center gap-1"><GraduationCap size={13} />Year 3 · Semester 1</div>
-                <div className="flex items-center gap-1"><BookOpen size={13} />Registration No: T23-03-09759</div>
-                <div className="flex items-center gap-1"><MapPin size={13} />University of Dodoma, Cive</div>
+                {profile?.year_level && <div className="flex items-center gap-1"><GraduationCap size={13} />{String(profile.year_level)}</div>}
+                {profile?.registration_no && <div className="flex items-center gap-1"><BookOpen size={13} />Reg No: {String(profile.registration_no)}</div>}
+                {profile?.institution && <div className="flex items-center gap-1"><MapPin size={13} />{String(profile.institution)}</div>}
               </div>
               <div className="flex flex-wrap items-center gap-3 mt-2" style={{ fontSize: "12px" }}>
-                <div className="flex items-center gap-1 text-slate-500"><Mail size={12} />hamiskalira@gmail.com</div>
-                <div className="flex items-center gap-1 text-slate-500"><Phone size={12} />+255 686 300 235</div>
+                <div className="flex items-center gap-1 text-slate-500"><Mail size={12} />{String(u?.email ?? profile?.email ?? '')}</div>
+                {profile?.phone && <div className="flex items-center gap-1 text-slate-500"><Phone size={12} />{String(profile.phone)}</div>}
               </div>
               <div className="flex items-center gap-3 mt-3">
                 <a href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><Github size={16} /></a>
@@ -117,8 +115,8 @@ export function LearnerProfile() {
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "Courses", value: "7", icon: BookOpen, color: "#2563eb" },
-                { label: "Badges", value: "24", icon: Award, color: "#7c3aed" },
+                { label: "Courses",  value: String(enrolledCourses.length || 0), icon: BookOpen, color: "#2563eb" },
+                { label: "Badges",   value: String(achievements.length || 0),   icon: Award,    color: "#7c3aed" },
               ].map((s) => (
                 <div key={s.label} className="text-center p-3 rounded-xl" style={{ backgroundColor: "#f8fafc" }}>
                   <s.icon size={16} color={s.color} className="mx-auto mb-1" />
@@ -132,14 +130,14 @@ export function LearnerProfile() {
           {/* Bio */}
           {!editing ? (
             <p className="mt-4 p-3 rounded-xl" style={{ fontSize: "13px", color: "#475569", backgroundColor: "#f8fafc", lineHeight: "1.6" }}>
-              Passionate Instructional Designer student specializing in multimedia contents. I love creating vitual appear and exploring interactive learning. Currently working on FYP project.
+              {String(profile?.bio ?? u?.bio ?? '')}
             </p>
           ) : (
             <textarea
               className="mt-4 w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
               style={{ fontSize: "13px", color: "#475569", borderColor: "#e2e8f0", lineHeight: "1.6", resize: "none" }}
               rows={3}
-              defaultValue="Passionate Computer Science student specializing in Data Science and AI. I love building data-driven applications and exploring machine learning. Currently working on research in NLP."
+              defaultValue={String(profile?.bio ?? u?.bio ?? '')}
             />
           )}
         </div>
@@ -173,12 +171,12 @@ export function LearnerProfile() {
             <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b", marginBottom: "16px" }}>Academic Information</h3>
             <div className="space-y-3">
               {[
-                { label: "Program", value: "B.Sc. Instructional Design and Information Technology (IDIT)" },
-                { label: "Faculty", value: "Faculty of Instructional Design" },
-                { label: "Year/Semester", value: "Year 3, Semester 1" },
-                { label: "Enrollment Date", value: "January 2025" },
-                { label: "Expected Graduation", value: "July 2026" },
-                { label: "Academic Advisor", value: "Sir. Iroko" },
+                { label: "Program",             value: String(profile?.program       ?? profile?.department ?? u?.department ?? '—') },
+                { label: "Faculty",             value: String(profile?.faculty        ?? '—') },
+                { label: "Year/Semester",       value: String(profile?.year_level     ?? '—') },
+                { label: "Enrollment Date",     value: profile?.enrolled_at ? new Date(String(profile.enrolled_at)).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—' },
+                { label: "Expected Graduation", value: String(profile?.graduation_year ?? '—') },
+                { label: "Academic Advisor",    value: String(profile?.advisor        ?? '—') },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between py-1.5 border-b last:border-0" style={{ borderColor: "#f1f5f9" }}>
                   <span style={{ fontSize: "12px", color: "#94a3b8" }}>{item.label}</span>
@@ -276,6 +274,11 @@ export function LearnerProfile() {
               type="button"
               className="w-full py-2.5 rounded-xl text-white font-semibold"
               style={{ background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
+              onClick={() => profileApi.updatePreferences({
+                preferred_modes: selectedModes,
+                pace_preference: pacePreference,
+                support_notes:   supportNotes,
+              }).catch(() => {})}
             >
               Save preference snapshot
             </button>
@@ -309,46 +312,59 @@ export function LearnerProfile() {
       {activeTab === "courses" && (
         <div className="bg-white rounded-2xl p-5 space-y-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>Enrolled Courses</h3>
-          {enrolledCourses.map((course) => (
-            <div key={course.code} className="flex items-center gap-4">
-              <span className="w-14 text-center px-1 py-1 rounded-lg text-white flex-shrink-0" style={{ fontSize: "10px", fontWeight: 700, backgroundColor: course.color }}>
-                {course.code}
-              </span>
-              <div className="flex-1">
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>{course.name}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
-                    <div className="h-full rounded-full" style={{ width: `${course.progress}%`, backgroundColor: course.color }} />
+          {enrolledCourses.length === 0 && (
+            <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center", padding: "16px 0" }}>No courses yet</p>
+          )}
+          {enrolledCourses.map((course, idx) => {
+            const color    = COURSE_COLORS[idx % COURSE_COLORS.length];
+            const progress = Number(course.completion_rate ?? 0);
+            return (
+              <div key={String(course.id ?? idx)} className="flex items-center gap-4">
+                <span className="w-14 text-center px-1 py-1 rounded-lg text-white flex-shrink-0" style={{ fontSize: "10px", fontWeight: 700, backgroundColor: color }}>
+                  {String(course.short_name ?? course.shortName ?? '').slice(0, 6) || 'COURSE'}
+                </span>
+                <div className="flex-1">
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>{String(course.name ?? '')}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
+                      <div className="h-full rounded-full" style={{ width: `${progress}%`, backgroundColor: color }} />
+                    </div>
+                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>{progress}%</span>
                   </div>
-                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>{course.progress}%</span>
                 </div>
+                <span style={{ fontSize: "14px", fontWeight: 700, color: progress >= 100 ? "#22c55e" : "#2563eb" }}>
+                  {String(course.current_grade ?? '—')}
+                </span>
               </div>
-              <span style={{ fontSize: "14px", fontWeight: 700, color: course.progress === 100 ? "#22c55e" : "#2563eb" }}>
-                {course.grade}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {activeTab === "achievements" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {achievements.map((ach) => (
+          {achievements.length === 0 && (
+            <div className="col-span-3 bg-white rounded-2xl p-12 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+              <Award size={36} className="mx-auto mb-3 text-slate-200" />
+              <p style={{ fontSize: "14px", color: "#94a3b8" }}>No achievements yet — keep learning!</p>
+            </div>
+          )}
+          {achievements.map((ach, idx) => (
             <div
-              key={ach.id}
+              key={String((ach as Record<string,unknown>).id ?? idx)}
               className="bg-white rounded-2xl p-4 flex items-start gap-3 transition-all hover:-translate-y-0.5"
               style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                style={{ backgroundColor: `${ach.color}12` }}
+                style={{ backgroundColor: `${(ach as Record<string,unknown>).color ?? '#2563eb'}12` }}
               >
-                {ach.icon}
+                {String((ach as Record<string,unknown>).icon ?? '🏆')}
               </div>
               <div>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "#1e293b" }}>{ach.title}</p>
-                <p style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>{ach.desc}</p>
-                <p style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>{ach.date}</p>
+                <p style={{ fontSize: "13px", fontWeight: 700, color: "#1e293b" }}>{String((ach as Record<string,unknown>).title ?? '')}</p>
+                <p style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>{String((ach as Record<string,unknown>).description ?? (ach as Record<string,unknown>).desc ?? '')}</p>
+                <p style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>{String((ach as Record<string,unknown>).earned_at ?? (ach as Record<string,unknown>).date ?? '')}</p>
               </div>
             </div>
           ))}
@@ -359,24 +375,24 @@ export function LearnerProfile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="bg-white rounded-2xl p-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b", marginBottom: "16px" }}>Technical Skills</h3>
-            {[
-              { skill: "Python Programming", level: 85, color: "#2563eb" },
-              { skill: "Data Analysis", level: 80, color: "#0891b2" },
-              { skill: "Machine Learning", level: 62, color: "#7c3aed" },
-              { skill: "Web Development", level: 90, color: "#22c55e" },
-              { skill: "SQL / Databases", level: 70, color: "#f59e0b" },
-              { skill: "Mathematics", level: 78, color: "#dc2626" },
-            ].map((s) => (
-              <div key={s.skill} className="mb-3">
-                <div className="flex justify-between mb-1">
-                  <span style={{ fontSize: "12px", color: "#475569" }}>{s.skill}</span>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: s.color }}>{s.level}%</span>
+            {skillData.length === 0 && (
+              <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>No skills data yet</p>
+            )}
+            {skillData.map((s, idx) => {
+              const skillColors = ["#2563eb","#0891b2","#7c3aed","#22c55e","#f59e0b","#dc2626"];
+              const color = skillColors[idx % skillColors.length];
+              return (
+                <div key={s.subject} className="mb-3">
+                  <div className="flex justify-between mb-1">
+                    <span style={{ fontSize: "12px", color: "#475569" }}>{s.subject}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 600, color }}>{s.value}%</span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
+                    <div className="h-full rounded-full transition-all" style={{ width: `${s.value}%`, backgroundColor: color }} />
+                  </div>
                 </div>
-                <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
-                  <div className="h-full rounded-full transition-all" style={{ width: `${s.level}%`, backgroundColor: s.color }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="bg-white rounded-2xl p-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b", marginBottom: "16px" }}>Certifications & Extra</h3>

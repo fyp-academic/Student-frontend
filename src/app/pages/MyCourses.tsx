@@ -1,53 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router";
-import { BookOpen, Clock, ChevronRight, TrendingUp, CheckCircle, PlayCircle } from "lucide-react";
+import { BookOpen, Clock, TrendingUp, CheckCircle, PlayCircle, Loader2 } from "lucide-react";
+import { coursesApi } from "../services/api";
 
 const tabs = ["All", "In Progress", "Completed", "Not Started"];
 
-const myCourses = [
-  {
-    id: 1, code: "CS301", title: "Data Science Fundamentals", instructor: "Adelfina Mambali",
-    progress: 72, lessonsTotal: 42, lessonsDone: 30, status: "In Progress",
-    image: "https://images.unsplash.com/photo-1617240016072-d92174e44171?w=400&h=200&fit=crop",
-    color: "#2563eb", nextLesson: "Neural Networks Basics", dueDate: "Apr 30, 2026",
-    grade: "A-", lastActivity: "2 hours ago",
-  },
-  {
-    id: 2, code: "MATH402", title: "Advanced Calculus", instructor: "Prof. John Miller",
-    progress: 45, lessonsTotal: 50, lessonsDone: 22, status: "In Progress",
-    image: "https://images.unsplash.com/photo-1732304719443-c3c04003bf25?w=400&h=200&fit=crop",
-    color: "#7c3aed", nextLesson: "Multivariable Integration", dueDate: "May 15, 2026",
-    grade: "B+", lastActivity: "1 day ago",
-  },
-  {
-    id: 3, code: "BIO301", title: "Molecular Biology", instructor: "Dr. Emily Ross",
-    progress: 88, lessonsTotal: 36, lessonsDone: 32, status: "In Progress",
-    image: "https://images.unsplash.com/photo-1634872554756-18534b7ffe30?w=400&h=200&fit=crop",
-    color: "#059669", nextLesson: "Cell Signaling Pathways", dueDate: "Apr 10, 2026",
-    grade: "A", lastActivity: "3 hours ago",
-  },
-  {
-    id: 4, code: "CS450", title: "AI & Machine Learning", instructor: "Dr. James Liu",
-    progress: 23, lessonsTotal: 54, lessonsDone: 12, status: "In Progress",
-    image: "https://images.unsplash.com/photo-1749006590639-e749e6b7d84c?w=400&h=200&fit=crop",
-    color: "#0891b2", nextLesson: "Supervised Learning Models", dueDate: "May 20, 2026",
-    grade: "B", lastActivity: "2 days ago",
-  },
-  {
-    id: 5, code: "CS201", title: "Web Development", instructor: "Prof. Maria Santos",
-    progress: 100, lessonsTotal: 38, lessonsDone: 38, status: "Completed",
-    image: "https://images.unsplash.com/photo-1762329388386-22bf162a9368?w=400&h=200&fit=crop",
-    color: "#22c55e", nextLesson: "—", dueDate: "Completed Jan 2026",
-    grade: "A+", lastActivity: "3 weeks ago",
-  },
-  {
-    id: 6, code: "CS350", title: "Database Systems", instructor: "Dr. Robert Kim",
-    progress: 0, lessonsTotal: 40, lessonsDone: 0, status: "Not Started",
-    image: "https://images.unsplash.com/photo-1763615834709-cd4b196980db?w=400&h=200&fit=crop",
-    color: "#f59e0b", nextLesson: "Start: Intro to SQL", dueDate: "Jun 1, 2026",
-    grade: "—", lastActivity: "Not started",
-  },
-];
+const COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#f59e0b", "#e11d48"];
 
 const gradeColors: Record<string, string> = {
   "A+": "#16a34a", A: "#16a34a", "A-": "#22c55e",
@@ -55,10 +13,39 @@ const gradeColors: Record<string, string> = {
   "—": "#94a3b8",
 };
 
-export function MyCourses() {
-  const [activeTab, setActiveTab] = useState("All");
+function deriveStatus(progress: number): string {
+  if (progress === 0)   return "Not Started";
+  if (progress >= 100)  return "Completed";
+  return "In Progress";
+}
 
-  const filtered = activeTab === "All" ? myCourses : myCourses.filter((c) => c.status === activeTab);
+export function MyCourses() {
+  const [activeTab, setActiveTab]   = useState("All");
+  const [courses, setCourses]       = useState<Record<string, unknown>[]>([]);
+  const [loading, setLoading]       = useState(true);
+
+  useEffect(() => {
+    coursesApi.myCourses()
+      .then(r => setCourses(r.data.data ?? r.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const enriched = courses.map((c, i) => ({
+    id:           String(c.id),
+    code:         String(c.short_name ?? c.shortName ?? ''),
+    title:        String(c.name       ?? ''),
+    instructor:   String(c.instructor_name ?? c.instructor ?? ''),
+    progress:     Number(c.completion_rate ?? 0),
+    lessonsTotal: Number(c.total_sections   ?? 0),
+    lessonsDone:  Number(c.completed_sections ?? 0),
+    status:       deriveStatus(Number(c.completion_rate ?? 0)),
+    color:        COLORS[i % COLORS.length],
+    grade:        String(c.current_grade ?? '—'),
+    lastActivity: String(c.last_accessed ?? ''),
+  }));
+
+  const filtered = activeTab === "All" ? enriched : enriched.filter((c) => c.status === activeTab);
 
   return (
     <div className="space-y-6">
@@ -66,7 +53,7 @@ export function MyCourses() {
         <div>
           <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>My Courses</h1>
           <p style={{ fontSize: "14px", color: "#64748b", marginTop: "2px" }}>
-            You are enrolled in {myCourses.length} courses this semester
+            You are enrolled in {enriched.length} courses this semester
           </p>
         </div>
         <NavLink
@@ -81,9 +68,9 @@ export function MyCourses() {
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "In Progress", count: myCourses.filter(c => c.status === "In Progress").length, color: "#2563eb", bg: "#eff6ff" },
-          { label: "Completed", count: myCourses.filter(c => c.status === "Completed").length, color: "#22c55e", bg: "#f0fdf4" },
-          { label: "Not Started", count: myCourses.filter(c => c.status === "Not Started").length, color: "#f59e0b", bg: "#fffbeb" },
+          { label: "In Progress", count: enriched.filter(c => c.status === "In Progress").length, color: "#2563eb", bg: "#eff6ff" },
+          { label: "Completed",   count: enriched.filter(c => c.status === "Completed").length,   color: "#22c55e", bg: "#f0fdf4" },
+          { label: "Not Started", count: enriched.filter(c => c.status === "Not Started").length, color: "#f59e0b", bg: "#fffbeb" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: s.bg }}>
@@ -115,21 +102,28 @@ export function MyCourses() {
       </div>
 
       {/* Courses List */}
+      {loading && (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={28} className="animate-spin text-blue-400" />
+        </div>
+      )}
+      {!loading && filtered.length === 0 && (
+        <div className="text-center py-16 text-slate-400">
+          <BookOpen size={40} className="mx-auto mb-2 opacity-30" />
+          <p>No courses found.</p>
+        </div>
+      )}
       <div className="space-y-4">
-        {filtered.map((course) => (
+        {!loading && filtered.map((course) => (
           <div
             key={course.id}
             className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
             style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
           >
             <div className="flex">
-              {/* Thumbnail */}
-              <div className="w-40 h-28 flex-shrink-0 relative overflow-hidden hidden sm:block">
-                <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${course.color}99, transparent)` }} />
-                <span className="absolute top-2 left-2 text-white px-2 py-0.5 rounded-md" style={{ fontSize: "10px", fontWeight: 700, backgroundColor: course.color }}>
-                  {course.code}
-                </span>
+              {/* Thumbnail — colour block (no external image required) */}
+              <div className="w-32 flex-shrink-0 hidden sm:flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}55)` }}>
+                <span className="font-bold" style={{ fontSize: "13px", color: course.color }}>{course.code || 'COURSE'}</span>
               </div>
 
               {/* Content */}
@@ -164,14 +158,12 @@ export function MyCourses() {
                     </div>
 
                     <div className="flex items-center gap-4 mt-2">
-                      <div className="flex items-center gap-1 text-slate-400">
-                        <BookOpen size={11} />
-                        <span style={{ fontSize: "11px" }}>Next: {course.nextLesson}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-slate-400">
-                        <Clock size={11} />
-                        <span style={{ fontSize: "11px" }}>{course.lastActivity}</span>
-                      </div>
+                      {course.lastActivity && (
+                        <div className="flex items-center gap-1 text-slate-400">
+                          <Clock size={11} />
+                          <span style={{ fontSize: "11px" }}>{course.lastActivity}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

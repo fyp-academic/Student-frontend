@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite';
-import type { IncomingMessage } from 'http';
+import type { IncomingMessage, ServerResponse } from 'http';
 import { renderEmail } from './src/emails/render';
 import type { EmailRenderRequest } from './src/emails/types';
 
@@ -15,8 +15,8 @@ export function emailRenderPlugin(): Plugin {
   return {
     name: 'email-render-plugin',
     configureServer(server) {
-      server.middlewares.use('/__email/render', async (req, res, next) => {
-        if ((req as any).method !== 'POST') {
+      server.middlewares.use('/__email/render', async (req: IncomingMessage, res: ServerResponse, next) => {
+        if (req.method !== 'POST') {
           res.statusCode = 405;
           res.end('Method not allowed');
           return;
@@ -42,8 +42,8 @@ export function emailRenderPlugin(): Plugin {
       });
 
       // CORS preflight
-      server.middlewares.use('/__email/render', (req, res, next) => {
-        if ((req as any).method === 'OPTIONS') {
+      server.middlewares.use('/__email/render', (req: IncomingMessage, res: ServerResponse, next) => {
+        if (req.method === 'OPTIONS') {
           res.setHeader('Access-Control-Allow-Origin', '*');
           res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
           res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

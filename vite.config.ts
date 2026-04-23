@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
-import path from 'path'
+import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { emailRenderPlugin } from './vite-email-plugin'
+
+declare const __dirname: string
 
 export default defineConfig({
   plugins: [

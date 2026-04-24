@@ -106,10 +106,6 @@ export default function Login() {
             <div className="w-11 h-11 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
               <Brain className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <p className="text-lg font-bold leading-none">EduAI LMS</p>
-              <p className="text-indigo-300 text-xs mt-0.5">Student Learning Portal</p>
-            </div>
           </div>
 
           <h1 className="text-4xl font-extrabold leading-tight mb-4">
@@ -299,12 +295,6 @@ export default function Login() {
               <Link to="/register" className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
                 Create account
               </Link>
-            </p>
-            <p>
-              Instructor or Admin?{' '}
-              <a href={INSTRUCTOR_URL} className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
-                Go to instructor portal
-              </a>
             </p>
           </div>
         </div>

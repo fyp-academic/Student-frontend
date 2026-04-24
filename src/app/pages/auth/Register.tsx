@@ -151,10 +151,6 @@ export default function Register() {
             <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl flex items-center justify-center">
               <Brain className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <p className="text-base font-bold text-gray-900 leading-none">EduAI LMS</p>
-              <p className="text-xs text-gray-500">Student Learning Portal</p>
-            </div>
           </div>
 
           {registered ? (
@@ -183,7 +179,7 @@ export default function Register() {
           ) : (
             <>
               <h2 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
-              <p className="text-sm text-gray-500 mb-7">Join the EduAI LMS learning community</p>
+              <p className="text-sm text-gray-500 mb-7">Join the apes udom learning community</p>
 
               {apiError && (
                 <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2">

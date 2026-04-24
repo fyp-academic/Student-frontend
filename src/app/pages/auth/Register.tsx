@@ -112,10 +112,6 @@ export default function Register() {
             <div className="w-11 h-11 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
               <Brain className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <p className="text-lg font-bold leading-none">EduAI LMS</p>
-              <p className="text-indigo-300 text-xs mt-0.5">Student Learning Portal</p>
-            </div>
           </div>
 
           <h1 className="text-4xl font-extrabold leading-tight mb-4">
@@ -142,7 +138,7 @@ export default function Register() {
 
         <div className="relative z-10">
           <div className="h-px bg-white/10 mb-4" />
-          <p className="text-indigo-400 text-xs">© 2026 EduAI LMS · GPT-o4 Analytics Pipeline</p>
+          <p className="text-indigo-400 text-xs">&copy; 2026 apes-udom · GPT-o4 Analytics Pipeline</p>
         </div>
       </div>
 
@@ -223,16 +219,6 @@ export default function Register() {
                 className={fieldCls(!!errors.email)}
               />
               {errors.email && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.email}</p>}
-            </div>
-
-            {/* Account type (read-only) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Account type</label>
-              <div className="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-indigo-50 text-sm text-indigo-700 font-medium flex items-center gap-2">
-                <Brain className="w-4 h-4" />
-                Student
-              </div>
-              <p className="mt-1.5 text-xs text-gray-400">Instructor accounts are created separately.</p>
             </div>
 
             {/* Password */}
@@ -322,12 +308,6 @@ export default function Register() {
               <Link to="/login" className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
                 Sign in
               </Link>
-            </p>
-            <p>
-              Instructor or Admin?{' '}
-              <a href={INSTRUCTOR_URL} className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
-                Go to instructor portal
-              </a>
             </p>
           </div>
           </>

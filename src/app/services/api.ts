@@ -34,8 +34,9 @@ export const authApi = {
   logout:             ()                               => api.post('/auth/logout'),
   forgotPassword:     (email: string)                  => api.post('/auth/forgot-password', { email }),
   resetPassword:      (data: Record<string, unknown>)  => api.post('/auth/reset-password', data),
-  resendVerification: ()                                 => api.post('/auth/email/resend'),
-  verifyEmail:        (id: string, hash: string)        => api.get(`/auth/verify-email/${id}/${hash}`),
+  resendVerification: (email?: string)                   => api.post('/auth/verify-email/resend', email ? { email } : {}),
+  verifyEmailConfirm: (data: { id: string; hash: string; signature: string; expires: string }) =>
+    api.post('/auth/verify-email/confirm', data),
 };
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────

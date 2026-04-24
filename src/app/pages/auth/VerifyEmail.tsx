@@ -1,44 +1,96 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router';
-import { Brain, CheckCircle, XCircle, Loader2, Mail, ArrowRight } from 'lucide-react';
+import { Link, useSearchParams, useNavigate } from 'react-router';
+import { Brain, CheckCircle, XCircle, Loader2, Mail, ArrowRight, RefreshCw } from 'lucide-react';
 import { authApi } from '../../services/api';
 
 export default function VerifyEmail() {
-  const { id, hash } = useParams<{ id: string; hash: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'info'>('loading');
   const [message, setMessage] = useState('Verifying your email...');
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
-    if (!id || !hash) {
+    const id = searchParams.get('id');
+    const hash = searchParams.get('hash');
+    const signature = searchParams.get('signature');
+    const expires = searchParams.get('expires');
+    const statusParam = searchParams.get('status');
+    const messageParam = searchParams.get('message');
+    const emailParam = searchParams.get('email');
+
+    if (emailParam) {
+      setUserEmail(emailParam);
+    }
+
+    // Handle backend redirect with error/info message
+    if (statusParam === 'error') {
       setStatus('error');
-      setMessage('Invalid verification link.');
+      setMessage(messageParam || 'Verification failed. The link may be expired or invalid.');
       return;
     }
 
-    authApi.verifyEmail(id, hash)
-      .then(() => {
+    if (statusParam === 'info') {
+      setStatus('info');
+      setMessage(messageParam || 'Email already verified.');
+      return;
+    }
+
+    // Validate required parameters
+    if (!id || !hash || !signature || !expires) {
+      setStatus('error');
+      setMessage('Invalid verification link. Missing required parameters.');
+      return;
+    }
+
+    // Confirm verification via POST (secure, no GET for sensitive actions)
+    authApi.verifyEmailConfirm({ id, hash, signature, expires })
+      .then((response) => {
         setStatus('success');
-        setMessage('Your email has been verified successfully!');
+        setMessage(response.data?.message || 'Your email has been verified successfully!');
         setTimeout(() => navigate('/login'), 3000);
       })
       .catch((err: unknown) => {
-        const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+        const data = (err as { response?: { data?: { message?: string } } })?.response?.data;
+        const msg = data?.message || 'Failed to verify email. The link may be expired or invalid.';
         setStatus('error');
-        setMessage(msg ?? 'Failed to verify email. The link may be expired or invalid.');
+        setMessage(msg);
       });
-  }, [id, hash, navigate]);
+  }, [searchParams, navigate]);
+
+  const handleResend = async () => {
+    if (!userEmail) {
+      setMessage('Please enter your email to resend verification.');
+      return;
+    }
+    setResending(true);
+    setResendSuccess(false);
+    try {
+      await authApi.resendVerification(userEmail);
+      setResendSuccess(true);
+      setMessage('Verification email resent! Check your inbox.');
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { message?: string } } })?.response?.data;
+      setMessage(data?.message || 'Failed to resend verification email. Please try again.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const icon = {
     loading: <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />,
     success: <CheckCircle className="w-12 h-12 text-emerald-600" />,
     error: <XCircle className="w-12 h-12 text-red-600" />,
+    info: <CheckCircle className="w-12 h-12 text-blue-600" />,
   }[status];
 
   const bgColor = {
     loading: 'bg-indigo-50',
     success: 'bg-emerald-50',
     error: 'bg-red-50',
+    info: 'bg-blue-50',
   }[status];
 
   return (
@@ -97,6 +149,7 @@ export default function VerifyEmail() {
             {status === 'loading' && 'Verifying...'}
             {status === 'success' && 'Email Verified!'}
             {status === 'error' && 'Verification Failed'}
+            {status === 'info' && 'Already Verified'}
           </h2>
 
           <p className="text-gray-500 mb-8">{message}</p>
@@ -110,18 +163,56 @@ export default function VerifyEmail() {
             </Link>
           )}
 
+          {status === 'info' && (
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
+            >
+              Continue to Login <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
+
           {status === 'error' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Email input for resend */}
+              <div className="text-left">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Email address
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                  />
+                  <button
+                    onClick={handleResend}
+                    disabled={resending || !userEmail}
+                    className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 font-medium text-sm hover:bg-indigo-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                  >
+                    {resending ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
+                    ) : (
+                      <><RefreshCw className="w-4 h-4" /> Resend</>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {resendSuccess && (
+                <p className="text-sm text-emerald-600 font-medium">
+                  ✓ Verification email sent! Check your inbox.
+                </p>
+              )}
+
               <Link
                 to="/login"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
               >
                 Go to Login <ArrowRight className="w-4 h-4" />
               </Link>
-              <p className="text-sm text-gray-400">
-                Need a new verification email?{' '}
-                <Link to="/login" className="text-indigo-600 hover:underline">Sign in</Link> to resend.
-              </p>
             </div>
           )}
 

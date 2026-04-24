@@ -75,7 +75,7 @@ export default function Login() {
     setResending(true);
     setResendSuccess(false);
     try {
-      await authApi.resendVerification();
+      await authApi.resendVerification(unverifiedEmail);
       setResendSuccess(true);
     } catch {
       setApiError('Failed to resend verification email. Please try again.');

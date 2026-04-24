@@ -21,8 +21,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: Record<string, unknown>) => Promise<void>;
-  resendVerification: () => Promise<void>;
-  verifyEmail: (id: string, hash: string) => Promise<void>;
+  resendVerification: (email?: string) => Promise<void>;
+  verifyEmailConfirm: (data: { id: string; hash: string; signature: string; expires: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -88,19 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authApi.resetPassword(data);
   };
 
-  const resendVerification = async () => {
-    await authApi.resendVerification();
+  const resendVerification = async (email?: string) => {
+    await authApi.resendVerification(email);
   };
 
-  const verifyEmail = async (id: string, hash: string) => {
-    await authApi.verifyEmail(id, hash);
+  const verifyEmailConfirm = async (data: { id: string; hash: string; signature: string; expires: string }) => {
+    await authApi.verifyEmailConfirm(data);
   };
 
   return (
     <AuthContext.Provider value={{
       user, token, isAuthenticated: !!token, isLoading,
       login, register, logout,
-      forgotPassword, resetPassword, resendVerification, verifyEmail
+      forgotPassword, resetPassword, resendVerification, verifyEmailConfirm
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Eye, EyeOff, Loader2, Brain, CheckCircle2, Mail } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Brain, CheckCircle2, Mail, RefreshCw, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface FormData {
@@ -40,7 +40,7 @@ const PASSWORD_RULES = [
 ];
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, resendVerification } = useAuth();
   const navigate      = useNavigate();
 
   const [form, setForm] = useState<FormData>({
@@ -53,6 +53,9 @@ export default function Register() {
   const [loading,     setLoading]     = useState(false);
   const [registered,  setRegistered]  = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [resendError, setResendError] = useState('');
 
   const INSTRUCTOR_URL = import.meta.env.VITE_INSTRUCTOR_URL ?? 'http://localhost:5174';
 
@@ -88,6 +91,22 @@ export default function Register() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!registeredEmail) return;
+    setResending(true);
+    setResendSuccess(false);
+    setResendError('');
+    try {
+      await resendVerification(registeredEmail);
+      setResendSuccess(true);
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { message?: string } } })?.response?.data;
+      setResendError(data?.message || 'Failed to resend. Please try again.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -163,17 +182,39 @@ export default function Register() {
                 We've sent a verification link to <strong>{registeredEmail}</strong>.
                 Please check your inbox and click the link to activate your account.
               </p>
-              <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 mb-6">
-                <p className="text-sm text-indigo-700">
-                  Didn't receive the email? Check your spam folder or{' '}
-                  <Link to="/login" className="font-semibold underline">try logging in</Link> to resend.
-                </p>
-              </div>
+              {resendError && (
+                <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+                  {resendError}
+                </div>
+              )}
+
+              {resendSuccess ? (
+                <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <p className="text-sm text-emerald-700 font-medium">
+                    ✓ Verification email resent! Check your inbox.
+                  </p>
+                </div>
+              ) : (
+                <div className="mb-6">
+                  <button
+                    onClick={handleResend}
+                    disabled={resending}
+                    className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
+                  >
+                    {resending ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
+                    ) : (
+                      <><RefreshCw className="w-4 h-4" /> Resend verification email</>
+                    )}
+                  </button>
+                </div>
+              )}
+
               <Link
                 to="/login"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
               >
-                Go to Login
+                Go to Login <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           ) : (

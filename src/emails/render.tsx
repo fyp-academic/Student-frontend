@@ -3,22 +3,25 @@ import * as React from 'react';
 import { EmailVerificationTemplate } from './templates/EmailVerification';
 import { CourseUpdateTemplate } from './templates/CourseUpdate';
 import { AIRecommendationTemplate } from './templates/AIRecommendation';
+import { PasswordResetTemplate } from './templates/PasswordReset';
 import type {
   EmailType,
   EmailVerificationProps,
   CourseUpdateProps,
   AIRecommendationProps,
+  PasswordResetProps,
 } from './types';
 
 const templates: Record<EmailType, React.FC<any>> = {
   'email-verification': EmailVerificationTemplate,
   'course-update': CourseUpdateTemplate,
   'ai-recommendation': AIRecommendationTemplate,
+  'password-reset': PasswordResetTemplate,
 };
 
 export function renderEmail(
   type: EmailType,
-  data: EmailVerificationProps | CourseUpdateProps | AIRecommendationProps
+  data: EmailVerificationProps | CourseUpdateProps | AIRecommendationProps | PasswordResetProps
 ): string {
   const Template = templates[type];
   if (!Template) {

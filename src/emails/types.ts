@@ -27,9 +27,15 @@ export interface AIRecommendationProps {
   actionUrl: string;
 }
 
-export type EmailType = 'email-verification' | 'course-update' | 'ai-recommendation';
+export interface PasswordResetProps {
+  userName: string;
+  resetUrl: string;
+  expiresIn: string;
+}
+
+export type EmailType = 'email-verification' | 'course-update' | 'ai-recommendation' | 'password-reset';
 
 export interface EmailRenderRequest {
   type: EmailType;
-  data: EmailVerificationProps | CourseUpdateProps | AIRecommendationProps;
+  data: EmailVerificationProps | CourseUpdateProps | AIRecommendationProps | PasswordResetProps;
 }

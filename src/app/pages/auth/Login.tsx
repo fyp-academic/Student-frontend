@@ -130,7 +130,7 @@ export default function Login() {
         <div className="relative z-10">
           <div className="h-px bg-white/10 mb-4" />
           <p className="text-indigo-400 text-xs">
-            © 2026 EduAI LMS · GPT-o4 Analytics Pipeline
+            © 2026 apes udom · GPT-o4 Analytics Pipeline
           </p>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router";
+import { NavLink, useLocation, useNavigate } from "react-router";
 import { notificationsApi, assignmentsApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -112,7 +112,13 @@ const navGroups: NavGroup[] = [
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
     navGroups.reduce((acc, g) => ({ ...acc, [g.id]: g.defaultOpen ?? true }), {})
   );
@@ -337,7 +343,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </div>
           )}
           <button
-            onClick={logout}
+            onClick={handleLogout}
             title="Logout"
             className="p-2 rounded-lg hover:bg-white/10 text-blue-300 transition-colors"
           >

@@ -113,7 +113,7 @@ export function Dashboard() {
               You have <span className="text-white font-semibold">{pendingCount} pending tasks</span> and{" "}
               <span className="text-white font-semibold">{upcomingDeadlines.length} upcoming deadlines</span>.
             </p>
-            {hub?.streak_days && (
+            {!!hub?.streak_days && (
               <div className="flex items-center gap-4 mt-3">
                 <div className="flex items-center gap-1.5">
                   <Flame size={15} color="#fbbf24" />

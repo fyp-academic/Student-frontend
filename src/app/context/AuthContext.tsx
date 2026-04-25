@@ -9,6 +9,12 @@ interface AuthUser {
   initials?: string;
   department?: string;
   enrolled_courses?: number;
+  registration_number?: string;
+  degree_programme_id?: string;
+  year_of_study?: number;
+  education_level?: string;
+  nationality?: string;
+  college_id?: string;
 }
 
 interface AuthContextType {
@@ -22,7 +28,7 @@ interface AuthContextType {
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: Record<string, unknown>) => Promise<void>;
   resendVerification: (email?: string) => Promise<void>;
-  verifyEmailConfirm: (data: { id: string; hash: string; signature: string; expires: string }) => Promise<void>;
+  verifyEmailCode: (email: string, code: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -92,15 +98,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authApi.resendVerification(email);
   };
 
-  const verifyEmailConfirm = async (data: { id: string; hash: string; signature: string; expires: string }) => {
-    await authApi.verifyEmailConfirm(data);
+  const verifyEmailCode = async (email: string, code: string) => {
+    await authApi.verifyEmailCode(email, code);
   };
 
   return (
     <AuthContext.Provider value={{
       user, token, isAuthenticated: !!token, isLoading,
       login, register, logout,
-      forgotPassword, resetPassword, resendVerification, verifyEmailConfirm
+      forgotPassword, resetPassword, resendVerification, verifyEmailCode
     }}>
       {children}
     </AuthContext.Provider>

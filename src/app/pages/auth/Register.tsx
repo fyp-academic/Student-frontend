@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Eye, EyeOff, Loader2, Brain, CheckCircle2, Mail, RefreshCw, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Brain, CheckCircle2, Mail, RefreshCw, ArrowRight, GraduationCap, Building2, Globe } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { authApi, collegesApi, degreeProgrammesApi } from '../../services/api';
 
 interface FormData {
   name: string;
@@ -9,6 +10,9 @@ interface FormData {
   password: string;
   confirmPassword: string;
   role: 'student';
+  registrationNumber: string;
+  collegeId: string;
+  degreeProgrammeId: string;
 }
 
 interface FormErrors {
@@ -16,9 +20,21 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  registrationNumber?: string;
+  collegeId?: string;
+  degreeProgrammeId?: string;
 }
 
-function validate(f: FormData): FormErrors {
+interface ParsedReg {
+  nationality_code: string;
+  nationality: string;
+  flag: string;
+  registration_year: number;
+  education_level: string;
+  year_of_study: number;
+}
+
+function validate(f: FormData, parsed: ParsedReg | null): FormErrors {
   const e: FormErrors = {};
   if (!f.name.trim()) e.name = 'Full name is required';
   else if (f.name.trim().length < 2) e.name = 'Name must be at least 2 characters';
@@ -30,6 +46,16 @@ function validate(f: FormData): FormErrors {
   else if (!/[0-9]/.test(f.password)) e.password = 'Include at least one number';
   if (!f.confirmPassword) e.confirmPassword = 'Please confirm your password';
   else if (f.password !== f.confirmPassword) e.confirmPassword = 'Passwords do not match';
+
+  if (!f.registrationNumber.trim()) {
+    e.registrationNumber = 'Registration number is required';
+  } else if (!/^[TKBRU]\d{2}-\d{2}-\d{5}$/.test(f.registrationNumber.trim())) {
+    e.registrationNumber = 'Invalid format. Expected: XYY-LL-NNNNN (e.g., T23-03-09759)';
+  }
+
+  if (!f.collegeId) e.collegeId = 'Please select a college';
+  if (!f.degreeProgrammeId) e.degreeProgrammeId = 'Please select a degree programme';
+
   return e;
 }
 
@@ -45,6 +71,7 @@ export default function Register() {
 
   const [form, setForm] = useState<FormData>({
     name: '', email: '', password: '', confirmPassword: '', role: 'student',
+    registrationNumber: '', collegeId: '', degreeProgrammeId: '',
   });
   const [showPass,    setShowPass]    = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -57,7 +84,65 @@ export default function Register() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendError, setResendError] = useState('');
 
+  // Registration parsing state
+  const [parsed, setParsed] = useState<ParsedReg | null>(null);
+  const [parsing, setParsing] = useState(false);
+
+  // Colleges & degree programmes
+  const [colleges, setColleges] = useState<Array<{id: string; name: string; code: string}>>([]);
+  const [programmes, setProgrammes] = useState<Array<{id: string; name: string; code: string; college_id: string}>>([]);
+  const [loadingColleges, setLoadingColleges] = useState(false);
+
   const INSTRUCTOR_URL = import.meta.env.VITE_INSTRUCTOR_URL ?? 'http://localhost:5174';
+
+  // Fetch colleges on mount
+  useEffect(() => {
+    setLoadingColleges(true);
+    collegesApi.list()
+      .then(res => {
+        const data = res.data.data ?? [];
+        setColleges(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingColleges(false));
+  }, []);
+
+  // Fetch degree programmes when college changes
+  useEffect(() => {
+    if (!form.collegeId) {
+      setProgrammes([]);
+      return;
+    }
+    degreeProgrammesApi.list(form.collegeId)
+      .then(res => {
+        const data = res.data.data ?? [];
+        setProgrammes(data);
+      })
+      .catch(() => {});
+  }, [form.collegeId]);
+
+  // Parse registration number in real-time
+  useEffect(() => {
+    const reg = form.registrationNumber.trim();
+    if (!reg || !/^[TKBRU]\d{2}-\d{2}-\d{5}$/.test(reg)) {
+      setParsed(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setParsing(true);
+      authApi.parseRegistration(reg)
+        .then(res => {
+          setParsed(res.data.data ?? null);
+          setErrors(p => ({ ...p, registrationNumber: '' }));
+        })
+        .catch(() => {
+          setParsed(null);
+          setErrors(p => ({ ...p, registrationNumber: 'Invalid registration number format' }));
+        })
+        .finally(() => setParsing(false));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [form.registrationNumber]);
 
   const set = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm(p => ({ ...p, [key]: e.target.value }));
@@ -66,7 +151,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs = validate(form);
+    const errs = validate(form, parsed);
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
     setApiError('');
@@ -78,6 +163,9 @@ export default function Register() {
         password:              form.password,
         password_confirmation: form.confirmPassword,
         role:                  form.role,
+        registration_number:   form.registrationNumber.trim(),
+        degree_programme_id:   form.degreeProgrammeId,
+        college_id:            form.collegeId,
       });
       setRegisteredEmail(form.email.trim());
       setRegistered(true);
@@ -179,9 +267,15 @@ export default function Register() {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h2>
               <p className="text-gray-500 mb-6">
-                We've sent a verification link to <strong>{registeredEmail}</strong>.
-                Please check your inbox and click the link to activate your account.
+                We've sent a 6-digit verification code to <strong>{registeredEmail}</strong>.
+                Please check your inbox and enter the code below to activate your account.
               </p>
+              <Link
+                to={`/verify-email?email=${encodeURIComponent(registeredEmail)}`}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors mb-6"
+              >
+                Enter Verification Code <ArrowRight className="w-4 h-4" />
+              </Link>
               {resendError && (
                 <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
                   {resendError}
@@ -256,6 +350,95 @@ export default function Register() {
                 className={fieldCls(!!errors.email)}
               />
               {errors.email && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.email}</p>}
+            </div>
+
+            {/* Registration Number */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Registration Number <span className="text-gray-400 font-normal">(e.g., T23-03-09759)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={form.registrationNumber}
+                  onChange={set('registrationNumber')}
+                  placeholder="T23-03-09759"
+                  className={fieldCls(!!errors.registrationNumber)}
+                />
+                {parsing && (
+                  <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
+                )}
+              </div>
+              {errors.registrationNumber && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.registrationNumber}</p>}
+
+              {/* Parsed info display */}
+              {parsed && (
+                <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-indigo-600" />
+                    <span className="text-sm text-gray-700">
+                      <span className="text-xl mr-1">{parsed.flag}</span>
+                      {parsed.nationality}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                    <div className="bg-white rounded-lg px-3 py-2 border border-indigo-100">
+                      <span className="block text-[10px] text-gray-400 uppercase tracking-wide">Education Level</span>
+                      <span className="font-medium text-indigo-700">{parsed.education_level}</span>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 py-2 border border-indigo-100">
+                      <span className="block text-[10px] text-gray-400 uppercase tracking-wide">Year of Study</span>
+                      <span className="font-medium text-indigo-700">Year {parsed.year_of_study}</span>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 py-2 border border-indigo-100">
+                      <span className="block text-[10px] text-gray-400 uppercase tracking-wide">Registered</span>
+                      <span className="font-medium text-indigo-700">{parsed.registration_year}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* College */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <Building2 className="inline w-4 h-4 mr-1 -mt-0.5 text-gray-500" />
+                College
+              </label>
+              <select
+                value={form.collegeId}
+                onChange={set('collegeId')}
+                disabled={loadingColleges}
+                className={fieldCls(!!errors.collegeId) + ' appearance-none bg-white'}
+              >
+                <option value="">{loadingColleges ? 'Loading colleges…' : 'Select a college'}</option>
+                {colleges.map(c => (
+                  <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
+                ))}
+              </select>
+              {errors.collegeId && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.collegeId}</p>}
+            </div>
+
+            {/* Degree Programme */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <GraduationCap className="inline w-4 h-4 mr-1 -mt-0.5 text-gray-500" />
+                Degree Programme
+              </label>
+              <select
+                value={form.degreeProgrammeId}
+                onChange={set('degreeProgrammeId')}
+                disabled={!form.collegeId || programmes.length === 0}
+                className={fieldCls(!!errors.degreeProgrammeId) + ' appearance-none bg-white'}
+              >
+                <option value="">
+                  {!form.collegeId ? 'Select a college first' : programmes.length === 0 ? 'No programmes available' : 'Select a degree programme'}
+                </option>
+                {programmes.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.code})</option>
+                ))}
+              </select>
+              {errors.degreeProgrammeId && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.degreeProgrammeId}</p>}
             </div>
 
             {/* Password */}

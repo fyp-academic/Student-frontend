@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -35,8 +35,10 @@ export const authApi = {
   forgotPassword:     (email: string)                  => api.post('/auth/forgot-password', { email }),
   resetPassword:      (data: Record<string, unknown>)  => api.post('/auth/reset-password', data),
   resendVerification: (email?: string)                   => api.post('/auth/verify-email/resend', email ? { email } : {}),
-  verifyEmailConfirm: (data: { id: string; hash: string; signature: string; expires: string }) =>
-    api.post('/auth/verify-email/confirm', data),
+  verifyEmailCode: (email: string, code: string) =>
+    api.post('/auth/verify-email-code', { email, code }),
+  parseRegistration: (registrationNumber: string) =>
+    api.post('/auth/parse-registration', { registration_number: registrationNumber }),
 };
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
@@ -58,6 +60,15 @@ export const coursesApi = {
 // ─── Categories ───────────────────────────────────────────────────────────────
 export const categoriesApi = {
   list: () => api.get('/categories'),
+};
+
+// ─── Colleges & Degree Programmes ─────────────────────────────────────────────
+export const collegesApi = {
+  list: () => api.get('/colleges'),
+};
+
+export const degreeProgrammesApi = {
+  list: (collegeId?: string) => api.get('/degree-programmes', { params: collegeId ? { college_id: collegeId } : {} }),
 };
 
 // ─── Activities ───────────────────────────────────────────────────────────────

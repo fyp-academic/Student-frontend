@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MousePointerClick, PlayCircle, Star, Clock, CheckCircle, Code, FlaskConical, Brain, Loader2 } from "lucide-react";
+import { MousePointerClick, PlayCircle, Star, Clock, CheckCircle, Code, FlaskConical, Lightbulb, Loader2 } from "lucide-react";
 import { coursesApi, activitiesApi } from "../services/api";
 
 type Act = Record<string, unknown>;
@@ -10,7 +10,7 @@ const INTERACTIVE_TYPES = ['lab', 'resource', 'interactive', 'simulation', 'game
 
 const iconForType = (t: string) => {
   if (t.includes('lab') || t.includes('sim')) return FlaskConical;
-  if (t.includes('quiz') || t.includes('ai') || t.includes('brain')) return Brain;
+  if (t.includes('quiz') || t.includes('ai') || t.includes('brain')) return Lightbulb;
   return Code;
 };
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router';
-import { Brain, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCw } from 'lucide-react';
+import { Mail, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCw } from 'lucide-react';
 import { authApi } from '../../services/api';
 
 export default function VerifyEmail() {
@@ -54,7 +54,7 @@ export default function VerifyEmail() {
   };
 
   const icon = {
-    idle: <Brain className="w-12 h-12 text-indigo-600" />,
+    idle: <Mail className="w-12 h-12 text-indigo-600" />,
     loading: <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />,
     success: <CheckCircle className="w-12 h-12 text-emerald-600" />,
     error: <XCircle className="w-12 h-12 text-red-600" />,
@@ -77,16 +77,6 @@ export default function VerifyEmail() {
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-14">
-            <div className="w-11 h-11 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-              <Brain className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-lg font-bold leading-none">EduAI LMS</p>
-              <p className="text-indigo-300 text-xs mt-0.5">Student Learning Portal</p>
-            </div>
-          </div>
-
           <h1 className="text-4xl font-extrabold leading-tight mb-4">
             Email<br />verification
           </h1>
@@ -102,19 +92,8 @@ export default function VerifyEmail() {
       </div>
 
       {/* ── Right content panel ── */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-gray-50">
+      <div className="flex-1 flex items-start sm:items-center justify-center p-6 sm:p-10 bg-gray-50">
         <div className="w-full max-w-md text-center">
-          {/* Mobile logo */}
-          <div className="flex items-center justify-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl flex items-center justify-center">
-              <Brain className="w-5 h-5 text-white" />
-            </div>
-            <div className="text-left">
-              <p className="text-base font-bold text-gray-900 leading-none">EduAI LMS</p>
-              <p className="text-xs text-gray-500">Student Learning Portal</p>
-            </div>
-          </div>
-
           <div className={`w-20 h-20 ${bgColor} rounded-full flex items-center justify-center mx-auto mb-6`}>
             {icon}
           </div>

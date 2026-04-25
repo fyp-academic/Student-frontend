@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Eye, EyeOff, Loader2, Brain, BookOpen, Target, Zap, Award, Mail, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Loader2, BookOpen, Target, Zap, Award, Mail, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../services/api';
 
@@ -104,12 +104,6 @@ export default function Login() {
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-14">
-            <div className="w-11 h-11 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-              <Brain className="w-6 h-6 text-white" />
-            </div>
-          </div>
-
           <h1 className="text-4xl font-extrabold leading-tight mb-4">
             Learn smarter.<br />Achieve more.
           </h1>
@@ -138,19 +132,8 @@ export default function Login() {
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-gray-50">
+      <div className="flex-1 flex items-start sm:items-center justify-center p-6 sm:p-10 bg-gray-50">
         <div className="w-full max-w-md">
-
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl flex items-center justify-center">
-              <Brain className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-base font-bold text-gray-900 leading-none">EduAI LMS</p>
-              <p className="text-xs text-gray-500">Student Learning Portal</p>
-            </div>
-          </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>
           <p className="text-sm text-gray-500 mb-7">Sign in to continue your learning</p>

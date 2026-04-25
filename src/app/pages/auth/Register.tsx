@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Eye, EyeOff, Loader2, Brain, CheckCircle2, Mail, RefreshCw, ArrowRight, GraduationCap, Building2, Globe } from 'lucide-react';
+import { Eye, EyeOff, Loader2, CheckCircle2, Mail, RefreshCw, ArrowRight, GraduationCap, Building2, Globe } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authApi, collegesApi, degreeProgrammesApi } from '../../services/api';
 
@@ -93,7 +93,7 @@ export default function Register() {
   const [programmes, setProgrammes] = useState<Array<{id: string; name: string; code: string; college_id: string}>>([]);
   const [loadingColleges, setLoadingColleges] = useState(false);
 
-  const INSTRUCTOR_URL = import.meta.env.VITE_INSTRUCTOR_URL ?? 'http://localhost:5174';
+  const INSTRUCTOR_URL = import.meta.env.VITE_INSTRUCTOR_URL ?? 'https://apesguide.codagenz.com';
 
   // Fetch colleges on mount
   useEffect(() => {
@@ -215,12 +215,6 @@ export default function Register() {
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-14">
-            <div className="w-11 h-11 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-              <Brain className="w-6 h-6 text-white" />
-            </div>
-          </div>
-
           <h1 className="text-4xl font-extrabold leading-tight mb-4">
             Start your<br />learning journey
           </h1>
@@ -250,15 +244,8 @@ export default function Register() {
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-gray-50 overflow-y-auto">
+      <div className="flex-1 flex items-start sm:items-center justify-center p-6 sm:p-10 bg-gray-50 overflow-y-auto">
         <div className="w-full max-w-md py-6">
-
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl flex items-center justify-center">
-              <Brain className="w-5 h-5 text-white" />
-            </div>
-          </div>
 
           {registered ? (
             <div className="text-center">

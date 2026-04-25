@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { emailRenderPlugin } from './vite-email-plugin'
 
 declare const __dirname: string
 
@@ -12,8 +11,6 @@ export default defineConfig({
     // Tailwind is not being actively used – do not remove them
     react(),
     tailwindcss(),
-    // Email render plugin for Laravel backend to render React email templates
-    emailRenderPlugin(),
   ],
   resolve: {
     alias: {

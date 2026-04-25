@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff, Loader2, CheckCircle2, Mail, RefreshCw, ArrowRight, GraduationCap, Building2, Globe } from 'lucide-react';
+
 import { useAuth } from '../../context/AuthContext';
 import { authApi, collegesApi, degreeProgrammesApi } from '../../services/api';
 
@@ -219,45 +220,7 @@ export default function Register() {
     }`;
 
   return (
-    <div className="min-h-screen flex">
-      {/* ── Left branding panel ── */}
-      <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-indigo-700 via-purple-700 to-indigo-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-16 -left-16 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-0 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative z-10">
-          <h1 className="text-4xl font-extrabold leading-tight mb-4">
-            Start your<br />learning journey
-          </h1>
-          <p className="text-indigo-200 text-base mb-12 max-w-xs">
-            Join thousands of students mastering new skills with AI-powered personalized learning.
-          </p>
-
-          <div className="space-y-4">
-            {[
-              'Access 100+ interactive courses',
-              'AI-powered study recommendations',
-              'Track progress with detailed analytics',
-              'Connect with peers and instructors',
-            ].map(t => (
-              <div key={t} className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                <p className="text-indigo-100 text-sm">{t}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <div className="h-px bg-white/10 mb-4" />
-          <p className="text-indigo-400 text-xs">&copy; 2026 apes-udom · GPT-o4 Analytics Pipeline</p>
-        </div>
-      </div>
-
-      {/* ── Right form panel ── */}
-      <div className="flex-1 flex items-start sm:items-center justify-center p-6 sm:p-10 bg-gray-50 overflow-y-auto">
+    <div className="min-h-screen flex items-start justify-center p-6 sm:p-10 bg-gray-50 overflow-y-auto">
         <div className="w-full max-w-md py-6">
 
           {registered ? (
@@ -545,7 +508,6 @@ export default function Register() {
           </>
           )}
         </div>
-      </div>
     </div>
   );
 }

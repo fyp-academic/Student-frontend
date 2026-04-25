@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Eye, EyeOff, Loader2, BookOpen, Target, Zap, Award, Mail, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../services/api';
 
@@ -15,12 +15,6 @@ function validate(email: string, password: string) {
   return e;
 }
 
-const FEATURES = [
-  { icon: BookOpen, label: 'Access courses & interactive lessons' },
-  { icon: Target,    label: 'Track progress with AI insights' },
-  { icon: Zap,       label: 'Practice with AI-powered quizzes' },
-  { icon: Award,     label: 'Earn certificates & achievements' },
-];
 
 export default function Login() {
   const { login } = useAuth();
@@ -94,49 +88,11 @@ export default function Login() {
     }`;
 
   return (
-    <div className="min-h-screen flex">
-      {/* ── Left branding panel ── */}
-      <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-indigo-700 via-purple-700 to-indigo-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-16 -left-16 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-0 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-indigo-300/10 rounded-full blur-2xl" />
-        </div>
-
-        <div className="relative z-10">
-          <h1 className="text-4xl font-extrabold leading-tight mb-4">
-            Learn smarter.<br />Achieve more.
-          </h1>
-          <p className="text-indigo-200 text-base mb-12 max-w-xs">
-            Your personalized learning journey starts here. AI-powered courses tailored to your goals.
-          </p>
-
-          <div className="space-y-5">
-            {FEATURES.map(f => (
-              <div key={f.label} className="flex items-center gap-4">
-                <div className="w-9 h-9 bg-white/15 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
-                  <f.icon className="w-4 h-4 text-indigo-100" />
-                </div>
-                <p className="text-indigo-100 text-sm">{f.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <div className="h-px bg-white/10 mb-4" />
-          <p className="text-indigo-400 text-xs">
-            © 2026 apes udom · GPT-o4 Analytics Pipeline
-          </p>
-        </div>
-      </div>
-
-      {/* ── Right form panel ── */}
-      <div className="flex-1 flex items-start sm:items-center justify-center p-6 sm:p-10 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center p-6 sm:p-10 bg-gray-50">
         <div className="w-full max-w-md">
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>
-          <p className="text-sm text-gray-500 mb-7">Sign in to continue your learning</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1 text-center">Welcome back</h2>
+          <p className="text-sm text-gray-500 mb-7 text-center">Sign in to continue your learning</p>
 
           {/* Wrong-role banner */}
           {wrongRole && (
@@ -292,6 +248,5 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

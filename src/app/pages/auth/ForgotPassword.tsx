@@ -29,31 +29,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* ── Left branding panel ── */}
-      <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-indigo-700 via-purple-700 to-indigo-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-16 -left-16 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-0 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative z-10">
-          <h1 className="text-4xl font-extrabold leading-tight mb-4">
-            Reset your<br />password
-          </h1>
-          <p className="text-indigo-200 text-base mb-12 max-w-xs">
-            Enter your email and we'll send you a link to reset your password.
-          </p>
-        </div>
-
-        <div className="relative z-10">
-          <div className="h-px bg-white/10 mb-4" />
-          <p className="text-indigo-400 text-xs">© 2026 EduAI LMS · GPT-o4 Analytics Pipeline</p>
-        </div>
-      </div>
-
-      {/* ── Right form panel ── */}
-      <div className="flex-1 flex items-start sm:items-center justify-center p-6 sm:p-10 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center p-6 sm:p-10 bg-gray-50">
         <div className="w-full max-w-md">
           <Link
             to="/login"
@@ -134,7 +110,6 @@ export default function ForgotPassword() {
             </Link>
           </p>
         </div>
-      </div>
     </div>
   );
 }

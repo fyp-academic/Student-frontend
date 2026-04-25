@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet, useLocation, NavLink } from "react-router";
 import { Sidebar } from "./Sidebar";
+import { useAuth } from "../context/AuthContext";
 import {
   Bell,
   Search,
@@ -34,6 +35,7 @@ export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [aiGuideOpen, setAiGuideOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   const pathKey = location.pathname.replace("/", "") || "";
   const breadcrumb = breadcrumbMap[pathKey] || "Dashboard";
@@ -121,8 +123,8 @@ export function Layout() {
                 style={{ borderColor: "#2563eb" }}
               />
               <div className="hidden md:block">
-                <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b" }}>Hamis Kalira</p>
-                <p style={{ fontSize: "10px", color: "#64748b" }}>Student</p>
+                <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b" }}>{user?.name ?? 'Student'}</p>
+                <p style={{ fontSize: "10px", color: "#64748b" }}>{user?.department ?? user?.role ?? 'Student'}</p>
               </div>
             </NavLink>
           </div>

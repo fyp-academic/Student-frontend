@@ -92,18 +92,25 @@ export default function Register() {
   const [colleges, setColleges] = useState<Array<{id: string; name: string; code: string}>>([]);
   const [programmes, setProgrammes] = useState<Array<{id: string; name: string; code: string; college_id: string}>>([]);
   const [loadingColleges, setLoadingColleges] = useState(false);
+  const [collegesError, setCollegesError] = useState('');
+  const [programmesError, setProgrammesError] = useState('');
 
   const INSTRUCTOR_URL = import.meta.env.VITE_INSTRUCTOR_URL ?? 'https://apesguide.codagenz.com';
 
   // Fetch colleges on mount
   useEffect(() => {
     setLoadingColleges(true);
+    setCollegesError('');
     collegesApi.list()
       .then(res => {
-        const data = res.data.data ?? [];
+        const data = res.data.data ?? res.data ?? [];
         setColleges(data);
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error('Failed to load colleges:', err);
+        const msg = err.response?.data?.message || err.message || 'Failed to load colleges. Please check your API connection.';
+        setCollegesError(msg);
+      })
       .finally(() => setLoadingColleges(false));
   }, []);
 
@@ -111,14 +118,20 @@ export default function Register() {
   useEffect(() => {
     if (!form.collegeId) {
       setProgrammes([]);
+      setProgrammesError('');
       return;
     }
+    setProgrammesError('');
     degreeProgrammesApi.list(form.collegeId)
       .then(res => {
-        const data = res.data.data ?? [];
+        const data = res.data.data ?? res.data ?? [];
         setProgrammes(data);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to load degree programmes:', err);
+        const msg = err.response?.data?.message || err.message || 'Failed to load degree programmes.';
+        setProgrammesError(msg);
+      });
   }, [form.collegeId]);
 
   // Parse registration number in real-time
@@ -404,6 +417,12 @@ export default function Register() {
                 ))}
               </select>
               {errors.collegeId && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.collegeId}</p>}
+              {collegesError && (
+                <div className="mt-2 p-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-1.5">
+                  <span className="mt-0.5 flex-shrink-0">⚠</span>
+                  <span>{collegesError}</span>
+                </div>
+              )}
             </div>
 
             {/* Degree Programme */}
@@ -426,6 +445,12 @@ export default function Register() {
                 ))}
               </select>
               {errors.degreeProgrammeId && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.degreeProgrammeId}</p>}
+              {programmesError && (
+                <div className="mt-2 p-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-1.5">
+                  <span className="mt-0.5 flex-shrink-0">⚠</span>
+                  <span>{programmesError}</span>
+                </div>
+              )}
             </div>
 
             {/* Password */}

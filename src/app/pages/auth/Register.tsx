@@ -438,11 +438,11 @@ export default function Register() {
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {PASSWORD_RULES.map(r => {
                     const ok = form.password.length > 0 && r.test(form.password);
                     return (
-                      <span key={r.label} className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
+                      <span key={r.label} className={`text-[11px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
                         {ok ? '✓' : '○'} {r.label}
                       </span>
                     );

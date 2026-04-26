@@ -147,6 +147,10 @@ export const messagingApi = {
 export const profileApi = {
   get:               ()                                => api.get('/profile'),
   update:            (data: Record<string, unknown>)  => api.put('/profile', data),
+  uploadImage:       (formData: FormData)             => api.post('/profile/image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  removeImage:       ()                               => api.delete('/profile/image'),
   preferences:       ()                                => api.get('/profile/preferences'),
   updatePreferences: (data: Record<string, unknown>)  => api.put('/profile/preferences', data),
   learnerProfile:    (learnerId: string, courseId: string) =>

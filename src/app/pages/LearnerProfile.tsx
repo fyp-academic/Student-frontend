@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { User, Mail, Phone, MapPin, BookOpen, Award, Star, Edit3, Camera, GraduationCap, Calendar, Globe, Github, Linkedin, TrendingUp, CheckCircle, Clock } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { User, Mail, Phone, MapPin, BookOpen, Award, Star, Edit3, Camera, GraduationCap, Calendar, Globe, Github, Linkedin, TrendingUp, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import { useAuth } from "../context/AuthContext";
 import { profileApi, coursesApi } from "../services/api";
@@ -19,17 +19,26 @@ export function LearnerProfile() {
   const [enrolledCourses, setEnrolledCourses] = useState<Record<string, unknown>[]>([]);
   const [skillData, setSkillData] = useState<{ subject: string; value: number }[]>([]);
   const [achievements, setAchievements] = useState<Record<string, unknown>[]>([]);
+  const [bio, setBio] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  const loadProfile = () => {
     profileApi.get().then(r => {
       const p: Record<string, unknown> = r.data.data ?? r.data;
       setProfile(p);
+      setBio(String(p.bio ?? ''));
       if (p.preferred_modes)  setSelectedModes(p.preferred_modes as string[]);
       if (p.pace_preference)  setPacePreference(String(p.pace_preference));
       if (p.support_notes)    setSupportNotes(String(p.support_notes));
       if (p.skills)           setSkillData(p.skills as { subject: string; value: number }[]);
       if (p.achievements)     setAchievements(p.achievements as Record<string, unknown>[]);
     }).catch(() => {});
+  };
+
+  useEffect(() => {
+    loadProfile();
     coursesApi.myCourses().then(r => {
       setEnrolledCourses(r.data.data ?? r.data ?? []);
     }).catch(() => {});
@@ -48,6 +57,39 @@ export function LearnerProfile() {
     setSelectedModes((prev) =>
       prev.includes(modeId) ? prev.filter((m) => m !== modeId) : [...prev, modeId]
     );
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editing) {
+      setEditing(true);
+      return;
+    }
+    setSaving(true);
+    try {
+      await profileApi.update({ bio });
+      await loadProfile();
+      setEditing(false);
+    } catch (e) {
+      // Error handled silently
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      await profileApi.uploadImage(formData);
+      await loadProfile();
+    } catch (e) {
+      // Error handled silently
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   return (
@@ -70,24 +112,38 @@ export function LearnerProfile() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-12 mb-4 gap-4">
             <div className="relative w-fit">
               <img
-                src="https://images.unsplash.com/photo-1573145532966-3cefadb09b82?w=200&h=200&fit=crop&crop=face"
-                alt="hamis kalira"
+                src={String(profile?.profile_image_url ?? 'https://ui-avatars.com/api/?name=' + encodeURIComponent(String(u?.name ?? profile?.name ?? 'Student')) + '&background=2563eb&color=fff&size=200')}
+                alt={String(u?.name ?? profile?.name ?? 'Student')}
                 className="w-24 h-24 rounded-2xl object-cover border-4 border-white"
                 style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
               />
-              <button
-                className="absolute bottom-1 right-1 w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center"
-                style={{ boxShadow: "0 2px 6px rgba(37,99,235,0.4)" }}
-              >
-                <Camera size={13} />
-              </button>
+              {editing && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg,image/gif"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="absolute bottom-1 right-1 w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center disabled:opacity-50"
+                    style={{ boxShadow: "0 2px 6px rgba(37,99,235,0.4)" }}
+                  >
+                    {uploadingImage ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
+                  </button>
+                </>
+              )}
             </div>
             <button
-              onClick={() => setEditing(!editing)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border transition-all hover:bg-slate-50 self-start sm:self-auto"
+              onClick={handleSaveProfile}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border transition-all hover:bg-slate-50 self-start sm:self-auto disabled:opacity-50"
               style={{ fontSize: "12px", fontWeight: 600, color: "#475569", borderColor: "#e2e8f0" }}
             >
-              <Edit3 size={14} />
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <Edit3 size={14} />}
               {editing ? "Save Profile" : "Edit Profile"}
             </button>
           </div>
@@ -97,13 +153,13 @@ export function LearnerProfile() {
               <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>{String(u?.name ?? profile?.name ?? 'Student')}</h1>
               <p style={{ fontSize: "14px", color: "#2563eb", fontWeight: 500 }}>{String(profile?.department ?? u?.department ?? '')}</p>
               <div className="flex flex-wrap items-center gap-3 mt-2 text-slate-500" style={{ fontSize: "12px" }}>
-                {profile?.year_level && <div className="flex items-center gap-1"><GraduationCap size={13} />{String(profile.year_level)}</div>}
-                {profile?.registration_no && <div className="flex items-center gap-1"><BookOpen size={13} />Reg No: {String(profile.registration_no)}</div>}
-                {profile?.institution && <div className="flex items-center gap-1"><MapPin size={13} />{String(profile.institution)}</div>}
+                {Boolean(profile?.year_level) && <div className="flex items-center gap-1"><GraduationCap size={13} />{String(profile?.year_level)}</div>}
+                {Boolean(profile?.registration_no) && <div className="flex items-center gap-1"><BookOpen size={13} />Reg No: {String(profile?.registration_no)}</div>}
+                {Boolean(profile?.institution) && <div className="flex items-center gap-1"><MapPin size={13} />{String(profile?.institution)}</div>}
               </div>
               <div className="flex flex-wrap items-center gap-3 mt-2" style={{ fontSize: "12px" }}>
                 <div className="flex items-center gap-1 text-slate-500"><Mail size={12} />{String(u?.email ?? profile?.email ?? '')}</div>
-                {profile?.phone && <div className="flex items-center gap-1 text-slate-500"><Phone size={12} />{String(profile.phone)}</div>}
+                {profile?.phone ? <div className="flex items-center gap-1 text-slate-500"><Phone size={12} />{String(profile.phone)}</div> : null}
               </div>
               <div className="flex items-center gap-3 mt-3">
                 <a href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><Github size={16} /></a>
@@ -127,17 +183,19 @@ export function LearnerProfile() {
             </div>
           </div>
 
-          {/* Bio */}
+          {/* Bio - Only editable field along with profile image */}
           {!editing ? (
             <p className="mt-4 p-3 rounded-xl" style={{ fontSize: "13px", color: "#475569", backgroundColor: "#f8fafc", lineHeight: "1.6" }}>
-              {String(profile?.bio ?? u?.bio ?? '')}
+              {String(profile?.bio ?? u?.bio ?? '') || <span className="italic text-gray-400">No bio yet. Click Edit Profile to add one.</span>}
             </p>
           ) : (
             <textarea
               className="mt-4 w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
               style={{ fontSize: "13px", color: "#475569", borderColor: "#e2e8f0", lineHeight: "1.6", resize: "none" }}
               rows={3}
-              defaultValue={String(profile?.bio ?? u?.bio ?? '')}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell us about yourself..."
             />
           )}
         </div>

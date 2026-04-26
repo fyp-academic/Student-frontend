@@ -141,6 +141,46 @@ export const messagingApi = {
   markRead:      (convId: string)      => api.patch(`/conversations/${convId}/messages/read`),
   react:         (messageId: string, emoji: string) =>
     api.post(`/messages/${messageId}/react`, { emoji }),
+  // Structured chat features
+  typing:        (convId: string, isTyping: boolean) =>
+    api.post(`/conversations/${convId}/typing`, { is_typing: isTyping }),
+  deleteMessage: (messageId: string, deletionType: 'me' | 'everyone') =>
+    api.delete(`/messages/${messageId}`, { params: { deletion_type: deletionType } }),
+  pinMessage:    (messageId: string, isPinned: boolean) =>
+    api.post(`/messages/${messageId}/pin`, { is_pinned: isPinned }),
+  markDelivered: (messageId: string) =>
+    api.post(`/messages/${messageId}/delivered`),
+  markMessageRead: (messageId: string) =>
+    api.post(`/messages/${messageId}/read`),
+  pinnedMessages: (convId: string) =>
+    api.get(`/conversations/${convId}/pinned-messages`),
+};
+
+// ─── Structured Chat Access ───────────────────────────────────────────────────
+export const chatAccessApi = {
+  eligibleRecipients: (type?: string, courseId?: string, programmeId?: string) =>
+    api.get('/chat/eligible-recipients', { params: { type, course_id: courseId, programme_id: programmeId } }),
+  myChats:       () => api.get('/chat/my-chats'),
+  availableCourses: () => api.get('/chat/available-courses'),
+  availableProgrammes: () => api.get('/chat/available-programmes'),
+};
+
+// ─── Course Chat ───────────────────────────────────────────────────────────────
+export const courseChatApi = {
+  getOrCreate:   (courseId: string) => api.get(`/courses/${courseId}/chat`),
+  participants:  (courseId: string) => api.get(`/courses/${courseId}/chat/participants`),
+  syncParticipants: (courseId: string) => api.post(`/courses/${courseId}/chat/sync-participants`),
+  postAnnouncement: (courseId: string, content: string) =>
+    api.post(`/courses/${courseId}/chat/announcement`, { content }),
+};
+
+// ─── Programme Chat ───────────────────────────────────────────────────────────
+export const programmeChatApi = {
+  getOrCreate:   (programmeId: string) => api.get(`/degree-programmes/${programmeId}/chat`),
+  participants:  (programmeId: string) => api.get(`/degree-programmes/${programmeId}/chat/participants`),
+  syncParticipants: (programmeId: string) => api.post(`/degree-programmes/${programmeId}/chat/sync-participants`),
+  postAnnouncement: (programmeId: string, content: string) =>
+    api.post(`/degree-programmes/${programmeId}/chat/announcement`, { content }),
 };
 
 // ─── Profile / Learner ────────────────────────────────────────────────────────

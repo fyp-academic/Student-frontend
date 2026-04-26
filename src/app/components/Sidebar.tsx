@@ -33,6 +33,8 @@ import {
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 interface NavItem {
@@ -110,7 +112,7 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -152,13 +154,22 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   };
 
   return (
-    <aside
-      className="flex flex-col h-screen transition-all duration-300 flex-shrink-0"
-      style={{
-        width: collapsed ? "70px" : "268px",
-        backgroundColor: "#0c1e4a",
-      }}
-    >
+    <>
+      {/* Mobile backdrop overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+      <aside
+        className={`flex flex-col h-screen transition-all duration-300 flex-shrink-0 fixed lg:static z-50
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        style={{
+          width: collapsed ? "70px" : "268px",
+          backgroundColor: "#0c1e4a",
+        }}
+      >
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-4 border-b"
@@ -352,5 +363,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </div>
       </div>
     </aside>
+    </>
   );
 }

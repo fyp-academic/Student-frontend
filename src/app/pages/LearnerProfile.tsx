@@ -154,11 +154,13 @@ export function LearnerProfile() {
               <p style={{ fontSize: "14px", color: "#2563eb", fontWeight: 500 }}>{String(profile?.department ?? u?.department ?? '')}</p>
               <div className="flex flex-wrap items-center gap-3 mt-2 text-slate-500" style={{ fontSize: "12px" }}>
                 {Boolean(profile?.year_level) && <div className="flex items-center gap-1"><GraduationCap size={13} />{String(profile?.year_level)}</div>}
-                {Boolean(profile?.registration_no) && <div className="flex items-center gap-1"><BookOpen size={13} />Reg No: {String(profile?.registration_no)}</div>}
                 {Boolean(profile?.institution) && <div className="flex items-center gap-1"><MapPin size={13} />{String(profile?.institution)}</div>}
               </div>
               <div className="flex flex-wrap items-center gap-3 mt-2" style={{ fontSize: "12px" }}>
                 <div className="flex items-center gap-1 text-slate-500"><Mail size={12} />{String(u?.email ?? profile?.email ?? '')}</div>
+                {Boolean(profile?.registration_no) && (
+                  <div className="flex items-center gap-1 text-slate-500"><BookOpen size={12} />Reg No: {String(profile?.registration_no)}</div>
+                )}
                 {profile?.phone ? <div className="flex items-center gap-1 text-slate-500"><Phone size={12} />{String(profile.phone)}</div> : null}
               </div>
               <div className="flex items-center gap-3 mt-3">

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useLocation, NavLink } from "react-router";
 import { Sidebar } from "./Sidebar";
 import { useAuth } from "../context/AuthContext";
+import { profileApi } from "../services/api";
 import {
   Bell,
   Search,
@@ -33,9 +34,20 @@ const breadcrumbMap: Record<string, string> = {
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiGuideOpen, setAiGuideOpen] = useState(false);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const location = useLocation();
   const { user } = useAuth();
+
+  useEffect(() => {
+    profileApi.get().then(r => {
+      const p: Record<string, unknown> = r.data.data ?? r.data;
+      setProfile(p);
+    }).catch(() => {});
+  }, []);
+
+  const profileImageUrl = profile?.profile_image_url as string | undefined;
 
   const pathKey = location.pathname.replace("/", "") || "";
   const breadcrumb = breadcrumbMap[pathKey] || "Dashboard";
@@ -51,7 +63,12 @@ export function Layout() {
         }
       `}</style>
       <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#f0f5ff" }}>
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <Sidebar
+          collapsed={collapsed}
+          onToggle={() => setCollapsed(!collapsed)}
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+        />
 
         <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top Header */}
@@ -60,10 +77,17 @@ export function Layout() {
           style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
         >
           <div className="flex items-center gap-3">
+            {/* Mobile hamburger - always visible on small screens */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-500"
+            >
+              <Menu size={20} />
+            </button>
             {collapsed && (
               <button
                 onClick={() => setCollapsed(false)}
-                className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-500"
+                className="hidden lg:block p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-500"
               >
                 <Menu size={20} />
               </button>
@@ -117,9 +141,9 @@ export function Layout() {
             {/* Avatar */}
             <NavLink to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <img
-                src="https://images.unsplash.com/photo-1573145532966-3cefadb09b82?w=80&h=80&fit=crop&crop=face"
+                src={String(profileImageUrl ?? 'https://ui-avatars.com/api/?name=' + encodeURIComponent(String(user?.name ?? 'Student')) + '&background=2563eb&color=fff&size=80')}
                 alt="Profile"
-                className="w-8 h-8 rounded-full border-2"
+                className="w-8 h-8 rounded-full border-2 object-cover"
                 style={{ borderColor: "#2563eb" }}
               />
               <div className="hidden md:block">

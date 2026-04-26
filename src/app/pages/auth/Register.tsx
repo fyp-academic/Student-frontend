@@ -276,8 +276,8 @@ export default function Register() {
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
-              <p className="text-sm text-gray-500 mb-7">Join the apes udom learning community</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1 text-center">Create your account</h2>
+              <p className="text-sm text-gray-500 mb-7 text-center">Join the apes udom learning community</p>
 
               {apiError && (
                 <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2">
@@ -287,32 +287,32 @@ export default function Register() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-            {/* Full name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
-              <input
-                type="text"
-                autoComplete="name"
-                value={form.name}
-                onChange={set('name')}
-                placeholder="John Doe"
-                className={fieldCls(!!errors.name)}
-              />
-              {errors.name && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.name}</p>}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
-              <input
-                type="email"
-                autoComplete="email"
-                value={form.email}
-                onChange={set('email')}
-                placeholder="student@university.edu"
-                className={fieldCls(!!errors.email)}
-              />
-              {errors.email && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.email}</p>}
+            {/* Full name & Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  value={form.name}
+                  onChange={set('name')}
+                  placeholder="John Doe"
+                  className={fieldCls(!!errors.name)}
+                />
+                {errors.name && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={form.email}
+                  onChange={set('email')}
+                  placeholder="student@university.edu"
+                  className={fieldCls(!!errors.email)}
+                />
+                {errors.email && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.email}</p>}
+              </div>
             </div>
 
             {/* Registration Number */}
@@ -416,64 +416,64 @@ export default function Register() {
               )}
             </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <div className="relative">
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  value={form.password}
-                  onChange={set('password')}
-                  placeholder="••••••••"
-                  className={fieldCls(!!errors.password)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(p => !p)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            {/* Password & Confirm password */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={form.password}
+                    onChange={set('password')}
+                    placeholder="••••••••"
+                    className={fieldCls(!!errors.password)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(p => !p)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  {PASSWORD_RULES.map(r => {
+                    const ok = form.password.length > 0 && r.test(form.password);
+                    return (
+                      <span key={r.label} className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
+                        {ok ? '✓' : '○'} {r.label}
+                      </span>
+                    );
+                  })}
+                </div>
+                {errors.password && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.password}</p>}
               </div>
-              <div className="flex gap-2 mt-2">
-                {PASSWORD_RULES.map(r => {
-                  const ok = form.password.length > 0 && r.test(form.password);
-                  return (
-                    <span key={r.label} className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
-                      {ok ? '✓' : '○'} {r.label}
-                    </span>
-                  );
-                })}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirm ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={form.confirmPassword}
+                    onChange={set('confirmPassword')}
+                    placeholder="••••••••"
+                    className={fieldCls(!!errors.confirmPassword)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(p => !p)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="mt-1.5 text-xs text-red-600">⚠ {errors.confirmPassword}</p>
+                )}
               </div>
-              {errors.password && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.password}</p>}
-            </div>
-
-            {/* Confirm password */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm password</label>
-              <div className="relative">
-                <input
-                  type={showConfirm ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  value={form.confirmPassword}
-                  onChange={set('confirmPassword')}
-                  placeholder="••••••••"
-                  className={fieldCls(!!errors.confirmPassword)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(p => !p)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="mt-1.5 text-xs text-red-600">⚠ {errors.confirmPassword}</p>
-              )}
             </div>
 
             {/* Terms */}

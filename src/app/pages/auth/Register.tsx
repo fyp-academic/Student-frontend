@@ -30,6 +30,7 @@ interface ParsedReg {
   nationality_code: string;
   nationality: string;
   flag: string;
+  region?: string;
   registration_year: number;
   education_level: string;
   year_of_study: number;
@@ -50,8 +51,8 @@ function validate(f: FormData, parsed: ParsedReg | null): FormErrors {
 
   if (!f.registrationNumber.trim()) {
     e.registrationNumber = 'Registration number is required';
-  } else if (!/^[TKBRU]\d{2}-\d{2}-\d{5}$/.test(f.registrationNumber.trim())) {
-    e.registrationNumber = 'Invalid format. Expected: XYY-LL-NNNNN (e.g., T23-03-09759)';
+  } else if (!/^[TKBRUZ]\d{2}-\d{2}-\d{5}$/.test(f.registrationNumber.trim())) {
+    e.registrationNumber = 'Invalid format. Expected: XYY-LL-NNNNN (e.g., T23-03-09759, Z24-03-01234)';
   }
 
   if (!f.collegeId) e.collegeId = 'Please select a college';
@@ -342,6 +343,7 @@ export default function Register() {
                     <span className="text-sm text-gray-700">
                       <span className="text-xl mr-1">{parsed.flag}</span>
                       {parsed.nationality}
+                      {parsed.region && <span className="text-xs text-gray-500 ml-1">({parsed.region})</span>}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">

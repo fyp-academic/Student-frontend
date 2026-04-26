@@ -14,6 +14,8 @@ interface FormData {
   registrationNumber: string;
   collegeId: string;
   degreeProgrammeId: string;
+  gender: string;
+  phoneNumber: string;
 }
 
 interface FormErrors {
@@ -24,6 +26,8 @@ interface FormErrors {
   registrationNumber?: string;
   collegeId?: string;
   degreeProgrammeId?: string;
+  gender?: string;
+  phoneNumber?: string;
 }
 
 interface ParsedReg {
@@ -73,7 +77,7 @@ export default function Register() {
 
   const [form, setForm] = useState<FormData>({
     name: '', email: '', password: '', confirmPassword: '', role: 'student',
-    registrationNumber: '', collegeId: '', degreeProgrammeId: '',
+    registrationNumber: '', collegeId: '', degreeProgrammeId: '', gender: '', phoneNumber: '',
   });
   const [showPass,    setShowPass]    = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -181,6 +185,8 @@ export default function Register() {
         registration_number:   form.registrationNumber.trim(),
         degree_programme_id:   form.degreeProgrammeId,
         college_id:            form.collegeId,
+        gender:                form.gender,
+        phone_number:          form.phoneNumber,
       });
       setRegisteredEmail(form.email.trim());
       setRegistered(true);
@@ -416,6 +422,35 @@ export default function Register() {
                   <span>{programmesError}</span>
                 </div>
               )}
+            </div>
+
+            {/* Gender & Phone */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Gender</label>
+                <select
+                  value={form.gender}
+                  onChange={set('gender')}
+                  className={fieldCls(!!errors.gender) + ' appearance-none bg-white'}
+                >
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+                {errors.gender && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.gender}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+                <input
+                  type="tel"
+                  value={form.phoneNumber}
+                  onChange={set('phoneNumber')}
+                  placeholder="e.g. +255 712 345 678"
+                  className={fieldCls(!!errors.phoneNumber)}
+                />
+                {errors.phoneNumber && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.phoneNumber}</p>}
+              </div>
             </div>
 
             {/* Password & Confirm password */}

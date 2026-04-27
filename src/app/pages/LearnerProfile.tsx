@@ -231,12 +231,11 @@ export function LearnerProfile() {
             <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b", marginBottom: "16px" }}>Academic Information</h3>
             <div className="space-y-3">
               {[
-                { label: "Program",             value: String(profile?.program       ?? profile?.department ?? u?.department ?? '—') },
-                { label: "Faculty",             value: String(profile?.faculty        ?? '—') },
-                { label: "Year/Semester",       value: String(profile?.year_level     ?? '—') },
-                { label: "Enrollment Date",     value: profile?.enrolled_at ? new Date(String(profile.enrolled_at)).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—' },
-                { label: "Expected Graduation", value: String(profile?.graduation_year ?? '—') },
-                { label: "Academic Advisor",    value: String(profile?.advisor        ?? '—') },
+                { label: "College",           value: String(profile?.college_code    ?? u?.college_code    ?? '—') },
+                { label: "Program",           value: String(profile?.program_code    ?? u?.program_code    ?? '—') },
+                { label: "Registration No.",  value: String(profile?.registration_no ?? u?.registration_no ?? '—') },
+                { label: "Nationality",       value: String(profile?.nationality     ?? u?.nationality     ?? '—') },
+                { label: "Phone Number",      value: String(profile?.phone           ?? u?.phone           ?? '—') },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between py-1.5 border-b last:border-0" style={{ borderColor: "#f1f5f9" }}>
                   <span style={{ fontSize: "12px", color: "#94a3b8" }}>{item.label}</span>

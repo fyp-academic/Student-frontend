@@ -773,7 +773,7 @@ export function Chat() {
                         {initials(msg.sender_name)}
                       </div>
                     )}
-                    <div className={`flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"} max-w-[75%] sm:max-w-xs lg:max-w-md`}>
+                    <div className={`relative flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"} max-w-[75%] sm:max-w-xs lg:max-w-md`}>
                       <div
                         onContextMenu={(e) => handleContextMenu(e, msg.id)}
                         className={`relative ${isDeleted ? 'opacity-60' : ''}`}
@@ -826,7 +826,10 @@ export function Chat() {
                         </div>
                         {/* Reaction button on hover - only for non-deleted messages */}
                         {!isDeleted && (
-                          <button onClick={() => toggleEmojiPicker(msg.id)}
+                          <button onClick={(e) => {
+                              e.stopPropagation();
+                              toggleEmojiPicker(msg.id);
+                            }}
                             className="absolute -top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-slate-200 rounded-full px-1.5 py-0.5 shadow-sm"
                             style={isOwn ? { left: "-28px" } : { right: "-28px" }}>
                             <Smile size={11} className="text-slate-400" />
@@ -836,7 +839,7 @@ export function Chat() {
 
                       {/* Emoji picker */}
                       {!isDeleted && showEmojiPicker && emojiPickerMessageId === msg.id && (
-                        <div ref={emojiPickerRef} className={`absolute z-50 ${isOwn ? 'right-0' : 'left-0'}`} style={{ bottom: '100%', marginBottom: '8px' }}>
+                        <div ref={emojiPickerRef} className={`absolute z-50 ${isOwn ? 'right-0' : 'left-0'}`} style={{ bottom: '100%', marginBottom: '8px' }} onClick={(e) => e.stopPropagation()}>
                           <EmojiPicker
                             onEmojiClick={handleEmojiClick}
                             theme={Theme.LIGHT}

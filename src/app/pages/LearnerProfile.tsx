@@ -181,7 +181,7 @@ export function LearnerProfile() {
                   <p style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b" }}>{s.value}</p>
                   <p style={{ fontSize: "10px", color: "#94a3b8" }}>{s.label}</p>
                 </div>
-              ))}
+              ))} 
             </div>
           </div>
 

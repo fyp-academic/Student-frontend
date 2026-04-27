@@ -344,9 +344,12 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
       {/* User Footer */}
       <div className="border-t p-3" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
         <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 border-2" style={{ borderColor: "#22c55e" }}>
-            {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
-          </div>
+          <img
+            src={String(user?.profile_image_url ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(String(user?.name ?? 'Student'))}&background=2563eb&color=fff&size=100`)}
+            alt={String(user?.name ?? 'Student')}
+            className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2"
+            style={{ borderColor: "#22c55e" }}
+          />
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <p className="text-white truncate" style={{ fontSize: "12px", fontWeight: 600 }}>{user?.name ?? 'Student'}</p>

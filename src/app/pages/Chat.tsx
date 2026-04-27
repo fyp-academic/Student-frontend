@@ -6,6 +6,18 @@ import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 
+
+export default function TestListener(){
+    useEffect(() => {
+       window.Echo.channel('test-channel')
+            .listen('.test.event', (e: any) => {
+           console.log("TestListener mounted");
+       })
+    }, []);
+    
+    return <div>Listening...</div>;
+}
+
 let echo: Echo<"reverb"> | null = null;
 function getEcho(): Echo<"reverb"> {
   if (!echo) {

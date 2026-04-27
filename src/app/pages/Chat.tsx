@@ -1,22 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Search, MoreHorizontal, Paperclip, Smile, X, Download, MessageSquare, Trash2, Pin, Check, CheckCheck, BookOpen, GraduationCap, Users, Clock } from "lucide-react";
-import { messagingApi, chatAccessApi, courseChatApi, programmeChatApi } from "../services/api";
+import { Send, Search, MoreHorizontal, Paperclip, Smile, X, Download, MessageSquare, Trash2, Pin, Check, CheckCheck, BookOpen, GraduationCap, Users, Clock, ArrowLeft } from "lucide-react";
+import { messagingApi, chatAccessApi, courseChatApi, programmeChatApi, coursesApi, degreeProgrammesApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 
-
-export default function TestListener(){
-    useEffect(() => {
-       window.Echo.channel('test-channel')
-            .listen('.test.event', (e: any) => {
-           console.log("TestListener mounted");
-       })
-    }, []);
-    
-    return <div>Listening...</div>;
-}
 
 let echo: Echo<"reverb"> | null = null;
 function getEcho(): Echo<"reverb"> {
@@ -91,7 +80,7 @@ interface Programme {
 }
 
 
-export function Chat() {
+export default function Chat() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ChatType>('direct');
   const [conversations, setConversations] = useState<ApiConversation[]>([]);
@@ -112,6 +101,24 @@ export function Chat() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; messageId: string } | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiPickerMessageId, setEmojiPickerMessageId] = useState<string | null>(null);
+  
+  // New message modal for direct chats
+  const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+  const [eligibleRecipients, setEligibleRecipients] = useState<{id: string; name: string; role: string}[]>([]);
+  const [selectedRecipient, setSelectedRecipient] = useState<string | null>(null);
+  const [newMessageText, setNewMessageText] = useState("");
+  const [creatingConversation, setCreatingConversation] = useState(false);
+  
+  // Mobile sidebar visibility
+  const [showSidebar, setShowSidebar] = useState(true);
+  
+  // Hide sidebar on mobile when conversation selected
+  useEffect(() => {
+    if (selectedConvId && window.innerWidth < 768) {
+      setShowSidebar(false);
+    }
+  }, [selectedConvId]);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -138,13 +145,28 @@ export function Chat() {
 
   // Load available courses and programmes
   useEffect(() => {
-    chatAccessApi.availableCourses().then((res) => {
+    coursesApi.myCourses().then((res) => {
       setCourses(res.data?.data ?? []);
     });
-    chatAccessApi.availableProgrammes().then((res) => {
-      setProgrammes(res.data?.data ?? []);
+    degreeProgrammesApi.list().then((res) => {
+      // For students, filter to their enrolled programme
+      const allProgrammes = res.data?.data ?? [];
+      const userProgrammeId = user?.degree_programme_id;
+      const myProgramme = userProgrammeId 
+        ? allProgrammes.filter((p: Programme) => p.id === userProgrammeId)
+        : allProgrammes;
+      setProgrammes(myProgramme);
     });
-  }, []);
+  }, [user?.degree_programme_id]);
+
+  // Load eligible recipients for direct chat
+  useEffect(() => {
+    if (activeTab === 'direct') {
+      chatAccessApi.eligibleRecipients().then((res) => {
+        setEligibleRecipients(res.data?.data ?? []);
+      });
+    }
+  }, [activeTab]);
 
   // Auto-scroll
   useEffect(() => {
@@ -379,12 +401,90 @@ export function Chat() {
       (c.participant_role ?? "").toLowerCase().includes(searchConvo.toLowerCase())
   );
 
+  // Filter courses/programmes based on search
+  const filteredCourses = courses.filter(
+    (c) => c.name.toLowerCase().includes(searchConvo.toLowerCase())
+  );
+  const filteredProgrammes = programmes.filter(
+    (p) => p.name.toLowerCase().includes(searchConvo.toLowerCase())
+  );
+
   // Get conversation display name based on type
   const getConversationName = (convo: ApiConversation) => {
     if (convo.type === 'course' || convo.type === 'programme') {
       return convo.title ?? convo.participant_name;
     }
     return convo.participant_name;
+  };
+
+  // Handle clicking a course - get or create conversation
+  const handleCourseClick = async (course: Course) => {
+    const existing = conversations.find((c) => c.course_id === course.id && c.type === 'course');
+    if (existing) {
+      setSelectedConvId(existing.id);
+      if (window.innerWidth < 768) setShowSidebar(false);
+      return;
+    }
+    
+    try {
+      const res = await courseChatApi.getOrCreate(course.id);
+      const newConvo: ApiConversation = res.data?.data;
+      if (newConvo) {
+        setConversations((prev) => [...prev, newConvo]);
+        setSelectedConvId(newConvo.id);
+        if (window.innerWidth < 768) setShowSidebar(false);
+      }
+    } catch (err) {
+      console.error('Failed to enter course chat:', err);
+    }
+  };
+
+  // Handle clicking a programme - get or create conversation
+  const handleProgrammeClick = async (programme: Programme) => {
+    const existing = conversations.find((c) => c.programme_id === programme.id && c.type === 'programme');
+    if (existing) {
+      setSelectedConvId(existing.id);
+      if (window.innerWidth < 768) setShowSidebar(false);
+      return;
+    }
+    
+    try {
+      const res = await programmeChatApi.getOrCreate(programme.id);
+      const newConvo: ApiConversation = res.data?.data;
+      if (newConvo) {
+        setConversations((prev) => [...prev, newConvo]);
+        setSelectedConvId(newConvo.id);
+        if (window.innerWidth < 768) setShowSidebar(false);
+      }
+    } catch (err) {
+      console.error('Failed to enter programme chat:', err);
+    }
+  };
+
+  // Start new direct conversation
+  const handleStartDirectChat = async () => {
+    if (!selectedRecipient || !newMessageText.trim()) return;
+    
+    setCreatingConversation(true);
+    try {
+      const res = await messagingApi.createConv({
+        recipient_id: selectedRecipient,
+        message: newMessageText.trim()
+      });
+      const newConvo = res.data?.data;
+      if (newConvo) {
+        setConversations((prev) => [newConvo, ...prev]);
+        setSelectedConvId(newConvo.id);
+        setShowNewMessageModal(false);
+        setSelectedRecipient(null);
+        setNewMessageText("");
+        if (window.innerWidth < 768) setShowSidebar(false);
+      }
+    } catch (err) {
+      console.error('Failed to create conversation:', err);
+    } finally {
+      setCreatingConversation(false);
+    }
   };
 
   // Get conversation icon based on type
@@ -397,29 +497,37 @@ export function Chat() {
   };
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden flex" style={{ height: "calc(100vh - 140px)", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-      {/* Sidebar */}
-      <div className="w-80 flex-shrink-0 flex flex-col border-r" style={{ borderColor: "#f1f5f9" }}>
+    <div className="bg-white rounded-2xl overflow-hidden flex relative" style={{ height: "calc(100vh - 140px)", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+      {/* Sidebar - Hidden on mobile when conversation selected */}
+      <div 
+        className={`
+          flex-shrink-0 flex flex-col border-r absolute md:relative z-10 bg-white w-full md:w-80
+          transition-transform duration-300 ease-in-out
+          ${!showSidebar ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
+        `} 
+        style={{ borderColor: "#f1f5f9", height: "100%" }}
+      >
         <div className="p-4 border-b" style={{ borderColor: "#f1f5f9" }}>
           <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", marginBottom: "12px" }}>Messages</h2>
 
-          {/* Chat Type Tabs */}
+          {/* Chat Type Tabs - Icons inline with text */}
           <div className="flex gap-1 mb-3 p-1 rounded-lg" style={{ backgroundColor: "#f1f5f9" }}>
             {(['direct', 'course', 'programme'] as ChatType[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); setSelectedConvId(null); }}
-                className="flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-all"
+                className="flex-1 py-1.5 px-1 sm:px-2 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1"
                 style={{
                   backgroundColor: activeTab === tab ? "white" : "transparent",
                   color: activeTab === tab ? "#2563eb" : "#64748b",
                   boxShadow: activeTab === tab ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
                 }}
               >
-                {tab === 'direct' && <Users size={12} className="inline mr-1" />}
-                {tab === 'course' && <BookOpen size={12} className="inline mr-1" />}
-                {tab === 'programme' && <GraduationCap size={12} className="inline mr-1" />}
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === 'direct' && <Users size={12} />}
+                {tab === 'course' && <BookOpen size={12} />}
+                {tab === 'programme' && <GraduationCap size={12} />}
+                <span className="hidden sm:inline">{tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
+                <span className="sm:hidden">{tab.charAt(0).toUpperCase()}</span>
               </button>
             ))}
           </div>
@@ -435,18 +543,100 @@ export function Chat() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {filteredConvos.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-48 text-slate-400">
-              <MessageSquare size={32} className="mb-2 opacity-40" />
-              <p style={{ fontSize: "13px" }}>No {activeTab} chats yet</p>
-            </div>
+          {/* DIRECT TAB: New Message button + existing conversations */}
+          {activeTab === 'direct' && (
+            <>
+              <div className="p-3">
+                <button
+                  onClick={() => setShowNewMessageModal(true)}
+                  className="w-full py-2 px-3 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageSquare size={14} />
+                  New Message
+                </button>
+              </div>
+              {filteredConvos.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                  <MessageSquare size={32} className="mb-2 opacity-40" />
+                  <p style={{ fontSize: "13px" }}>No direct messages yet</p>
+                  <p style={{ fontSize: "11px" }}>Click "New Message" to start</p>
+                </div>
+              )}
+            </>
           )}
-          {filteredConvos.map((convo) => {
+          
+          {/* COURSE TAB: Available courses */}
+          {activeTab === 'course' && (
+            <>
+              <div className="px-4 py-2">
+                <p className="text-xs font-medium text-slate-500 mb-2">Your Courses</p>
+              </div>
+              {filteredCourses.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                  <BookOpen size={32} className="mb-2 opacity-40" />
+                  <p style={{ fontSize: "13px" }}>No courses found</p>
+                </div>
+              )}
+              {filteredCourses.map((course) => (
+                <div
+                  key={course.id}
+                  onClick={() => handleCourseClick(course)}
+                  className="flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-slate-50"
+                  style={{ backgroundColor: selectedConv?.course_id === course.id ? "#eff6ff" : "transparent" }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center text-sm font-bold">
+                    <BookOpen size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b" }} className="truncate">{course.name}</p>
+                    <p style={{ fontSize: "11px", color: "#94a3b8" }}>{course.instructor_name || 'Course Chat'}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          
+          {/* PROGRAMME TAB: Available programmes */}
+          {activeTab === 'programme' && (
+            <>
+              <div className="px-4 py-2">
+                <p className="text-xs font-medium text-slate-500 mb-2">Your Programme</p>
+              </div>
+              {filteredProgrammes.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                  <GraduationCap size={32} className="mb-2 opacity-40" />
+                  <p style={{ fontSize: "13px" }}>No programme found</p>
+                </div>
+              )}
+              {filteredProgrammes.map((programme) => (
+                <div
+                  key={programme.id}
+                  onClick={() => handleProgrammeClick(programme)}
+                  className="flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-slate-50"
+                  style={{ backgroundColor: selectedConv?.programme_id === programme.id ? "#eff6ff" : "transparent" }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 text-white flex items-center justify-center text-sm font-bold">
+                    <GraduationCap size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b" }} className="truncate">{programme.name}</p>
+                    <p style={{ fontSize: "11px", color: "#94a3b8" }}>{programme.code || 'Programme Chat'}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          
+          {/* DIRECT CONVERSATIONS LIST */}
+          {activeTab === 'direct' && filteredConvos.map((convo) => {
             const online = isOnline(convo.participant_user_id);
             const isGroupChat = convo.type === 'course' || convo.type === 'programme';
             return (
               <div key={convo.id}
-                onClick={() => setSelectedConvId(convo.id)}
+                onClick={() => {
+                  setSelectedConvId(convo.id);
+                  if (window.innerWidth < 768) setShowSidebar(false);
+                }}
                 className="flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-slate-50"
                 style={{ backgroundColor: selectedConvId === convo.id ? "#eff6ff" : "transparent" }}>
                 <div className="relative flex-shrink-0">
@@ -485,12 +675,22 @@ export function Chat() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col w-full">
         {selectedConv ? (
           <>
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: "#f1f5f9" }}>
-              <div className="flex items-center gap-3">
+            {/* Header - With back button on mobile */}
+            <div className="flex items-center justify-between px-3 sm:px-5 py-3.5 border-b" style={{ borderColor: "#f1f5f9" }}>
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                {/* Back button - only on mobile */}
+                <button
+                  onClick={() => {
+                    setSelectedConvId(null);
+                    setShowSidebar(true);
+                  }}
+                  className="md:hidden p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 flex-shrink-0"
+                >
+                  <ArrowLeft size={18} />
+                </button>
                 <div className="relative">
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center text-sm font-bold">
                     {(selectedConv.type === 'course' || selectedConv.type === 'programme')
@@ -501,9 +701,9 @@ export function Chat() {
                     <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white" style={{ backgroundColor: "#22c55e" }} />
                   )}
                 </div>
-                <div>
-                  <p style={{ fontSize: "14px", fontWeight: 700, color: "#1e293b" }}>{getConversationName(selectedConv)}</p>
-                  <p style={{ fontSize: "11px", color: selectedConv.type === 'direct' && isOnline(selectedConv.participant_user_id) ? "#22c55e" : "#94a3b8", fontWeight: selectedConv.type === 'direct' && isOnline(selectedConv.participant_user_id) ? 500 : 400 }}>
+                <div className="min-w-0">
+                  <p className="truncate" style={{ fontSize: "14px", fontWeight: 700, color: "#1e293b" }}>{getConversationName(selectedConv)}</p>
+                  <p className="truncate" style={{ fontSize: "11px", color: selectedConv.type === 'direct' && isOnline(selectedConv.participant_user_id) ? "#22c55e" : "#94a3b8", fontWeight: selectedConv.type === 'direct' && isOnline(selectedConv.participant_user_id) ? 500 : 400 }}>
                     {selectedConv.type === 'direct'
                       ? (isOnline(selectedConv.participant_user_id) ? "● Online" : selectedConv.participant_role)
                       : (selectedConv.type === 'course' ? 'Course Chat' : 'Programme Chat')}
@@ -555,7 +755,7 @@ export function Chat() {
             )}
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ backgroundColor: "#f8fafc" }}>
+            <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4" style={{ backgroundColor: "#f8fafc" }}>
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-slate-400">
                   <p style={{ fontSize: "13px" }}>No messages yet. Say hello!</p>
@@ -573,7 +773,7 @@ export function Chat() {
                         {initials(msg.sender_name)}
                       </div>
                     )}
-                    <div className={`flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"} max-w-xs lg:max-w-md`}>
+                    <div className={`flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"} max-w-[75%] sm:max-w-xs lg:max-w-md`}>
                       <div
                         onContextMenu={(e) => handleContextMenu(e, msg.id)}
                         className={`relative ${isDeleted ? 'opacity-60' : ''}`}
@@ -736,25 +936,25 @@ export function Chat() {
             )}
 
             {/* Input */}
-            <div className="p-4 border-t" style={{ borderColor: "#f1f5f9" }}>
-              <div className="flex items-center gap-3 bg-white rounded-2xl border px-4 py-2" style={{ borderColor: "#e2e8f0" }}>
+            <div className="p-2 sm:p-4 border-t" style={{ borderColor: "#f1f5f9" }}>
+              <div className="flex items-center gap-2 sm:gap-3 bg-white rounded-2xl border px-3 sm:px-4 py-2" style={{ borderColor: "#e2e8f0" }}>
                 <input ref={fileInputRef} type="file" className="hidden"
                   onChange={(e) => setFilePreview(e.target.files?.[0] ?? null)} />
                 <button onClick={() => fileInputRef.current?.click()}
-                  className="text-slate-400 hover:text-blue-500 transition-colors">
+                  className="text-slate-400 hover:text-blue-500 transition-colors flex-shrink-0">
                   <Paperclip size={17} />
                 </button>
                 <input
                   type="text" placeholder="Type a message..." value={input}
                   onChange={(e) => handleInputChange(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  className="flex-1 focus:outline-none text-slate-700 bg-transparent"
+                  className="flex-1 focus:outline-none text-slate-700 bg-transparent min-w-0"
                   style={{ fontSize: "13px" }} />
-                <button className="text-slate-400 hover:text-yellow-500 transition-colors" title="Emoji reactions on messages">
+                <button className="text-slate-400 hover:text-yellow-500 transition-colors flex-shrink-0 hidden sm:block" title="Emoji reactions on messages">
                   <Smile size={17} />
                 </button>
                 <button onClick={handleSend} disabled={(!input.trim() && !filePreview) || sending}
-                  className="p-2 rounded-xl text-white transition-all"
+                  className="p-2 rounded-xl text-white transition-all flex-shrink-0"
                   style={{ backgroundColor: (input.trim() || filePreview) && !sending ? "#2563eb" : "#cbd5e1" }}>
                   <Send size={15} />
                 </button>
@@ -769,6 +969,80 @@ export function Chat() {
           </div>
         )}
       </div>
+
+      {/* New Message Modal for Direct Chats */}
+      {showNewMessageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-96 max-w-full mx-4 shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "#f1f5f9" }}>
+              <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#1e293b" }}>New Message</h3>
+              <button
+                onClick={() => {
+                  setShowNewMessageModal(false);
+                  setSelectedRecipient(null);
+                  setNewMessageText("");
+                }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              {/* Recipient Select */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">To:</label>
+                <select
+                  value={selectedRecipient || ""}
+                  onChange={(e) => setSelectedRecipient(e.target.value || null)}
+                  className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  style={{ fontSize: "13px", borderColor: "#e2e8f0" }}
+                >
+                  <option value="">Select a recipient...</option>
+                  {eligibleRecipients.map((recipient) => (
+                    <option key={recipient.id} value={recipient.id}>
+                      {recipient.name} ({recipient.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Message Input */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Message:</label>
+                <textarea
+                  value={newMessageText}
+                  onChange={(e) => setNewMessageText(e.target.value)}
+                  placeholder="Type your first message..."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500/30 resize-none"
+                  style={{ fontSize: "13px", borderColor: "#e2e8f0" }}
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-end gap-2 p-4 border-t" style={{ borderColor: "#f1f5f9" }}>
+              <button
+                onClick={() => {
+                  setShowNewMessageModal(false);
+                  setSelectedRecipient(null);
+                  setNewMessageText("");
+                }}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStartDirectChat}
+                disabled={!selectedRecipient || !newMessageText.trim() || creatingConversation}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {creatingConversation ? "Starting..." : "Start Chat"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

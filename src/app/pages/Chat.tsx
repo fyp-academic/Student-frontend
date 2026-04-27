@@ -173,17 +173,22 @@ export function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
+  // Load messages for a conversation
+  const loadMessages = (convId: string) => {
+    messagingApi.messages(convId).then((res) => {
+      setMessages(res.data.data ?? res.data ?? []);
+    });
+    messagingApi.pinnedMessages(convId).then((res) => {
+      setPinnedMessages(res.data?.data ?? []);
+    });
+  };
+
   // Subscribe Reverb channel when conversation changes
   useEffect(() => {
     if (!selectedConvId) return;
 
     // Load messages and pinned messages
-    messagingApi.messages(selectedConvId).then((res) => {
-      setMessages(res.data.data ?? res.data ?? []);
-    });
-    messagingApi.pinnedMessages(selectedConvId).then((res) => {
-      setPinnedMessages(res.data?.data ?? []);
-    });
+    loadMessages(selectedConvId);
 
     const ch = getEcho().private(`conversation.${selectedConvId}`);
 
@@ -464,7 +469,7 @@ export function Chat() {
   // Start new direct conversation
   const handleStartDirectChat = async () => {
     if (!selectedRecipient || !newMessageText.trim()) return;
-    
+
     setCreatingConversation(true);
     try {
       const res = await messagingApi.createConv({
@@ -480,8 +485,41 @@ export function Chat() {
         setNewMessageText("");
         if (window.innerWidth < 768) setShowSidebar(false);
       }
-    } catch (err) {
-      console.error('Failed to create conversation:', err);
+    } catch (err: unknown) {
+      // Handle 409 - conversation already exists
+      const axiosErr = err as { response?: { status: number; data?: { conversation?: { id: string } } } };
+      if (axiosErr.response?.status === 409) {
+        // Backend should return the existing conversation
+        const existingConv = axiosErr.response.data?.conversation;
+        if (existingConv?.id) {
+          setSelectedConvId(existingConv.id);
+          setShowNewMessageModal(false);
+          setSelectedRecipient(null);
+          setNewMessageText("");
+          if (window.innerWidth < 768) setShowSidebar(false);
+          // Reload messages for this conversation
+          loadMessages(existingConv.id);
+        } else {
+          // Fallback: reload conversations and find by participant
+          const res = await chatAccessApi.myChats();
+          const allChats = res.data.data ?? res.data ?? [];
+          setConversations(allChats);
+          const existing = allChats.find((c: ApiConversation) =>
+            c.type === 'direct' &&
+            c.participants?.some((p: { id: string }) => p.id === selectedRecipient)
+          );
+          if (existing) {
+            setSelectedConvId(existing.id);
+            setShowNewMessageModal(false);
+            setSelectedRecipient(null);
+            setNewMessageText("");
+            if (window.innerWidth < 768) setShowSidebar(false);
+            loadMessages(existing.id);
+          }
+        }
+      } else {
+        console.error('Failed to create conversation:', err);
+      }
     } finally {
       setCreatingConversation(false);
     }

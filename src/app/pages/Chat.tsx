@@ -80,7 +80,7 @@ interface Programme {
 }
 
 
-export default function Chat() {
+export function Chat() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ChatType>('direct');
   const [conversations, setConversations] = useState<ApiConversation[]>([]);

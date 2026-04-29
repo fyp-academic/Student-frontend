@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet, useLocation, NavLink } from "react-router";
 import { Sidebar } from "./Sidebar";
 import { useAuth } from "../context/AuthContext";
-import { profileApi } from "../services/api";
+import { profileApi, notificationsApi } from "../services/api";
 import {
   Bell,
   Search,
@@ -37,6 +37,7 @@ export function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiGuideOpen, setAiGuideOpen] = useState(false);
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [notifCount, setNotifCount] = useState(0);
   const location = useLocation();
   const { user } = useAuth();
 
@@ -44,6 +45,13 @@ export function Layout() {
     profileApi.get().then(r => {
       const p: Record<string, unknown> = r.data.data ?? r.data;
       setProfile(p);
+    }).catch(() => {});
+
+    // Fetch notification count
+    notificationsApi.list().then(r => {
+      const raw: Record<string, unknown>[] = r.data.data ?? r.data ?? [];
+      const unreadCount = raw.filter((n: Record<string, unknown>) => !n.read).length;
+      setNotifCount(unreadCount);
     }).catch(() => {});
   }, []);
 
@@ -130,12 +138,14 @@ export function Layout() {
             {/* Notification Bell */}
             <NavLink to="/notifications" className="relative p-2 rounded-lg hover:bg-slate-100 transition-colors">
               <Bell size={19} color="#475569" />
-              <span
-                className="absolute top-1 right-1 rounded-full text-white flex items-center justify-center"
-                style={{ width: "16px", height: "16px", fontSize: "9px", backgroundColor: "#22c55e", fontWeight: 700 }}
-              >
-                5
-              </span>
+              {notifCount > 0 && (
+                <span
+                  className="absolute top-1 right-1 rounded-full text-white flex items-center justify-center"
+                  style={{ width: "16px", height: "16px", fontSize: "9px", backgroundColor: "#22c55e", fontWeight: 700 }}
+                >
+                  {notifCount > 9 ? '9+' : notifCount}
+                </span>
+              )}
             </NavLink>
 
             {/* Avatar */}

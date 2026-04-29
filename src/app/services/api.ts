@@ -200,3 +200,18 @@ export const profileApi = {
   submitPulse:       (learnerId: string, courseId: string, data: Record<string, unknown>) =>
     api.post(`/pipeline/learners/${learnerId}/courses/${courseId}/pulse`, data),
 };
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+export const notificationApi = {
+  getPreferences:    () => api.get('/notifications/preferences'),
+  updatePreferences: (data: { preferences: Array<{
+    type: string;
+    channel: 'in_app' | 'email' | 'push' | 'sms';
+    enabled: boolean;
+    digest_mode?: 'instant' | 'daily' | 'weekly';
+    quiet_start?: string | null;
+    quiet_end?: string | null;
+  }> }) => api.patch('/notifications/preferences', data),
+  resetPreferences:  () => api.post('/notifications/preferences/reset', {}),
+  setGlobalMute:     (muted: boolean) => api.post('/notifications/mute', { muted }),
+};

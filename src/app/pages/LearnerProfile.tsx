@@ -3,6 +3,7 @@ import { User, Mail, Phone, MapPin, BookOpen, Award, Star, Edit3, Camera, Gradua
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import { useAuth } from "../context/AuthContext";
 import { profileApi, coursesApi } from "../services/api";
+import { NotificationPreferences } from "../components/NotificationPreferences";
 
 const COURSE_COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#22c55e", "#f59e0b"];
 
@@ -255,6 +256,11 @@ export function LearnerProfile() {
                 <Radar dataKey="value" stroke="#2563eb" fill="#2563eb" fillOpacity={0.15} strokeWidth={2} dot={{ fill: "#2563eb", r: 3 }} />
               </RadarChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Notification Preferences */}
+          <div className="md:col-span-2">
+            <NotificationPreferences />
           </div>
         </div>
       )}

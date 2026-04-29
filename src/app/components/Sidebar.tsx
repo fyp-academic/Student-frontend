@@ -380,22 +380,23 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
                     ) : (
                       notifications.slice(0, MAX_DROPDOWN_NOTIFICATIONS).map((notif) => {
                         const cfg = typeConfig[notif.type] ?? typeConfig.info;
-                        const NIcon = cfg.icon;
+                        const NIcon = cfg?.icon ?? Bell;
+                        const safeBg = cfg?.bg?.replace('#f', '#1').replace('ff', '22').replace('fd', '1a').replace('f4', '1a') ?? '#1a3a7a';
                         return (
                           <div
                             key={notif.id}
                             onClick={() => { markRead(notif.id); navigate('/notifications'); setShowNotifDropdown(false); }}
                             className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer group"
-                            style={{ 
+                            style={{
                               borderLeft: !notif.read ? "3px solid #22c55e" : "3px solid transparent",
                               borderBottom: "1px solid rgba(255,255,255,0.05)"
                             }}
                           >
-                            <div 
+                            <div
                               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                              style={{ backgroundColor: cfg.bg.replace('#f', '#1').replace('ff', '22').replace('fd', '1a').replace('f4', '1a') }}
+                              style={{ backgroundColor: safeBg }}
                             >
-                              <NIcon size={14} color={cfg.color} />
+                              <NIcon size={14} color={cfg?.color ?? '#93c5fd'} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p 
@@ -525,18 +526,18 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
                   ) : (
                     notifications.slice(0, 4).map((notif) => {
                       const cfg = typeConfig[notif.type] ?? typeConfig.info;
-                      const NIcon = cfg.icon;
+                      const NIcon = cfg?.icon ?? Bell;
                       return (
                         <div
                           key={notif.id}
                           onClick={() => { markRead(notif.id); navigate('/notifications'); setShowNotifDropdown(false); }}
                           className="flex items-start gap-2 px-3 py-2 hover:bg-white/5 transition-colors cursor-pointer"
-                          style={{ 
+                          style={{
                             borderLeft: !notif.read ? "2px solid #22c55e" : "2px solid transparent",
                             borderBottom: "1px solid rgba(255,255,255,0.05)"
                           }}
                         >
-                          <NIcon size={12} color={cfg.color} className="flex-shrink-0 mt-0.5" />
+                          <NIcon size={12} color={cfg?.color ?? '#93c5fd'} className="flex-shrink-0 mt-0.5" />
                           <div className="flex-1 min-w-0">
                             <p 
                               className="truncate"

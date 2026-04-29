@@ -135,7 +135,7 @@ export function Notifications() {
         ) : (
           filtered.map((notif) => {
             const cfg = typeConfig[notif.type] ?? typeConfig.info;
-            const NIcon = cfg.icon;
+            const NIcon = cfg?.icon ?? Bell;
             return (
               <div
                 key={notif.id}
@@ -146,8 +146,8 @@ export function Notifications() {
                 }}
                 onClick={() => markRead(notif.id)}
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cfg.bg }}>
-                  <NIcon size={18} color={cfg.color} />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cfg?.bg ?? '#eff6ff' }}>
+                  <NIcon size={18} color={cfg?.color ?? '#2563eb'} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">

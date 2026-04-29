@@ -17,6 +17,7 @@ import { InteractiveActivities } from "./pages/InteractiveActivities";
 import { Notifications } from "./pages/Notifications";
 import { Chat } from "./pages/Chat";
 import { LearnerProfile } from "./pages/LearnerProfile";
+import Instructors from "./pages/Instructors";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
     element: <PageWrapper />,
     children: [
       { index: true, Component: Dashboard },
+      { path: "instructors", Component: Instructors },
       { path: "catalog", Component: LearningCatalog },
       { path: "my-courses", Component: MyCourses },
       { path: "course-feed", Component: CourseFeed },

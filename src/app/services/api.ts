@@ -193,6 +193,7 @@ export const profileApi = {
   removeImage:       ()                               => api.delete('/profile/image'),
   preferences:       ()                                => api.get('/profile/preferences'),
   updatePreferences: (data: Record<string, unknown>)  => api.put('/profile/preferences', data),
+  myInstructors:     ()                                => api.get('/profile/my-instructors'),
   learnerProfile:    (learnerId: string, courseId: string) =>
     api.get(`/pipeline/learners/${learnerId}/courses/${courseId}/profile`),
   riskScore:         (learnerId: string, courseId: string) =>

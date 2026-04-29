@@ -7,6 +7,7 @@ interface AuthUser {
   email: string;
   role: string;
   initials?: string;
+  profile_image_url?: string;
   department?: string;
   enrolled_courses?: number;
   registration_number?: string;

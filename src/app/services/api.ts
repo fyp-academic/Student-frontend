@@ -123,10 +123,10 @@ export const gradesApi = {
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 export const notificationsApi = {
-  list:        () => api.get('/notifications'),
-  markRead:    (id: string) => api.patch(`/notifications/${id}/read`),
-  markAllRead: () => api.post('/notifications/mark-all-read'),
-  remove:      (id: string) => api.delete(`/notifications/${id}`),
+  list:        () => api.get('/notifications', { params: { channel: 'in_app' } }),
+  markRead:    (id: string) => api.patch(`/notifications/${id}/read`, { channel: 'in_app' }),
+  markAllRead: () => api.post('/notifications/mark-all-read', { channel: 'in_app' }),
+  remove:      (id: string) => api.delete(`/notifications/${id}`, { params: { channel: 'in_app' } }),
 };
 
 // ─── Messaging ────────────────────────────────────────────────────────────────

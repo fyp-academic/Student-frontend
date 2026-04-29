@@ -246,6 +246,11 @@ export function LearnerProfile() {
             </div>
           </div>
 
+          {/* Notification Preferences */}
+          <div className="md:col-span-2">
+            <NotificationPreferences />
+          </div>
+
           {/* Skill Radar */}
           <div className="bg-white rounded-2xl p-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>Skill Overview</h3>
@@ -258,10 +263,6 @@ export function LearnerProfile() {
             </ResponsiveContainer>
           </div>
 
-          {/* Notification Preferences */}
-          <div className="md:col-span-2">
-            <NotificationPreferences />
-          </div>
         </div>
       )}
 

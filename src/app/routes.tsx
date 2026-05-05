@@ -19,6 +19,7 @@ import { Chat } from "./pages/Chat";
 import { LearnerProfile } from "./pages/LearnerProfile";
 import Instructors from "./pages/Instructors";
 import StudentSessions from "./pages/StudentSessions";
+import CourseDetail from "./pages/CourseDetail";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Dashboard },
       { path: "instructors", Component: Instructors },
+      { path: "courses/:id", Component: CourseDetail },
       { path: "catalog", Component: LearningCatalog },
       { path: "my-courses", Component: MyCourses },
       { path: "course-feed", Component: CourseFeed },

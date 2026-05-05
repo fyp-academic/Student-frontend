@@ -15,6 +15,8 @@ import {
 
 const breadcrumbMap: Record<string, string> = {
   "": "Dashboard",
+  instructors: "Instructors / My Instructors",
+  sessions: "Live Sessions / Sessions",
   catalog: "Learning Catalog / Browse Courses",
   "my-courses": "My Courses / Enrolled List",
   "course-feed": "Course Spaces / Course Feed",

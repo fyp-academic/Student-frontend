@@ -202,6 +202,38 @@ export const profileApi = {
     api.post(`/pipeline/learners/${learnerId}/courses/${courseId}/pulse`, data),
 };
 
+// ─── Video Sessions (Jitsi) ───────────────────────────────────────────────────
+export const sessionsApi = {
+  // Session CRUD
+  list:       (params?: Record<string, unknown>) => api.get('/sessions', { params }),
+  get:        (id: string) => api.get(`/sessions/${id}`),
+
+  // Token generation
+  getToken:   (id: string) => api.post(`/sessions/${id}/token`),
+
+  // AI features
+  getTranscript: (id: string) => api.get(`/sessions/${id}/transcript`),
+  getSummary:    (id: string) => api.get(`/sessions/${id}/summary`),
+  askAI:         (id: string, question: string) => api.post(`/sessions/${id}/ask-ai`, { question }),
+
+  // Recording download
+  getRecordingUrl: (id: string) => api.get(`/recordings/${id}/url`),
+
+  // Transcription consent
+  grantTranscriptionConsent: (id: string) => api.post(`/sessions/${id}/transcription-consent`),
+
+  // Polls
+  getPolls:      (id: string) => api.get(`/sessions/${id}/polls`),
+  votePoll:      (pollId: string, optionIndex: number) => api.post(`/polls/${pollId}/vote`, { option_index: optionIndex }),
+
+  // Certificate
+  checkCertificateEligibility: (id: string) => api.get(`/sessions/${id}/certificate/eligibility`),
+  generateCertificate: (id: string) => api.post(`/sessions/${id}/certificate`),
+
+  // Quiz
+  generateQuiz:  (id: string) => api.post(`/sessions/${id}/generate-quiz`),
+};
+
 // ─── Notifications ───────────────────────────────────────────────────────────
 export const notificationApi = {
   getPreferences:    () => api.get('/notifications/preferences'),

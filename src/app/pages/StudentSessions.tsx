@@ -31,11 +31,15 @@ import type { Session, SessionStatus } from '../components/sessions/types';
 function transformSession(raw: Record<string, unknown>): Session {
   const course = (raw.course as Record<string, unknown> | undefined);
   const instructor = (raw.instructor as Record<string, unknown> | undefined);
+  
+  // Extract course name from various possible sources (API returns name, show endpoint returns title)
+  const courseName = course?.name || course?.title || raw.course_name || raw.course_title || 'Unnamed Course';
+  
   return {
     id: String(raw.id),
     title: String(raw.title || ''),
     courseId: String(raw.course_id || course?.id || ''),
-    courseName: String(course?.title || course?.name || raw.course_name || ''),
+    courseName: String(courseName),
     courseColor: raw.course_color as string | undefined,
     instructorId: String(raw.instructor_id || instructor?.id || ''),
     instructorName: String(instructor?.name || raw.instructor_name || ''),

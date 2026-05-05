@@ -295,7 +295,7 @@ export function StudentSessions() {
     return (
       <JitsiRoom
         sessionId={activeSession.id}
-        roomName={activeSession.id}
+        roomName={activeSession.roomName || activeSession.id}
         jwtToken={jwtToken}
         displayName={userName}
         email={userEmail}

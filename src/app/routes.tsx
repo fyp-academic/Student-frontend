@@ -18,6 +18,7 @@ import { Notifications } from "./pages/Notifications";
 import { Chat } from "./pages/Chat";
 import { LearnerProfile } from "./pages/LearnerProfile";
 import Instructors from "./pages/Instructors";
+import StudentSessions from "./pages/StudentSessions";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
       { path: "interactive", Component: InteractiveActivities },
       { path: "notifications", Component: Notifications },
       { path: "chat", Component: Chat },
+      { path: "sessions", Component: StudentSessions },
       { path: "profile", Component: LearnerProfile },
     ],
   },

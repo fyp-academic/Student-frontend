@@ -16,6 +16,9 @@ export interface Session {
   startedAt?: string;
   endedAt?: string;
   
+  // Room
+  roomName?: string;
+
   // Status
   status: SessionStatus;
   participantCount: number;

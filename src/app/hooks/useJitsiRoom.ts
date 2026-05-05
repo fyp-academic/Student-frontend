@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { JitsiMeetExternalAPIInstance } from './useJitsiScript';
-import type { Participant } from '../components/conference/types';
+import type { Participant } from '../components/sessions/types';
 
 interface UseJitsiRoomOptions {
   domain?: string;
@@ -16,7 +16,7 @@ interface UseJitsiRoomOptions {
 
 export function useJitsiRoom(options: UseJitsiRoomOptions) {
   const {
-    domain = 'meet.jit.si',
+    domain = 'meet.codagenz.com',
     roomName,
     jwt,
     displayName,
@@ -87,11 +87,12 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
         videoConferenceJoined: () => {
           setIsLoading(false);
         },
-        participantJoined: ({ id, displayName: name, role }: { id: string; displayName: string; role?: string }) => {
+        participantJoined: (data: unknown) => {
+          const p = data as { id: string; displayName: string; role?: string };
           const participant: Participant = {
-            id,
-            name,
-            role: role === 'moderator' ? 'instructor' : 'student',
+            id: p.id,
+            name: p.displayName,
+            role: p.role === 'moderator' ? 'instructor' : 'student',
             isMuted: false,
             isVideoOff: false,
           };
@@ -100,26 +101,31 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
             setParticipantCount(participants.length);
           });
         },
-        participantLeft: ({ id }: { id: string }) => {
+        participantLeft: (data: unknown) => {
+          const { id } = data as { id: string };
           onParticipantLeft?.(id);
           api.getParticipantsInfo().then((participants) => {
             setParticipantCount(participants.length);
           });
         },
-        recordingStatusChanged: ({ on }: { on: boolean }) => {
+        recordingStatusChanged: (data: unknown) => {
+          const { on } = data as { on: boolean };
           setIsRecording(on);
           onRecordingStatusChanged?.(on);
         },
-        audioMuteStatusChanged: ({ muted }: { muted: boolean }) => {
+        audioMuteStatusChanged: (data: unknown) => {
+          const { muted } = data as { muted: boolean };
           setIsAudioMuted(muted);
         },
-        videoMuteStatusChanged: ({ muted }: { muted: boolean }) => {
+        videoMuteStatusChanged: (data: unknown) => {
+          const { muted } = data as { muted: boolean };
           setIsVideoMuted(muted);
         },
         readyToClose: () => {
           onReadyToClose?.();
         },
-        errorOccurred: ({ error: err }: { error: Error }) => {
+        errorOccurred: (data: unknown) => {
+          const { error: err } = data as { error: Error };
           console.error('Jitsi error:', err);
           setError(err);
         },

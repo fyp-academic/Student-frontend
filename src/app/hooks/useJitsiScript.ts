@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
  * Hook to dynamically load the Jitsi External API script
  * Returns { loaded, error } state
  */
-export function useJitsiScript(domain: string = 'meet.jit.si') {
+export function useJitsiScript(domain: string = 'meet.codagenz.com') {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 

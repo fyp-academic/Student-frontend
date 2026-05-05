@@ -26,6 +26,38 @@ import { JitsiRoom } from '../components/conference';
 import type { Session, SessionStatus } from '../components/sessions/types';
 
 /**
+ * Transform backend snake_case session to frontend camelCase Session
+ */
+function transformSession(raw: Record<string, unknown>): Session {
+  const course = (raw.course as Record<string, unknown> | undefined);
+  const instructor = (raw.instructor as Record<string, unknown> | undefined);
+  return {
+    id: String(raw.id),
+    title: String(raw.title || ''),
+    courseId: String(raw.course_id || course?.id || ''),
+    courseName: String(course?.title || course?.name || raw.course_name || ''),
+    courseColor: raw.course_color as string | undefined,
+    instructorId: String(raw.instructor_id || instructor?.id || ''),
+    instructorName: String(instructor?.name || raw.instructor_name || ''),
+    instructorAvatar: (instructor?.profile_image || raw.instructor_avatar) as string | undefined,
+    scheduledAt: String(raw.scheduled_at || ''),
+    duration: Number(raw.duration || 60),
+    startedAt: raw.started_at ? String(raw.started_at) : undefined,
+    endedAt: raw.ended_at ? String(raw.ended_at) : undefined,
+    status: String(raw.status || 'scheduled') as Session['status'],
+    participantCount: Number(raw.participant_count || 0),
+    maxParticipants: raw.max_participants ? Number(raw.max_participants) : undefined,
+    recordingEnabled: Boolean(raw.recording_enabled),
+    hasRecording: Boolean(raw.has_recording),
+    recordingUrl: raw.recording_url as string | undefined,
+    isPasswordProtected: Boolean(raw.password),
+    roomName: raw.room_name as string | undefined,
+    room_id: raw.room_id as string | undefined,
+    aiTranscription: Boolean(raw.ai_transcription),
+  };
+}
+
+/**
  * Format relative time
  */
 function formatRelativeTime(dateString: string): string {
@@ -163,19 +195,31 @@ function SessionCard({ session, onJoin, onWatchRecording, onSetReminder }: Sessi
         <div className="flex items-center justify-between pt-3 border-t">
           <div className="flex items-center gap-2">
             {isLive && (
-              <Button onClick={() => onJoin(session)} className="bg-green-600 hover:bg-green-700 animate-pulse">
+              <Button
+                onClick={() => onJoin(session)}
+                className="bg-blue-600 hover:bg-blue-700 text-white animate-pulse"
+              >
                 <Video className="h-4 w-4 mr-2" />
                 Join Now
               </Button>
             )}
             {isScheduled && (
-              <Button onClick={() => onSetReminder(session.id)} variant="ghost" size="sm">
+              <Button
+                onClick={() => onSetReminder(session.id)}
+                variant="ghost"
+                size="sm"
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
                 <Bell className="h-4 w-4 mr-2" />
                 Remind Me
               </Button>
             )}
             {hasRecording && (
-              <Button onClick={() => onWatchRecording(session)} variant="outline">
+              <Button
+                onClick={() => onWatchRecording(session)}
+                variant="outline"
+                className="border-blue-300 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              >
                 <Play className="h-4 w-4 mr-2" />
                 Watch
               </Button>
@@ -189,7 +233,12 @@ function SessionCard({ session, onJoin, onWatchRecording, onSetReminder }: Sessi
           )}
 
           {hasRecording && (
-            <Button variant="link" size="sm" className="h-auto p-0" onClick={() => onWatchRecording(session)}>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-blue-600 hover:text-blue-700"
+              onClick={() => onWatchRecording(session)}
+            >
               View Recording
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -224,7 +273,7 @@ export function StudentSessions() {
           status: 'live,scheduled,ended',
           upcoming: true,
         });
-        setSessions(res.data.data || []);
+        setSessions((res.data.data || []).map(transformSession));
       } catch (error) {
         console.error('Failed to fetch sessions:', error);
         toast({
@@ -295,7 +344,7 @@ export function StudentSessions() {
     return (
       <JitsiRoom
         sessionId={activeSession.id}
-        roomName={activeSession.roomName || activeSession.id}
+        roomName={activeSession.roomName || activeSession.room_id || activeSession.id}
         jwtToken={jwtToken}
         displayName={userName}
         email={userEmail}

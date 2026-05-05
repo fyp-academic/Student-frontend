@@ -18,6 +18,7 @@ export interface Session {
   
   // Room
   roomName?: string;
+  room_id?: string;
 
   // Status
   status: SessionStatus;

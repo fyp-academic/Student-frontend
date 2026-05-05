@@ -100,7 +100,10 @@ const navGroups: NavGroup[] = [
     label: "Learning Catalog",
     icon: BookOpen,
     defaultOpen: true,
-    items: [{ label: "Browse Courses", icon: Search, path: "/catalog" }],
+    items: [
+      { label: "Browse Courses", icon: Search, path: "/catalog" },
+      { label: "Instructors", icon: Users, path: "/instructors" },
+    ],
   },
   {
     id: "my-courses",
@@ -620,30 +623,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
                 {!collapsed && (
                   <span style={{ fontSize: "13px", color: isActive ? "#ffffff" : "#bfdbfe", fontWeight: isActive ? 600 : 400 }}>
                     Live Sessions
-                  </span>
-                )}
-              </>
-            )}
-          </NavLink>
-      </div>
-
-      {/* Instructors Link */}
-      <div className="px-3 pb-1">
-          <NavLink
-            to="/instructors"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
-            style={({ isActive }) => ({
-              backgroundColor: isActive ? "rgba(34,197,94,0.18)" : "transparent",
-              borderLeft: isActive ? "2px solid #22c55e" : "2px solid transparent",
-              paddingLeft: isActive ? "10px" : "12px",
-            })}
-          >
-            {({ isActive }) => (
-              <>
-                <Users size={18} color={isActive ? "#22c55e" : "#93c5fd"} className="flex-shrink-0" />
-                {!collapsed && (
-                  <span style={{ fontSize: "13px", color: isActive ? "#ffffff" : "#bfdbfe", fontWeight: isActive ? 600 : 400 }}>
-                    Instructors
                   </span>
                 )}
               </>

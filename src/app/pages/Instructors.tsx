@@ -210,7 +210,12 @@ export default function Instructors() {
           </h2>
 
           {selectedInstructor.courses.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "#64748b" }}>No courses assigned.</p>
+            <div className="text-center py-4">
+              <p style={{ fontSize: "13px", color: "#64748b" }}>No active courses for your programme.</p>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
+                This instructor hasn't created any courses for your degree programme yet.
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {selectedInstructor.courses.map((course) => (

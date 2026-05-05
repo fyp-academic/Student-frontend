@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Users, Mail, Phone, Clock, MapPin, BookOpen, GraduationCap, Loader2, ChevronLeft, User } from "lucide-react";
+import { Users, Mail, Phone, Clock, MapPin, BookOpen, GraduationCap, Loader2, ChevronLeft, User, AlertCircle, RefreshCw } from "lucide-react";
 import { profileApi } from "../services/api";
 
 interface Course {
@@ -26,17 +26,27 @@ interface Instructor {
 export default function Instructors() {
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const fetchInstructors = () => {
+    setLoading(true);
+    setError(null);
     profileApi.myInstructors()
       .then((r) => {
         const data = r.data.data ?? [];
         setInstructors(data);
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error('Failed to fetch instructors:', err);
+        setError('Failed to load instructors. Please try again.');
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchInstructors();
   }, []);
 
   if (loading) {
@@ -44,6 +54,39 @@ export default function Instructors() {
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#2563eb" }} />
+        </div>
+      </div>
+    );
+  }
+
+  // Error State
+  if (error) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6">
+          <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#1e293b" }}>
+            My Instructors
+          </h1>
+          <p style={{ fontSize: "14px", color: "#64748b", marginTop: "4px" }}>
+            Instructors assigned to your degree programme
+          </p>
+        </div>
+        <div
+          className="bg-white rounded-2xl p-8 text-center"
+          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
+        >
+          <AlertCircle size={48} color="#dc2626" className="mx-auto mb-3" />
+          <p style={{ fontSize: "15px", fontWeight: 600, color: "#64748b" }}>
+            {error}
+          </p>
+          <button
+            onClick={fetchInstructors}
+            className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 rounded-lg transition-colors hover:bg-slate-100"
+            style={{ color: "#2563eb", fontSize: "14px" }}
+          >
+            <RefreshCw size={16} />
+            Try Again
+          </button>
         </div>
       </div>
     );

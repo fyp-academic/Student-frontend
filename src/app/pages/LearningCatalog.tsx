@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Filter, Star, Clock, Users, BookOpen, ChevronRight, X, Loader2 } from "lucide-react";
+import { Search, Filter, Star, Clock, Users, BookOpen, ChevronRight, X, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { coursesApi, categoriesApi } from "../services/api";
 
 type Course = Record<string, unknown>;
@@ -22,9 +22,12 @@ export function LearningCatalog() {
   const [courses, setCourses]         = useState<Course[]>([]);
   const [categories, setCategories]   = useState<string[]>(["All"]);
   const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState<string | null>(null);
   const [enrolling, setEnrolling]     = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadCatalog = useCallback(() => {
+    setLoading(true);
+    setError(null);
     Promise.all([
       coursesApi.catalog(),
       categoriesApi.list(),
@@ -33,8 +36,15 @@ export function LearningCatalog() {
       setCourses(rawCourses);
       const rawCats: Category[] = catRes.data.data ?? catRes.data ?? [];
       setCategories(["All", ...rawCats.map(c => String(c.name ?? ''))]);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err) => {
+      console.error('Failed to load catalog:', err);
+      setError('Failed to load courses. Please try again.');
+    }).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadCatalog();
+  }, [loadCatalog]);
 
   const handleEnroll = useCallback(async (courseId: string, isEnrolled: boolean) => {
     setEnrolling(courseId);
@@ -62,6 +72,37 @@ export function LearningCatalog() {
     const matchesCat = activeCategory === "All" || catName === activeCategory;
     return matchesSearch && matchesCat;
   });
+
+  // Error State
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>Learning Catalog</h1>
+          <p style={{ fontSize: "14px", color: "#64748b", marginTop: "2px" }}>
+            Browse courses from your instructors
+          </p>
+        </div>
+        <div
+          className="bg-white rounded-2xl p-8 text-center"
+          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
+        >
+          <AlertCircle size={48} color="#dc2626" className="mx-auto mb-3" />
+          <p style={{ fontSize: "15px", fontWeight: 600, color: "#64748b" }}>
+            {error}
+          </p>
+          <button
+            onClick={loadCatalog}
+            className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 rounded-lg transition-colors hover:bg-slate-100"
+            style={{ color: "#2563eb", fontSize: "14px" }}
+          >
+            <RefreshCw size={16} />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -138,7 +179,16 @@ export function LearningCatalog() {
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <BookOpen size={32} style={{ color: "#cbd5e1", margin: "0 auto 12px" }} />
-          <p style={{ fontSize: "14px", color: "#94a3b8" }}>No courses match your search.</p>
+          {courses.length === 0 ? (
+            <>
+              <p style={{ fontSize: "14px", color: "#64748b", fontWeight: 500 }}>No courses available yet.</p>
+              <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "8px" }}>
+                Courses will appear here once instructors create them for your programme.
+              </p>
+            </>
+          ) : (
+            <p style={{ fontSize: "14px", color: "#94a3b8" }}>No courses match your search.</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">

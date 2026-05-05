@@ -42,7 +42,7 @@ function transformSession(raw: Record<string, unknown>): Session {
     courseName: String(courseName),
     courseColor: raw.course_color as string | undefined,
     instructorId: String(raw.instructor_id || instructor?.id || ''),
-    instructorName: String(instructor?.name || raw.instructor_name || ''),
+    instructorName: String(instructor?.name || raw.instructor_name || 'Instructor'),
     instructorAvatar: (instructor?.profile_image || raw.instructor_avatar) as string | undefined,
     scheduledAt: String(raw.scheduled_at || ''),
     duration: Number(raw.duration || 60),

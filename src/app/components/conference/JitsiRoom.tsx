@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useJitsiRoom } from '../../hooks/useJitsiRoom';
+import { useJitsiScript } from '../../hooks/useJitsiScript';
 import { Toolbar } from './Toolbar';
 import { ParticipantList } from './ParticipantList';
 import { ChatPanel } from './ChatPanel';
@@ -10,8 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Button } from '../ui/button';
 import { useToast } from '../../hooks/use-toast';
 import { sessionsApi } from '../../services/api';
-import type { JitsiRoomProps, Participant, ChatMessage } from './types';
-import type { Poll as PollType } from '../sessions/types';
+import type { JitsiRoomProps, ChatMessage } from './types';
+import type { Participant, Poll as PollType } from '../sessions/types';
 
 export function JitsiRoom({
   sessionId,
@@ -34,6 +35,9 @@ export function JitsiRoom({
   const [consentGranted, setConsentGranted] = useState(false);
 
   const { toast } = useToast();
+
+  // Load Jitsi external API script
+  const { loaded: scriptLoaded, error: scriptError } = useJitsiScript();
 
   const {
     containerRef,
@@ -65,27 +69,11 @@ export function JitsiRoom({
     onReadyToClose: onLeave,
   });
 
-  // Initialize Jitsi when component mounts
+  // Initialize Jitsi when script is loaded
   useEffect(() => {
-    if (!window.JitsiMeetExternalAPI) {
-      // Wait for script to load
-      const checkInterval = setInterval(() => {
-        if (window.JitsiMeetExternalAPI) {
-          clearInterval(checkInterval);
-          initJitsi();
-        }
-      }, 500);
-
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval);
-      }, 30000);
-
-      return () => clearInterval(checkInterval);
-    }
-
+    if (!scriptLoaded) return;
     initJitsi();
-  }, [initJitsi]);
+  }, [initJitsi, scriptLoaded]);
 
   // Fetch polls periodically
   useEffect(() => {
@@ -141,12 +129,12 @@ export function JitsiRoom({
     onLeave();
   }, [leave, onLeave]);
 
-  if (error) {
+  if (error || scriptError) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Connection Error</h2>
-          <p className="text-muted-foreground mb-4">{error.message}</p>
+          <p className="text-muted-foreground mb-4">{(error || scriptError)?.message}</p>
           <Button onClick={onLeave}>Return to Sessions</Button>
         </div>
       </div>

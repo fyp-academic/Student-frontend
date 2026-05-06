@@ -37,9 +37,27 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
 
   const apiRef = useRef<JitsiMeetExternalAPIInstance | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const initializedRef = useRef(false);
+
+  // Use refs for callbacks so initJitsi stays stable and doesn't trigger loops
+  const callbacksRef = useRef({
+    onParticipantJoined,
+    onParticipantLeft,
+    onRecordingStatusChanged,
+    onReadyToClose,
+  });
+  useEffect(() => {
+    callbacksRef.current = {
+      onParticipantJoined,
+      onParticipantLeft,
+      onRecordingStatusChanged,
+      onReadyToClose,
+    };
+  }, [onParticipantJoined, onParticipantLeft, onRecordingStatusChanged, onReadyToClose]);
 
   // Initialize Jitsi API
   const initJitsi = useCallback(() => {
+    if (initializedRef.current) return;
     if (!window.JitsiMeetExternalAPI || !containerRef.current) {
       setError(new Error('Jitsi API not available'));
       return;
@@ -48,11 +66,22 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
     try {
       setIsLoading(true);
 
+      // Dispose any existing API before creating a new one
+      if (apiRef.current) {
+        try {
+          apiRef.current.dispose();
+        } catch {
+          // ignore disposal errors
+        }
+        apiRef.current = null;
+      }
+
       const configOverwrite = {
         startWithAudioMuted: false,
         startWithVideoMuted: false,
         disableDeepLinking: true,
         prejoinPageEnabled: false,
+        prejoinConfig: { enabled: false },
         p2p: { enabled: false }, // Force JVB routing
         channelLastN: 25, // Limit simultaneous video feeds
       };
@@ -81,6 +110,8 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
       });
 
       apiRef.current = api;
+      initializedRef.current = true;
+      setIsLoading(false);
 
       // Set up event listeners
       api.addEventListeners({
@@ -96,14 +127,14 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
             isMuted: false,
             isVideoOff: false,
           };
-          onParticipantJoined?.(participant);
+          callbacksRef.current.onParticipantJoined?.(participant);
           api.getParticipantsInfo().then((participants) => {
             setParticipantCount(participants.length);
           });
         },
         participantLeft: (data: unknown) => {
           const { id } = data as { id: string };
-          onParticipantLeft?.(id);
+          callbacksRef.current.onParticipantLeft?.(id);
           api.getParticipantsInfo().then((participants) => {
             setParticipantCount(participants.length);
           });
@@ -111,7 +142,7 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
         recordingStatusChanged: (data: unknown) => {
           const { on } = data as { on: boolean };
           setIsRecording(on);
-          onRecordingStatusChanged?.(on);
+          callbacksRef.current.onRecordingStatusChanged?.(on);
         },
         audioMuteStatusChanged: (data: unknown) => {
           const { muted } = data as { muted: boolean };
@@ -122,7 +153,7 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
           setIsVideoMuted(muted);
         },
         readyToClose: () => {
-          onReadyToClose?.();
+          callbacksRef.current.onReadyToClose?.();
         },
         errorOccurred: (data: unknown) => {
           const { error: err } = data as { error: Error };
@@ -136,11 +167,12 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
       setError(err instanceof Error ? err : new Error('Failed to initialize Jitsi'));
       setIsLoading(false);
     }
-  }, [domain, roomName, jwt, displayName, email, onParticipantJoined, onParticipantLeft, onRecordingStatusChanged, onReadyToClose]);
+  }, [domain, roomName, jwt, displayName, email]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      initializedRef.current = false;
       if (apiRef.current) {
         try {
           apiRef.current.dispose();

@@ -11,6 +11,7 @@ import {
   Users,
   BarChart3,
   MoreVertical,
+  Bot,
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { Button } from '../ui/button';
@@ -38,6 +39,7 @@ interface ToolbarProps {
   onOpenChat: () => void;
   onOpenParticipants: () => void;
   onOpenPolls: () => void;
+  onOpenAI: () => void;
   hasNewPolls?: boolean;
   sessionId: string;
 }
@@ -58,6 +60,7 @@ export function Toolbar({
   onOpenChat,
   onOpenParticipants,
   onOpenPolls,
+  onOpenAI,
   hasNewPolls,
 }: ToolbarProps) {
   return (
@@ -163,6 +166,10 @@ export function Toolbar({
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center">!</Badge>
               )}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenAI}>
+              <Bot className="h-4 w-4 mr-2" />
+              AI Assistant
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -210,6 +217,16 @@ export function Toolbar({
           {hasNewPolls && (
             <Badge variant="destructive" className="ml-1">New</Badge>
           )}
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onOpenAI}
+          className="gap-2"
+        >
+          <Bot className="h-4 w-4" />
+          AI
         </Button>
       </div>
     </div>

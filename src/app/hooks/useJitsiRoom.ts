@@ -12,6 +12,7 @@ interface UseJitsiRoomOptions {
   onParticipantLeft?: (participantId: string) => void;
   onRecordingStatusChanged?: (isRecording: boolean) => void;
   onReadyToClose?: () => void;
+  onChatMessage?: (message: { id: string; sender: { id: string; name: string }; text: string; timestamp: number; isAI?: boolean }) => void;
 }
 
 export function useJitsiRoom(options: UseJitsiRoomOptions) {
@@ -25,6 +26,7 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
     onParticipantLeft,
     onRecordingStatusChanged,
     onReadyToClose,
+    onChatMessage,
   } = options;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +36,7 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
   const [participantCount, setParticipantCount] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [handRaised, setHandRaised] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const apiRef = useRef<JitsiMeetExternalAPIInstance | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -45,6 +48,7 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
     onParticipantLeft,
     onRecordingStatusChanged,
     onReadyToClose,
+    onChatMessage,
   });
   useEffect(() => {
     callbacksRef.current = {
@@ -52,8 +56,9 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
       onParticipantLeft,
       onRecordingStatusChanged,
       onReadyToClose,
+      onChatMessage,
     };
-  }, [onParticipantJoined, onParticipantLeft, onRecordingStatusChanged, onReadyToClose]);
+  }, [onParticipantJoined, onParticipantLeft, onRecordingStatusChanged, onReadyToClose, onChatMessage]);
 
   // Initialize Jitsi API
   const initJitsi = useCallback(() => {
@@ -152,8 +157,22 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
           const { muted } = data as { muted: boolean };
           setIsVideoMuted(muted);
         },
+        screenSharingStatusChanged: (data: unknown) => {
+          const { on } = data as { on: boolean };
+          setIsScreenSharing(on);
+        },
         readyToClose: () => {
           callbacksRef.current.onReadyToClose?.();
+        },
+        incomingMessage: (data: unknown) => {
+          const msg = data as { from: string; nick: string; message: string; stamp: number };
+          callbacksRef.current.onChatMessage?.({
+            id: `${msg.from}-${msg.stamp || Date.now()}`,
+            sender: { id: msg.from, name: msg.nick || 'Unknown' },
+            text: msg.message,
+            timestamp: msg.stamp || Date.now(),
+            isAI: msg.message.startsWith('[AI]') || msg.nick?.toLowerCase().includes('ai'),
+          });
         },
         errorOccurred: (data: unknown) => {
           const { error: err } = data as { error: Error };
@@ -204,6 +223,8 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
 
   const shareScreen = useCallback(() => {
     apiRef.current?.executeCommand('toggleShareScreen');
+    // Toggle local state immediately for responsive UI; event listener will correct if needed
+    setIsScreenSharing(prev => !prev);
   }, []);
 
   const leave = useCallback(() => {
@@ -223,6 +244,7 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
     participantCount,
     isRecording,
     handRaised,
+    isScreenSharing,
     initJitsi,
     toggleAudio,
     toggleVideo,

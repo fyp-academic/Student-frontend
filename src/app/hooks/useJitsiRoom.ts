@@ -88,7 +88,18 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
         prejoinPageEnabled: false,
         prejoinConfig: { enabled: false },
         p2p: { enabled: false }, // Force JVB routing
-        channelLastN: 25, // Limit simultaneous video feeds
+        channelLastN: 10, // Limit simultaneous video feeds for bandwidth
+        resolution: 360,
+        constraints: {
+          video: {
+            height: { ideal: 360, max: 480 },
+            frameRate: { max: 20 },
+          },
+        },
+        disableSimulcast: false,
+        enableLayerSuspension: true,
+        enableNoisyMicDetection: false,
+        startBitrate: 800,
       };
 
       const interfaceConfigOverwrite = {

@@ -36,6 +36,7 @@ const NOTIFICATION_LABELS: Record<string, string> = {
   direct_message: 'Direct Message',
   enrollment_confirmed: 'Enrollment Confirmed',
   discussion_reply: 'Discussion Reply',
+  live_session: 'Live Session',
   // Student - Medium
   peer_review_assigned: 'Peer Review Assigned',
   attendance_flagged: 'Attendance Flagged',
@@ -55,6 +56,7 @@ const NOTIFICATION_DESCRIPTIONS: Record<string, string> = {
   direct_message: 'Messages from instructors and peers',
   enrollment_confirmed: 'Course enrollment confirmations',
   discussion_reply: 'When someone replies to your discussions',
+  live_session: 'When a new live class is scheduled for your course',
   peer_review_assigned: 'Peer review assignments',
   attendance_flagged: 'Attendance-related alerts',
   group_activity_update: 'Group collaboration updates',
@@ -220,6 +222,7 @@ export function NotificationPreferences() {
         'direct_message',
         'enrollment_confirmed',
         'discussion_reply',
+        'live_session',
       ].includes(type)
   );
 

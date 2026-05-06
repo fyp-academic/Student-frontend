@@ -100,6 +100,7 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
         enableLayerSuspension: true,
         enableNoisyMicDetection: false,
         startBitrate: 800,
+        desktopSharingFrameRate: { min: 5, max: 15 },
       };
 
       const interfaceConfigOverwrite = {

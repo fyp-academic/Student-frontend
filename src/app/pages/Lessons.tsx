@@ -23,6 +23,17 @@ const typeConfig: Record<string, { color: string; label: string }> = {
   label:       { color: "#94a3b8", label: "Label" },
   page:        { color: "#2563eb", label: "Page" },
   resource:    { color: "#64748b", label: "Resource" },
+  attendance:      { color: "#2563eb", label: "Attendance" },
+  bigbluebutton:   { color: "#2563eb", label: "BBB" },
+  book:            { color: "#2563eb", label: "Book" },
+  checklist:       { color: "#059669", label: "Checklist" },
+  choice:          { color: "#7c3aed", label: "Choice" },
+  certificate:     { color: "#f59e0b", label: "Certificate" },
+  database:        { color: "#64748b", label: "Database" },
+  feedback:        { color: "#0891b2", label: "Feedback" },
+  folder:          { color: "#64748b", label: "Folder" },
+  glossary:        { color: "#2563eb", label: "Glossary" },
+  ims_content_package: { color: "#ca8a04", label: "IMS CP" },
 };
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; color: string }> = {
@@ -92,7 +103,10 @@ export function Lessons() {
 
   const allActivities = sections.flatMap(s => (s.activities as Activity[]) ?? []);
   const totalLessons     = allActivities.length;
-  const completedLessons = allActivities.filter(a => String(a.status ?? '').toLowerCase() === 'completed').length;
+  const completedLessons = allActivities.filter(a => {
+    const s = String(a.completion_status ?? a.status ?? '').toLowerCase();
+    return s === 'completed';
+  }).length;
 
   if (coursesLoading) {
     return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;
@@ -161,7 +175,10 @@ export function Lessons() {
             const secId   = String(sec.id ?? '');
             const secTitle = String(sec.title ?? sec.name ?? `Section`);
             const acts    = ((sec.activities ?? []) as Activity[]);
-            const done    = acts.filter(a => String(a.status ?? '').toLowerCase() === 'completed').length;
+            const done    = acts.filter(a => {
+              const s = String(a.completion_status ?? a.status ?? '').toLowerCase();
+              return s === 'completed';
+            }).length;
             const isOpen  = openModules.includes(secId);
             const allDone = acts.length > 0 && done === acts.length;
 
@@ -192,19 +209,20 @@ export function Lessons() {
                       const title    = String(act.name ?? act.title ?? `Activity ${idx + 1}`);
                       const rawType  = String(act.type ?? act.activity_type ?? 'resource').toLowerCase();
                       const typeCfg  = typeConfig[rawType] ?? typeConfig.resource;
-                      const rawStatus = String(act.status ?? 'available').toLowerCase();
-                      const statKey  = rawStatus === 'completed' ? 'completed' : rawStatus === 'in_progress' || rawStatus === 'in-progress' ? 'in-progress' : 'locked';
-                      const StatIcon = statusConfig[statKey] ?? statusConfig.locked;
-                      const isLocked = statKey === 'locked' && rawStatus !== 'available';
+                      const rawStatus = String(act.completion_status ?? act.status ?? 'available').toLowerCase();
+                      const statKey  = rawStatus === 'completed' ? 'completed' : rawStatus === 'in_progress' || rawStatus === 'in-progress' ? 'in-progress' : rawStatus === 'locked' ? 'locked' : 'available';
+                      const StatIcon = statusConfig[statKey] ?? { icon: PlayCircle, color: "#2563eb" };
+                      const isLocked = rawStatus === 'locked';
                       const isVideo  = rawType === 'video' || rawType === 'lesson';
                       const isQuiz   = rawType === 'quiz';
-                      const videoUrl = String(act.url ?? act.video_url ?? act.file_url ?? '');
+                      const settings = (act.settings ?? {}) as Record<string, unknown>;
+                      const videoUrl = String(settings.videoUrl ?? settings.video_url ?? act.url ?? act.video_url ?? act.file_url ?? '');
                       const duration = String(act.duration ?? act.time_limit ? `${act.time_limit} min` : '');
 
                       return (
                         <div
                           key={aid}
-                          className={`flex items-center gap-4 px-4 py-3 transition-colors ${isLocked ? 'opacity-50' : 'hover:bg-slate-50 cursor-pointer'}`}
+                          className={`flex items-center gap-4 px-4 py-3 transition-colors ${isLocked ? 'opacity-50' : 'hover:bg-slate-50'}`}
                           style={{ borderBottom: idx < acts.length - 1 ? "1px solid #f8fafc" : "none" }}
                         >
                           <div className="flex items-center justify-center w-6 h-6 flex-shrink-0">
@@ -282,9 +300,11 @@ export function Lessons() {
                                     const res = await lessonApi.listPages(aid);
                                     const pages = res.data.data ?? res.data ?? [];
                                     const firstPage = pages[0];
-                                    setPageContent(String(firstPage?.content ?? act.description ?? act.settings?.content ?? 'No content available'));
+                                    const pageContent = String(firstPage?.content ?? act.description ?? (act.settings as Record<string, any>)?.content ?? 'No content available');
+                                    setPageContent(pageContent);
                                   } catch {
-                                    setPageContent(String(act.description ?? act.settings?.content ?? 'No content available'));
+                                    const fallbackContent = String(act.description ?? (act.settings as Record<string, any>)?.content ?? 'No content available');
+                                    setPageContent(fallbackContent);
                                   }
                                 }}
                                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white"
@@ -293,9 +313,18 @@ export function Lessons() {
                                 <FileText size={12} /> View
                               </button>
                             )}
-                            {statKey === 'in-progress' && !isVideo && !isQuiz && rawType !== 'assignment' && rawType !== 'forum' && rawType !== 'url' && rawType !== 'file' && rawType !== 'page' && rawType !== 'lesson' && (
-                              <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white" style={{ fontSize: "11px", fontWeight: 600, backgroundColor: "#2563eb" }}>
-                                <PlayCircle size={12} /> Resume
+                            {/* Generic action for all other types */}
+                            {!isLocked && !isVideo && !isQuiz && rawType !== 'assignment' && rawType !== 'forum' && rawType !== 'url' && rawType !== 'file' && rawType !== 'page' && rawType !== 'lesson' && (
+                              <button
+                                onClick={() => {
+                                  if (rawType === 'label') return; // Labels are just text blocks
+                                  // For unsupported types, show a toast or placeholder action
+                                  window.alert(`Activity type "${typeCfg.label}" will be available soon.`);
+                                }}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white"
+                                style={{ fontSize: "11px", fontWeight: 600, backgroundColor: "#2563eb" }}
+                              >
+                                <PlayCircle size={12} /> Open
                               </button>
                             )}
                           </div>

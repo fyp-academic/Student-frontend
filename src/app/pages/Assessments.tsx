@@ -53,8 +53,8 @@ export function Assessments() {
     })();
   }, []);
 
-  const upcoming  = assessments.filter(a => String(a.status ?? '').toLowerCase() !== 'completed').length;
-  const completed = assessments.filter(a => String(a.status ?? '').toLowerCase() === 'completed').length;
+  const upcoming  = assessments.filter(a => String(a.completion_status ?? a.status ?? '').toLowerCase() !== 'completed').length;
+  const completed = assessments.filter(a => String(a.completion_status ?? a.status ?? '').toLowerCase() === 'completed').length;
   const scores    = assessments.filter(a => a.score != null).map(a => Number(a.score ?? 0));
   const avgScore  = scores.length ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : null;
 

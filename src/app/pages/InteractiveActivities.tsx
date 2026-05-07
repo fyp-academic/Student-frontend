@@ -60,7 +60,7 @@ export function InteractiveActivities() {
                       type:        rawType || 'resource',
                       color,
                       description: String(a.description ?? a.summary ?? ''),
-                      status:      String(a.status ?? 'available').toLowerCase(),
+                      status:      String(a.completion_status ?? a.status ?? 'available').toLowerCase(),
                       duration:    a.time_limit ? `${a.time_limit} min` : '',
                       url:         String(a.url ?? a.external_url ?? a.file_url ?? ''),
                     });

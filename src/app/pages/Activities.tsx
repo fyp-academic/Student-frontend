@@ -15,6 +15,24 @@ const typeColors: Record<string, { bg: string; text: string }> = {
   project:     { bg: "#fff7ed",  text: "#ea580c" },
   video:       { bg: "#eff6ff",  text: "#2563eb" },
   lesson:      { bg: "#eff6ff",  text: "#2563eb" },
+  url:         { bg: "#ecfeff",  text: "#06b6d4" },
+  file:        { bg: "#f8fafc",  text: "#64748b" },
+  h5p:         { bg: "#fef2f2",  text: "#dc2626" },
+  scorm:       { bg: "#fefce8",  text: "#ca8a04" },
+  workshop:    { bg: "#fdf4ff",  text: "#9333ea" },
+  label:       { bg: "#f8fafc",  text: "#94a3b8" },
+  page:        { bg: "#eff6ff",  text: "#2563eb" },
+  attendance:      { bg: "#eff6ff",  text: "#2563eb" },
+  bigbluebutton:   { bg: "#eff6ff",  text: "#2563eb" },
+  book:            { bg: "#eff6ff",  text: "#2563eb" },
+  checklist:       { bg: "#f0fdf4",  text: "#16a34a" },
+  choice:          { bg: "#fdf4ff",  text: "#9333ea" },
+  certificate:     { bg: "#fff7ed",  text: "#ea580c" },
+  database:        { bg: "#f8fafc",  text: "#64748b" },
+  feedback:        { bg: "#f0fdff",  text: "#0891b2" },
+  folder:          { bg: "#f8fafc",  text: "#64748b" },
+  glossary:        { bg: "#eff6ff",  text: "#2563eb" },
+  ims_content_package: { bg: "#fefce8", text: "#ca8a04" },
 };
 
 export function Activities() {
@@ -51,8 +69,8 @@ export function Activities() {
     })();
   }, []);
 
-  const done      = activities.filter(a => String(a.status ?? '').toLowerCase() === 'completed').length;
-  const available = activities.filter(a => { const s = String(a.status ?? '').toLowerCase(); return s !== 'completed' && s !== 'locked'; }).length;
+  const done      = activities.filter(a => String(a.completion_status ?? a.status ?? '').toLowerCase() === 'completed').length;
+  const available = activities.filter(a => { const s = String(a.completion_status ?? a.status ?? '').toLowerCase(); return s !== 'completed' && s !== 'locked'; }).length;
 
   return (
     <div className="space-y-6">
@@ -87,7 +105,7 @@ export function Activities() {
             const title    = String(activity.name ?? activity.title ?? `Activity ${ai + 1}`);
             const rawType  = String(activity.type ?? activity.activity_type ?? 'resource').toLowerCase();
             const typeCfg  = typeColors[rawType] ?? { bg: "#f1f5f9", text: "#475569" };
-            const rawStatus = String(activity.status ?? 'available').toLowerCase();
+            const rawStatus = String(activity.completion_status ?? activity.status ?? 'available').toLowerCase();
             const isLocked  = rawStatus === 'locked';
             const isDone    = rawStatus === 'completed';
             const desc      = String(activity.description ?? activity.summary ?? '');

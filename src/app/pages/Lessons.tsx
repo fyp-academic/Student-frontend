@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { PlayCircle, Lock, CheckCircle, Clock, BookMarked, ChevronDown, ChevronRight, Loader2, X, FileText } from "lucide-react";
+import { PlayCircle, Lock, CheckCircle, Clock, BookMarked, ChevronDown, ChevronRight, Loader2, X, FileText, ExternalLink } from "lucide-react";
 import { dashboardApi, quizApi, lessonApi } from "../services/api";
 
 type Course  = Record<string, unknown>;
@@ -280,30 +280,17 @@ export function Lessons() {
                                 <PlayCircle size={12} /> View
                               </button>
                             )}
-                            {(rawType === 'url' || rawType === 'file') && !isLocked && (
-                              <button
-                                onClick={() => {
-                                  const url = String(act.url || act.file_url || act.external_url || '');
-                                  if (url) window.open(url, '_blank');
-                                }}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white"
-                                style={{ fontSize: "11px", fontWeight: 600, backgroundColor: "#64748b" }}
-                              >
-                                <PlayCircle size={12} /> Open
-                              </button>
-                            )}
                             {(rawType === 'page' || rawType === 'lesson') && !isLocked && (
                               <button
                                 onClick={async () => {
-                                  setPageActivity(act);
                                   try {
                                     const res = await lessonApi.listPages(aid);
                                     const pages = res.data.data ?? res.data ?? [];
                                     const firstPage = pages[0];
-                                    const pageContent = String(firstPage?.content ?? act.description ?? (act.settings as Record<string, any>)?.content ?? 'No content available');
+                                    const pageContent = String(firstPage?.content ?? act.description ?? (act.settings as any)?.content ?? 'No content available');
                                     setPageContent(pageContent);
                                   } catch {
-                                    const fallbackContent = String(act.description ?? (act.settings as Record<string, any>)?.content ?? 'No content available');
+                                    const fallbackContent = String(act.description ?? (act.settings as any)?.content ?? 'No content available');
                                     setPageContent(fallbackContent);
                                   }
                                 }}
@@ -311,6 +298,27 @@ export function Lessons() {
                                 style={{ fontSize: "11px", fontWeight: 600, backgroundColor: "#2563eb" }}
                               >
                                 <FileText size={12} /> View
+                              </button>
+                            )}
+                            {(rawType === 'url' || rawType === 'file') && !isLocked && (
+                              <button
+                                onClick={() => {
+                                  let url = String(
+                                    (act.settings as Record<string, unknown>)?.fileUrl ??
+                                    (act.settings as Record<string, unknown>)?.file_url ??
+                                    act.url ?? act.file_url ?? act.external_url ?? ''
+                                  );
+                                  if (url && !url.match(/^https?:\/\//i)) {
+                                    const base = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
+                                    const origin = base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
+                                    url = url.startsWith('/') ? `${origin}${url}` : `${origin}/${url}`;
+                                  }
+                                  if (url) window.open(url, '_blank');
+                                }}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white"
+                                style={{ fontSize: "11px", fontWeight: 600, backgroundColor: "#06b6d4" }}
+                              >
+                                <ExternalLink size={12} /> Open
                               </button>
                             )}
                             {/* Generic action for all other types */}
@@ -341,8 +349,16 @@ export function Lessons() {
 
       {/* Video Player Modal */}
       {videoActivity && (() => {
-        const url   = String(videoActivity.url ?? videoActivity.video_url ?? videoActivity.file_url ?? '');
+        const settings = (videoActivity.settings ?? {}) as Record<string, unknown>;
+        let url = String(settings.videoUrl ?? settings.video_url ?? videoActivity.url ?? videoActivity.video_url ?? videoActivity.file_url ?? '');
+        // Normalize relative URLs: if backend returns /storage/… without origin, prepend API base
+        if (url && !url.match(/^https?:\/\//i)) {
+          const base = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
+          const origin = base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
+          url = url.startsWith('/') ? `${origin}${url}` : `${origin}/${url}`;
+        }
         const title = String(videoActivity.name ?? videoActivity.title ?? 'Video');
+        const [videoError, setVideoError] = useState(false);
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
             <div className="absolute inset-0 bg-slate-900/70" onClick={() => setVideoActivity(null)} />
@@ -351,17 +367,24 @@ export function Lessons() {
                 <p className="text-white font-semibold text-sm truncate">{title}</p>
                 <button onClick={() => setVideoActivity(null)} className="text-slate-400 hover:text-white p-1"><X size={18} /></button>
               </div>
-              <video
-                src={url}
-                controls
-                autoPlay
-                className="w-full"
-                style={{ maxHeight: "70vh", background: "#000" }}
-                onError={e => { (e.target as HTMLVideoElement).style.display = 'none'; }}
-              >
-                Your browser does not support the video tag.
-              </video>
-              <p className="text-xs text-slate-500 text-center py-2 bg-slate-900">{url}</p>
+              {videoError || !url ? (
+                <div className="flex flex-col items-center justify-center text-white py-16 px-6" style={{ minHeight: "300px" }}>
+                  <PlayCircle size={48} className="mb-4 opacity-40" />
+                  <p className="text-sm font-medium opacity-80">Video not available</p>
+                  <p className="text-xs opacity-50 mt-1">{url || 'No video source found'}</p>
+                </div>
+              ) : (
+                <video
+                  src={url}
+                  controls
+                  autoPlay
+                  className="w-full"
+                  style={{ maxHeight: "70vh", background: "#000" }}
+                  onError={() => setVideoError(true)}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
             </div>
           </div>
         );

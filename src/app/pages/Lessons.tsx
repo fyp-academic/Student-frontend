@@ -363,7 +363,6 @@ export function Lessons() {
           url = url.startsWith('/') ? `${origin}${url}` : `${origin}/${url}`;
         }
         const title = String(videoActivity.name ?? videoActivity.title ?? 'Video');
-        const [videoError, setVideoError] = useState(false);
 
         // Detect embeddable platforms
         const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);

@@ -52,6 +52,7 @@ export function Lessons() {
 
   // Video player state
   const [videoActivity, setVideoActivity] = useState<Activity | null>(null);
+  const [videoError, setVideoError] = useState(false);
 
   // Page viewer state
   const [pageActivity, setPageActivity] = useState<Activity | null>(null);
@@ -61,6 +62,11 @@ export function Lessons() {
   const [startingQuiz, setStartingQuiz] = useState<string | null>(null);
 
   const navigate = useNavigate();
+
+  // Reset video error when video changes
+  useEffect(() => {
+    setVideoError(false);
+  }, [videoActivity]);
 
   const loadData = useCallback(async () => {
     setCoursesLoading(true);
@@ -358,7 +364,6 @@ export function Lessons() {
           url = url.startsWith('/') ? `${origin}${url}` : `${origin}/${url}`;
         }
         const title = String(videoActivity.name ?? videoActivity.title ?? 'Video');
-        const [videoError, setVideoError] = useState(false);
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
             <div className="absolute inset-0 bg-slate-900/70" onClick={() => setVideoActivity(null)} />

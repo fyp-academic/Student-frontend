@@ -222,7 +222,6 @@ export function Lessons() {
                       const isVideo  = rawType === 'video' || rawType === 'lesson';
                       const isQuiz   = rawType === 'quiz';
                       const settings = (act.settings ?? {}) as Record<string, unknown>;
-                      const videoUrl = String(settings.videoUrl ?? settings.video_url ?? act.url ?? act.video_url ?? act.file_url ?? '');
                       const duration = String(act.duration ?? act.time_limit ? `${act.time_limit} min` : '');
 
                       return (
@@ -356,7 +355,7 @@ export function Lessons() {
       {/* Video Player Modal */}
       {videoActivity && (() => {
         const settings = (videoActivity.settings ?? {}) as Record<string, unknown>;
-        let url = String(settings.videoUrl ?? settings.video_url ?? videoActivity.url ?? videoActivity.video_url ?? videoActivity.file_url ?? '');
+        let url = String(settings.videoUrl ?? settings.video_url ?? settings.url ?? videoActivity.url ?? videoActivity.video_url ?? videoActivity.file_url ?? '');
         // Normalize relative URLs: if backend returns /storage/… without origin, prepend API base
         if (url && !url.match(/^https?:\/\//i)) {
           const base = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
@@ -364,6 +363,19 @@ export function Lessons() {
           url = url.startsWith('/') ? `${origin}${url}` : `${origin}/${url}`;
         }
         const title = String(videoActivity.name ?? videoActivity.title ?? 'Video');
+        const [videoError, setVideoError] = useState(false);
+
+        // Detect embeddable platforms
+        const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+        const isYouTube = !!youtubeMatch;
+        const isVimeo = !!vimeoMatch;
+        const embedUrl = isYouTube
+          ? `https://www.youtube.com/embed/${youtubeMatch![1]}?autoplay=1&rel=0`
+          : isVimeo
+          ? `https://player.vimeo.com/video/${vimeoMatch![1]}?autoplay=1`
+          : null;
+
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
             <div className="absolute inset-0 bg-slate-900/70" onClick={() => setVideoActivity(null)} />
@@ -376,8 +388,17 @@ export function Lessons() {
                 <div className="flex flex-col items-center justify-center text-white py-16 px-6" style={{ minHeight: "300px" }}>
                   <PlayCircle size={48} className="mb-4 opacity-40" />
                   <p className="text-sm font-medium opacity-80">Video not available</p>
-                  <p className="text-xs opacity-50 mt-1">{url || 'No video source found'}</p>
+                  <p className="text-xs opacity-50 mt-1 max-w-md text-center">{url || 'No video source found. Instructor may not have attached a video yet.'}</p>
                 </div>
+              ) : embedUrl ? (
+                <iframe
+                  src={embedUrl}
+                  className="w-full"
+                  style={{ height: "70vh", background: "#000" }}
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                  onError={() => setVideoError(true)}
+                />
               ) : (
                 <video
                   src={url}

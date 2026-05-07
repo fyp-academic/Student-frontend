@@ -121,16 +121,25 @@ export function Quizzes() {
       setAttemptId(String((attemptData as Record<string,unknown>).id ?? ''));
       const qs: QItem[] = qRes.data.data ?? qRes.data ?? [];
       setQuestions(qs);
-      // Load answer options for each question
+      // Load answer options — backend already eager-loads answers with questions
       const ansMap: Record<string, unknown[]> = {};
       await Promise.all(qs.map(async (q) => {
         const qid = String(q.id ?? '');
         if (!qid) return;
+        const existing = (q.answers ?? q.answers_list ?? []) as unknown[];
+        if (existing.length > 0) {
+          ansMap[qid] = existing;
+          return;
+        }
+        // Fallback: fetch answers separately if not included in questions response
         const ar = await quizApi.answers(qid);
         ansMap[qid] = ar.data.data ?? ar.data ?? [];
       }));
       setAnswers(ansMap);
-    } catch { /* ignore */ } finally {
+    } catch (err: any) {
+      console.error('Failed to start quiz:', err);
+      alert('Failed to start quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+    } finally {
       setQuizLoading(false);
     }
   };

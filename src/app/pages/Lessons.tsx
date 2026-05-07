@@ -237,7 +237,7 @@ export function Lessons() {
                           <div className="flex items-center gap-3 flex-shrink-0">
                             <span className="px-2 py-0.5 rounded-md" style={{ fontSize: "10px", fontWeight: 600, backgroundColor: `${typeCfg.color}15`, color: typeCfg.color }}>{typeCfg.label}</span>
                             {duration && <div className="flex items-center gap-1 text-slate-400" style={{ fontSize: "11px" }}><Clock size={11} />{duration}</div>}
-                            {isVideo && videoUrl && (
+                            {rawType === 'video' && (
                               <button
                                 onClick={() => setVideoActivity(act)}
                                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white"

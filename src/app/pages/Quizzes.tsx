@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router";
 import { HelpCircle, Clock, CheckCircle, PlayCircle, Lock, Trophy, X, ChevronRight, Loader2 } from "lucide-react";
 import { quizApi, dashboardApi } from "../services/api";
 
@@ -12,6 +13,9 @@ const getScoreColor = (score: number) => score >= 90 ? "#16a34a" : score >= 80 ?
 const getScoreLabel = (score: number) => score >= 90 ? "Excellent" : score >= 80 ? "Good" : score >= 70 ? "Fair" : "Needs Improvement";
 
 export function Quizzes() {
+  const location = useLocation();
+  const startQuizId = (location.state as { startQuizId?: string } | null)?.startQuizId;
+
   const [activeFilter, setActiveFilter] = useState("All");
   const filters = ["All", "Available", "Completed", "Locked"];
 
@@ -80,6 +84,13 @@ export function Quizzes() {
         }
       }
       setQuizzes(merged);
+      // Auto-start quiz if navigated from Lessons with a specific quiz ID
+      if (startQuizId) {
+        const target = merged.find(m => String(m.id ?? m.activity_id ?? '') === startQuizId);
+        if (target) {
+          setTimeout(() => handleStartQuiz(target), 0);
+        }
+      }
     }).finally(() => setLoading(false));
     return () => { cancelled = true; };
   }, []);

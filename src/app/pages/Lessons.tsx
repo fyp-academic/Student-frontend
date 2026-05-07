@@ -257,8 +257,7 @@ export function Lessons() {
                                 onClick={async () => {
                                   setStartingQuiz(aid);
                                   try {
-                                    await quizApi.start(aid);
-                                    navigate('/quizzes');
+                                    navigate('/quizzes', { state: { startQuizId: aid } });
                                   } catch { /* ignore */ } finally { setStartingQuiz(null); }
                                 }}
                                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white"

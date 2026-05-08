@@ -148,10 +148,17 @@ export function Quizzes() {
     if (!attemptId) return;
     setQuizLoading(true);
     try {
-      const r = await quizApi.submit(attemptId, { responses: selected });
+      const responses = Object.entries(selected).map(([question_id, answer_id]) => ({
+        question_id,
+        answer_id,
+      }));
+      const r = await quizApi.submit(attemptId, { responses });
       setResult(r.data.data ?? r.data ?? {});
       setSubmitted(true);
-    } catch { /* ignore */ } finally {
+    } catch (err: any) {
+      console.error('Failed to submit quiz:', err);
+      alert('Failed to submit quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+    } finally {
       setQuizLoading(false);
     }
   };
@@ -326,10 +333,19 @@ export function Quizzes() {
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Submitted!</h2>
                   {result && (
                     <>
-                      <p className="text-4xl font-bold mt-4 mb-1" style={{ color: getScoreColor(Number((result as Record<string,unknown>).score ?? 0)) }}>
-                        {Number((result as Record<string,unknown>).score ?? 0)}%
-                      </p>
-                      <p className="text-sm text-gray-500">{getScoreLabel(Number((result as Record<string,unknown>).score ?? 0))}</p>
+                      {(result as Record<string,unknown>).needs_grading ? (
+                        <div className="mt-4">
+                          <p className="text-lg font-semibold text-amber-600">Waiting for instructor grade</p>
+                          <p className="text-sm text-gray-500 mt-1">Your quiz has been submitted. Results will be available after grading.</p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-4xl font-bold mt-4 mb-1" style={{ color: getScoreColor(Number((result as Record<string,unknown>).score_percentage ?? 0)) }}>
+                            {Math.round(Number((result as Record<string,unknown>).score_percentage ?? 0))}%
+                          </p>
+                          <p className="text-sm text-gray-500">{getScoreLabel(Number((result as Record<string,unknown>).score_percentage ?? 0))}</p>
+                        </>
+                      )}
                     </>
                   )}
                   <button onClick={() => setActiveQuiz(null)} className="mt-6 px-6 py-2.5 rounded-xl text-white font-semibold" style={{ backgroundColor: "#2563eb" }}>Close</button>

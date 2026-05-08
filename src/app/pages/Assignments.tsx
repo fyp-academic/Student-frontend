@@ -48,6 +48,9 @@ type AssignmentItem = {
   submission_text: string;
   submission_file: string;
   submission_file_url: string;
+  settings?: Record<string, unknown>;
+  textOnlineEnabled?: boolean;
+  fileSubmissionEnabled?: boolean;
 };
 
 export function Assignments() {
@@ -146,6 +149,9 @@ export function Assignments() {
               submission_text: sub?.submission_text ?? '',
               submission_file: sub?.file_name ?? '',
               submission_file_url: sub?.file_url ?? '',
+              settings,
+              textOnlineEnabled: (settings?.textOnlineEnabled ?? true) as boolean,
+              fileSubmissionEnabled: (settings?.fileSubmissionEnabled ?? true) as boolean,
             });
             colorIdx++;
           }
@@ -298,7 +304,7 @@ export function Assignments() {
                   <div className="flex flex-wrap items-center gap-4 text-slate-400" style={{ fontSize: "11px" }}>
                     <div className="flex items-center gap-1">
                       <Calendar size={11} />
-                      Due: {assignment.due_date || '—'} {assignment.due_time && `at ${assignment.due_time}`}
+                      {assignment.due_date ? `Due: ${assignment.due_date}${assignment.due_time ? ` at ${assignment.due_time}` : ''}` : 'No due date'}
                     </div>
                     <div className="flex items-center gap-1">
                       <FileText size={11} />
@@ -367,7 +373,7 @@ export function Assignments() {
             </div>
             <div className="space-y-3">
               <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                <span className="flex items-center gap-1"><Calendar size={12} /> Due: {viewing.due_date || '—'} {viewing.due_time && `at ${viewing.due_time}`}</span>
+                <span className="flex items-center gap-1"><Calendar size={12} /> {viewing.due_date ? `Due: ${viewing.due_date}${viewing.due_time ? ` at ${viewing.due_time}` : ''}` : 'No due date'}</span>
                 <span className="flex items-center gap-1"><FileText size={12} /> {viewing.points} points</span>
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-md" style={{ backgroundColor: statusConfig[viewing.status]?.bg, color: statusConfig[viewing.status]?.color, fontWeight: 600 }}>
                   {viewing.status.charAt(0).toUpperCase() + viewing.status.slice(1)}
@@ -437,30 +443,34 @@ export function Assignments() {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block mb-1 text-xs font-semibold text-slate-600">Submission text</label>
-                <textarea
-                  value={submissionText}
-                  onChange={(e) => setSubmissionText(e.target.value)}
-                  rows={5}
-                  className="w-full rounded-xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-sm"
-                  style={{ borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
-                  placeholder="Write your answer or reflection here..."
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-xs font-semibold text-slate-600">Attach file (optional)</label>
-                <input
-                  type="file"
-                  onChange={(e) => setSubmissionFile(e.target.files?.[0] ?? null)}
-                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                />
-                {submissionFile && (
-                  <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
-                    <Paperclip size={10} /> {submissionFile.name}
-                  </p>
-                )}
-              </div>
+              {submittingTo.textOnlineEnabled && (
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-slate-600">Submission text{submittingTo.fileSubmissionEnabled ? ' (optional)' : ''}</label>
+                  <textarea
+                    value={submissionText}
+                    onChange={(e) => setSubmissionText(e.target.value)}
+                    rows={5}
+                    className="w-full rounded-xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-sm"
+                    style={{ borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
+                    placeholder="Write your answer or reflection here..."
+                  />
+                </div>
+              )}
+              {submittingTo.fileSubmissionEnabled && (
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-slate-600">Attach file{submittingTo.textOnlineEnabled ? ' (optional)' : ''}</label>
+                  <input
+                    type="file"
+                    onChange={(e) => setSubmissionFile(e.target.files?.[0] ?? null)}
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  {submissionFile && (
+                    <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
+                      <Paperclip size={10} /> {submissionFile.name}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
@@ -469,7 +479,11 @@ export function Assignments() {
               </button>
               <button
                 onClick={handleSubmitAssignment}
-                disabled={submitLoading || (!submissionText.trim() && !submissionFile)}
+                disabled={submitLoading || (submittingTo.textOnlineEnabled && submittingTo.fileSubmissionEnabled 
+                  ? (!submissionText.trim() && !submissionFile) 
+                  : submittingTo.textOnlineEnabled 
+                    ? !submissionText.trim() 
+                    : !submissionFile)}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white disabled:opacity-60 text-sm font-semibold"
                 style={{ backgroundColor: "#2563eb" }}
               >

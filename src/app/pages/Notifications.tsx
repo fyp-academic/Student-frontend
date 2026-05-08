@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Bell, FileText, HelpCircle, MessageCircle, Award, AlertCircle,
   CheckCircle, Trash2,
 } from "lucide-react";
 import { notificationsApi } from "../services/api";
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
 type NotifType = "assignment" | "quiz" | "message" | "achievement" | "reminder" | "announcement" | "grade" | "info" | "warning" | "success" | "danger" | "course_update";
 
@@ -35,11 +37,34 @@ const typeConfig: Record<NotifType, { icon: React.ElementType; color: string; bg
   course_update:{ icon: Bell,           color: "#7c3aed", bg: "#fdf4ff" },
 };
 
+// Initialize Echo for real-time notifications
+let echoInstance: Echo<'reverb'> | null = null;
+function getEchoInstance(): Echo<'reverb'> {
+  if (!echoInstance) {
+    (window as unknown as Record<string, unknown>).Pusher = Pusher;
+    echoInstance = new Echo({
+      broadcaster:  'reverb',
+      key:          import.meta.env.VITE_REVERB_APP_KEY,
+      wsHost:       import.meta.env.VITE_REVERB_HOST,
+      wsPort:       Number(import.meta.env.VITE_REVERB_PORT),
+      wssPort:      Number(import.meta.env.VITE_REVERB_PORT),
+      forceTLS:     true,
+      enabledTransports: ['ws', 'wss'],
+      authEndpoint: 'https://api.codagenz.com/broadcasting/auth',
+      auth: { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') ?? ''}` } },
+    } as ConstructorParameters<typeof Echo>[0]);
+  }
+  return echoInstance;
+}
+
 export function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState("All");
+  const echoRef = useRef<Echo<'reverb'> | null>(null);
+  const channelRef = useRef<any>(null);
   const filters = ["All", "Unread", "Assignments", "Grades", "Announcements"];
 
+  // Fetch initial notifications
   useEffect(() => {
     notificationsApi.list().then(r => {
       const raw: Record<string, unknown>[] = r.data.data ?? r.data ?? [];
@@ -54,6 +79,47 @@ export function Notifications() {
         courseColor: n.course_color as string | undefined,
       })));
     }).catch(() => {});
+  }, []);
+
+  // Set up real-time notification listener
+  useEffect(() => {
+    try {
+      const echo = getEchoInstance();
+      echoRef.current = echo;
+      
+      // Subscribe to user's notification channel
+      const channel = echo.private(`user.${localStorage.getItem('user_id') ?? 'unknown'}`);
+      channelRef.current = channel;
+
+      // Listen for new notifications
+      channel.listen('.notification.new', (data: Record<string, unknown>) => {
+        const newNotif: Notification = {
+          id:        String(data.id),
+          type:      (data.type as NotifType) ?? 'info',
+          title:     String(data.title ?? ''),
+          body:      String(data.body ?? ''),
+          time:      new Date().toISOString(),
+          read:      false,
+        };
+        setNotifications(prev => [newNotif, ...prev]);
+      });
+
+      // Listen for badge updates
+      channel.listen('.notification.badge', (data: Record<string, unknown>) => {
+        // Badge updates trigger a refresh of unread count UI
+        // This is handled by the filtering logic below
+      });
+
+    } catch (err) {
+      console.error('Failed to set up notification listener:', err);
+    }
+
+    return () => {
+      // Cleanup: unsubscribe from channel when component unmounts
+      if (channelRef.current) {
+        echoRef.current?.leave(`user.${localStorage.getItem('user_id') ?? 'unknown'}`);
+      }
+    };
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;

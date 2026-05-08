@@ -29,6 +29,7 @@ function getEcho(): Echo<"reverb"> {
 type ChatType = 'direct' | 'course' | 'programme';
 
 interface ApiConversation {
+  [x: string]: string;
   id: string;
   type: ChatType;
   participant_name: string;
@@ -244,7 +245,7 @@ export function Chat() {
     return () => { getEcho().leave(`conversation.${selectedConvId}`); };
   }, [selectedConvId, user?.id]);
 
-  // Presence channel
+  // Presence channel for online/offline status
   useEffect(() => {
     if (!user) return;
     const p = getEcho().join("online-users") as unknown as {
@@ -257,6 +258,31 @@ export function Chat() {
      .leaving((m: { id: string }) => setOnlineUsers((prev) => { const s = new Set(prev); s.delete(m.id); return s; }));
     return () => { getEcho().leave("online-users"); };
   }, [user]);
+
+  // Listen for new messages on all conversations to update conversation list
+  useEffect(() => {
+    if (conversations.length === 0) return;
+    
+    conversations.forEach((conv) => {
+      const ch = getEcho().private(`conversation.${conv.id}`);
+      
+      ch.listen(".message.sent", (data: ApiMessage) => {
+        // Update conversation with new message info
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === conv.id
+              ? ({
+                  ...c,
+                  last_message: data.content ?? "📎 Attachment",
+                  last_message_time: data.timestamp,
+                  unread_count: data.sender_id !== user?.id ? c.unread_count + 1 : 0,
+                } as ApiConversation)
+              : c
+          )
+        );
+      });
+    });
+  }, [conversations.length, user?.id]);
 
   const handleSend = useCallback(async () => {
     if ((!input.trim() && !filePreview) || !selectedConvId || sending) return;
@@ -506,7 +532,7 @@ export function Chat() {
           setConversations(allChats);
           const existing = allChats.find((c: ApiConversation) =>
             c.type === 'direct' &&
-            c.participants?.some((p: { id: string }) => p.id === selectedRecipient)
+            (c.participant_user_id === selectedRecipient || c.owner_user_id === selectedRecipient)
           );
           if (existing) {
             setSelectedConvId(existing.id);

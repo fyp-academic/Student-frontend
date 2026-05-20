@@ -31,7 +31,7 @@ export const authApi = {
   login:              (email: string, password: string) => api.post('/auth/login', { email, password }),
   register:           (data: Record<string, unknown>) => api.post('/auth/register', data),
   me:                 ()                                 => api.get('/auth/me'),
-  logout:             ()                               => api.post('/auth/logout'),
+  logout:             (loginSessionId?: string)        => api.post('/auth/logout', loginSessionId ? { login_session_id: loginSessionId } : {}),
   forgotPassword:     (email: string)                  => api.post('/auth/forgot-password', { email }),
   resetPassword:      (data: Record<string, unknown>)  => api.post('/auth/reset-password', data),
   resendVerification: (email?: string)                   => api.post('/auth/verify-email/resend', email ? { email } : {}),
@@ -75,7 +75,8 @@ export const degreeProgrammesApi = {
 export const activitiesApi = {
   list:     (sectionId: string) => api.get(`/sections/${sectionId}/activities`),
   get:      (id: string)        => api.get(`/activities/${id}`),
-  complete: (id: string)        => api.post(`/activities/${id}/complete`),
+  complete: (id: string, type: 'viewed' | 'submitted' | 'attempted' | 'manual' = 'manual') =>
+    api.post(`/activities/${id}/complete`, { completion_type: type }),
 };
 
 // ─── Assignments ──────────────────────────────────────────────────────────────
@@ -97,6 +98,20 @@ export const quizApi = {
   start:      (activityId: string)               => api.post(`/activities/${activityId}/quiz-attempt`),
   submit:     (attemptId: string, data: Record<string, unknown>) =>
     api.post(`/quiz-attempts/${attemptId}/submit`, data),
+};
+
+// ─── Proctoring ───────────────────────────────────────────────────────────────
+export const proctoringApi = {
+  start:             (data: { activity_id: string; course_id?: string; context_type?: 'quiz' | 'assignment'; quiz_attempt_id?: string }) =>
+    api.post('/proctoring/start', data),
+  violation:         (data: { session_id: string; type: string; metadata?: Record<string, unknown>; snapshot?: string }) =>
+    api.post('/proctoring/violation', data),
+  webcamCheck:       (data: { session_id: string; image: string }) =>
+    api.post('/proctoring/webcam-check', data),
+  end:               (data: { session_id: string }) =>
+    api.post('/proctoring/end', data),
+  analyzeSubmission: (formData: FormData) =>
+    api.post('/proctoring/analyze-submission', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
 // ─── Lesson ───────────────────────────────────────────────────────────────────
@@ -192,7 +207,8 @@ export const profileApi = {
   }),
   removeImage:       ()                               => api.delete('/profile/image'),
   preferences:       ()                                => api.get('/profile/preferences'),
-  updatePreferences: (data: Record<string, unknown>)  => api.put('/profile/preferences', data),
+  updatePreferences:  (data: Record<string, unknown>)  => api.put('/profile/preferences', data),
+  updateLearningStyle:(data: Record<string, unknown>)  => api.put('/profile/learning-style', data),
   myInstructors:     ()                                => api.get('/profile/my-instructors'),
   learnerProfile:    (learnerId: string, courseId: string) =>
     api.get(`/pipeline/learners/${learnerId}/courses/${courseId}/profile`),
@@ -232,6 +248,16 @@ export const sessionsApi = {
 
   // Quiz
   generateQuiz:  (id: string) => api.post(`/sessions/${id}/generate-quiz`),
+};
+
+// ─── Engagement ──────────────────────────────────────────────────────────────
+export const engagementApi = {
+  dashboard:       ()                                          => api.get('/engagement/my-dashboard'),
+  loginHistory:    (page = 1)                                  => api.get('/engagement/my-login-history', { params: { page, per_page: 20 } }),
+  activityLog:     (params?: Record<string, unknown>)         => api.get('/engagement/my-activity-log', { params }),
+  recommendations: ()                                          => api.get('/engagement/my-recommendations'),
+  logEvent:        (data: Record<string, unknown>)            => api.post('/engagement/events', data),
+  markNotifClicked:(id: number)                               => api.patch(`/notifications/${id}/click`, { channel: 'in_app' }),
 };
 
 // ─── Notifications ───────────────────────────────────────────────────────────

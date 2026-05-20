@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useRealtime } from "../context/RealtimeContext";
 import { dashboardApi, coursesApi } from "../services/api";
 import {
   BookOpen,
   CheckCircle,
   Clock,
   TrendingUp,
-  Calendar,
   ArrowRight,
   Flame,
   ChevronRight,
@@ -33,22 +33,40 @@ import {
 
 const COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#f59e0b"];
 
-const typeIcon: Record<string, React.ElementType> = { assignment: FileText, quiz: HelpCircle, assessment: Zap };
-const typeColor: Record<string, string>            = { assignment: "#2563eb", quiz: "#7c3aed", assessment: "#0891b2" };
+const URL_RE = /(https?:\/\/[^\s→"'\]]+)/g;
+function linkifyBody(text: string) {
+  const parts = text.split(URL_RE);
+  return parts.map((part, i) =>
+    URL_RE.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+        style={{ color: "rgba(255,255,255,0.95)", textDecoration: "underline", wordBreak: "break-all" }}>
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 
 export function Dashboard() {
   const { user } = useAuth();
+  const { refreshTrigger } = useRealtime();
   const [hub,     setHub]     = useState<Record<string, unknown> | null>(null);
   const [courses, setCourses] = useState<Record<string, unknown>[]>([]);
 
-  useEffect(() => {
+  const loadDashboard = () => {
     dashboardApi.studentHub()
       .then(r => setHub(r.data.data ?? r.data))
       .catch(() => {});
     coursesApi.myCourses()
       .then(r => setCourses((r.data.data ?? r.data ?? []).slice(0, 3)))
       .catch(() => {});
-  }, []);
+  };
+
+  useEffect(() => {
+    loadDashboard();
+  }, [refreshTrigger]);
 
   const weeklyData: { day: string; hours: number }[] =
     (hub?.weekly_study_hours as { day: string; hours: number }[] | undefined) ??
@@ -67,10 +85,10 @@ export function Dashboard() {
     lessonsLeft:Number((c.total_sections ?? 0)) - Number((c.completed_sections ?? 0)),
   }));
 
-  const upcomingDeadlines = ((hub?.upcoming_deadlines as Record<string, unknown>[] | undefined) ?? []).slice(0, 5);
-  const recentActivity    = ((hub?.recent_activity    as Record<string, unknown>[] | undefined) ?? []).slice(0, 4);
+  const recentActivity = ((hub?.recent_activity as Record<string, unknown>[] | undefined) ?? []).slice(0, 4);
+  const aiNudge        = hub?.ai_nudge as { title: string; body: string; sent_at: string; read: boolean; course_id: string } | null | undefined;
 
-  const enrolledCount  = Number(hub?.enrolled_courses   ?? courses.length);
+  const enrolledCount  = Number(hub?.enrolled_count ?? courses.length);
   const lessonsCount   = Number(hub?.lessons_completed  ?? 0);
   const pendingCount   = Number(hub?.pending_tasks      ?? 0);
   const riskSignal     = String(hub?.risk_signal        ?? 'active') as 'active' | 'inactive';
@@ -110,8 +128,7 @@ export function Dashboard() {
               Welcome back, {firstName}! 👋
             </h1>
             <p style={{ fontSize: "14px", color: "#bfdbfe", marginTop: "4px" }}>
-              You have <span className="text-white font-semibold">{pendingCount} pending tasks</span> and{" "}
-              <span className="text-white font-semibold">{upcomingDeadlines.length} upcoming deadlines</span>.
+              You have <span className="text-white font-semibold">{pendingCount} pending tasks</span> across your enrolled courses.
             </p>
             {!!hub?.streak_days && (
               <div className="flex items-center gap-4 mt-3">
@@ -263,77 +280,47 @@ export function Dashboard() {
 
         {/* Right Column */}
         <div className="space-y-4">
-          {/* Upcoming Deadlines */}
-          <div className="bg-white rounded-2xl p-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>Upcoming Deadlines</h2>
-              <Calendar size={16} color="#2563eb" />
-            </div>
-            <div className="space-y-2.5">
-{upcomingDeadlines.length === 0 && (
-                <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center", padding: "12px 0" }}>No upcoming deadlines</p>
-              )}
-              {upcomingDeadlines.map((item, idx) => {
-                const t     = String(item.type ?? 'assignment');
-                const urgent = Boolean(item.urgent);
-                const Icon  = typeIcon[t] ?? FileText;
-                return (
-                  <div
-                    key={String(item.id ?? idx)}
-                    className="flex items-start gap-3 p-2.5 rounded-xl transition-colors hover:bg-slate-50"
-                    style={{ borderLeft: urgent ? "3px solid #ef4444" : "3px solid #e2e8f0" }}
-                  >
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ backgroundColor: `${typeColor[t] ?? '#2563eb'}15` }}
-                    >
-                      <Icon size={13} color={typeColor[t] ?? '#2563eb'} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-slate-700 truncate" style={{ fontSize: "12px", fontWeight: 500 }}>
-                        {String(item.title ?? item.name ?? '')}
-                      </p>
-                      <p style={{ fontSize: "11px", color: urgent ? "#ef4444" : "#94a3b8", marginTop: "2px", fontWeight: urgent ? 600 : 400 }}>
-                        {urgent && "⚡ "}Due {String(item.due ?? item.due_date ?? '')}
-                      </p>
-                    </div>
+          {/* AI Nudge Card */}
+          <div className="rounded-2xl p-5 relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #0c1e4a 0%, #1e3a8a 60%, #2563eb 100%)", boxShadow: "0 4px 20px rgba(37,99,235,0.25)" }}>
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                    <BookOpen size={15} color="white" />
                   </div>
-                );
-              })}
-            </div>
-            <NavLink
-              to="/assignments"
-              className="flex items-center justify-center gap-1.5 mt-3 py-2 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors"
-              style={{ fontSize: "13px", fontWeight: 500 }}
-            >
-              View All Tasks <ArrowRight size={13} />
-            </NavLink>
-          </div>
+                  <div>
+                    <p style={{ fontSize: "13px", fontWeight: 700, color: "white" }}>Message from Your Instructor</p>
+                    {aiNudge?.sent_at && (
+                      <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)" }}>{aiNudge.sent_at}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-          {/* Progress Chart */}
-          <div className="bg-white rounded-2xl p-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>Lessons This Semester</h2>
-              <TrendingUp size={16} color="#22c55e" />
+              {aiNudge ? (
+                <>
+                  <p style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.9)", marginBottom: "8px", lineHeight: "1.5" }}>
+                    {aiNudge.title}
+                  </p>
+                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", lineHeight: "1.7", whiteSpace: "pre-line", maxHeight: "260px", overflowY: "auto", paddingRight: "4px" }}>
+                    {linkifyBody(String(aiNudge.body ?? ""))}
+                  </p>
+                  <NavLink to="/profile"
+                    className="inline-flex items-center gap-1.5 mt-4 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                    style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.2)" }}>
+                    View my learning profile <ArrowRight size={11} />
+                  </NavLink>
+                </>
+              ) : (
+                <div className="py-4 text-center space-y-2">
+                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)", lineHeight: "1.6" }}>
+                    No messages yet. Your instructor will reach out here with personalised guidance based on your progress.
+                  </p>
+                </div>
+              )}
             </div>
-            <ResponsiveContainer width="100%" height={120}>
-              <AreaChart data={progressData}>
-                <defs>
-                  <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                <YAxis hide />
-                <Tooltip
-                  contentStyle={{ borderRadius: "10px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: "12px" }}
-                  formatter={(v) => [`${v} lessons`, "Completed"]}
-                />
-                <Area type="monotone" dataKey="completed" stroke="#22c55e" strokeWidth={2} fill="url(#greenGrad)" dot={{ fill: "#22c55e", r: 3 }} />
-              </AreaChart>
-            </ResponsiveContainer>
           </div>
 
           {/* Recent Activity */}

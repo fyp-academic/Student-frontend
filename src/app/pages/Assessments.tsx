@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ClipboardList, Calendar, Clock, CheckCircle, AlertCircle, Trophy, Star, Loader2 } from "lucide-react";
+import { useRealtime } from "../context/RealtimeContext";
 import { coursesApi, activitiesApi } from "../services/api";
 
 type Act = Record<string, unknown>;
@@ -17,8 +18,10 @@ const statusCfg = {
 export function Assessments() {
   const [assessments, setAssessments] = useState<Act[]>([]);
   const [loading, setLoading]         = useState(true);
+  const { refreshTrigger } = useRealtime();
 
   useEffect(() => {
+    setLoading(true);
     (async () => {
       try {
         const cRes = await coursesApi.myCourses();
@@ -51,7 +54,7 @@ export function Assessments() {
         setAssessments(all);
       } catch { /* ignore */ } finally { setLoading(false); }
     })();
-  }, []);
+  }, [refreshTrigger]);
 
   const upcoming  = assessments.filter(a => String(a.completion_status ?? a.status ?? '').toLowerCase() !== 'completed').length;
   const completed = assessments.filter(a => String(a.completion_status ?? a.status ?? '').toLowerCase() === 'completed').length;

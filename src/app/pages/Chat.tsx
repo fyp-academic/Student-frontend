@@ -8,33 +8,38 @@ import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 
 
 let echo: Echo<"reverb"> | null = null;
-function getEcho(): Echo<"reverb"> {
-  if (!echo) {
-    (window as unknown as Record<string, unknown>).Pusher = Pusher;
-    echo = new Echo({
-      broadcaster: "reverb",
-      key:         import.meta.env.VITE_REVERB_APP_KEY,
-      wsHost:      import.meta.env.VITE_REVERB_HOST,
-      wsPort:      Number(import.meta.env.VITE_REVERB_PORT),
-      wssPort:     Number(import.meta.env.VITE_REVERB_PORT),
-      forceTLS:    true,
-      enabledTransports: ["ws", "wss"],
-      authEndpoint: "https://api.codagenz.com/broadcasting/auth",
-      auth: { headers: { Authorization: `Bearer ${localStorage.getItem("auth_token") ?? ""}` } },
-    } as ConstructorParameters<typeof Echo>[0]);
-  }
+function getEcho(): Echo<"reverb"> | null {
+  if (echo) return echo;
+  const key    = import.meta.env.VITE_REVERB_APP_KEY;
+  const host   = import.meta.env.VITE_REVERB_HOST;
+  const port   = Number(import.meta.env.VITE_REVERB_PORT);
+  const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'https';
+  if (!key || !host || !port) return null;
+  const tls = scheme === 'https';
+  (window as unknown as Record<string, unknown>).Pusher = Pusher;
+  echo = new Echo({
+    broadcaster: "reverb",
+    key,
+    wsHost:      host,
+    wsPort:      port,
+    wssPort:     port,
+    forceTLS:    tls,
+    enabledTransports: tls ? ["ws", "wss"] : ["ws"],
+    authEndpoint: `${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://localhost:8000'}/api/broadcasting/auth`,
+    auth: { headers: { Authorization: `Bearer ${localStorage.getItem("auth_token") ?? ""}` } },
+  } as ConstructorParameters<typeof Echo>[0]);
   return echo;
 }
 
 type ChatType = 'direct' | 'course' | 'programme';
 
 interface ApiConversation {
-  [x: string]: string;
   id: string;
   type: ChatType;
-  participant_name: string;
-  participant_role: string;
-  participant_user_id: string;
+  participant_name?: string;
+  participant_role?: string;
+  participant_user_id?: string;
+  owner_user_id?: string;
   last_message: string | null;
   last_message_time: string | null;
   unread_count: number;
@@ -83,9 +88,13 @@ interface Programme {
 
 export function Chat() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<ChatType>('direct');
+  const [activeTab, setActiveTab] = useState<ChatType>(
+    () => (sessionStorage.getItem('chat_active_tab') as ChatType) ?? 'direct'
+  );
   const [conversations, setConversations] = useState<ApiConversation[]>([]);
-  const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
+  const [selectedConvId, setSelectedConvId] = useState<string | null>(
+    () => sessionStorage.getItem('chat_selected_conv_id')
+  );
   const [messages, setMessages]   = useState<ApiMessage[]>([]);
   const [input, setInput]         = useState("");
   const [searchConvo, setSearchConvo] = useState("");
@@ -102,6 +111,8 @@ export function Chat() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; messageId: string } | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiPickerMessageId, setEmojiPickerMessageId] = useState<string | null>(null);
+  const [showInputEmojiPicker, setShowInputEmojiPicker] = useState(false);
+  const [conversationParticipantIds, setConversationParticipantIds] = useState<Set<string>>(new Set());
   
   // New message modal for direct chats
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
@@ -125,11 +136,24 @@ export function Chat() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasSentTypingRef = useRef(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const inputEmojiPickerRef = useRef<HTMLDivElement>(null);
+  const selectedConvIdRef = useRef<string | null>(selectedConvId);
+
+  // Keep ref in sync with state (used inside WS closures to avoid stale captures)
+  useEffect(() => { selectedConvIdRef.current = selectedConvId; }, [selectedConvId]);
+
+  // Persist active tab and selected conversation across page refreshes
+  useEffect(() => { sessionStorage.setItem('chat_active_tab', activeTab); }, [activeTab]);
+  useEffect(() => {
+    if (selectedConvId) sessionStorage.setItem('chat_selected_conv_id', selectedConvId);
+    else sessionStorage.removeItem('chat_selected_conv_id');
+  }, [selectedConvId]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
 
   // Load conversation list based on active tab
   useEffect(() => {
+    setConversations([]); // clear stale items immediately
     chatAccessApi.myChats().then((res) => {
       const data = res.data?.data ?? {};
       let convs: ApiConversation[] = [];
@@ -179,6 +203,9 @@ export function Chat() {
     messagingApi.messages(convId).then((res) => {
       setMessages(res.data.data ?? res.data ?? []);
     });
+    // Reset unread count when opening a conversation
+    messagingApi.markRead(convId).catch(() => {});
+    setConversations((prev) => prev.map((c) => c.id === convId ? { ...c, unread_count: 0 } : c));
     messagingApi.pinnedMessages(convId).then((res) => {
       setPinnedMessages(res.data?.data ?? []);
     });
@@ -191,7 +218,9 @@ export function Chat() {
     // Load messages and pinned messages
     loadMessages(selectedConvId);
 
-    const ch = getEcho().private(`conversation.${selectedConvId}`);
+    const echoInst = getEcho();
+    if (!echoInst) return;
+    const ch = echoInst.private(`conversation.${selectedConvId}`);
 
     ch.listen(".message.sent", (data: ApiMessage) => {
       setMessages((prev) => [...prev, data]);
@@ -242,13 +271,61 @@ export function Chat() {
       });
     });
 
-    return () => { getEcho().leave(`conversation.${selectedConvId}`); };
+    return () => { getEcho()?.leave(`conversation.${selectedConvId}`); };
   }, [selectedConvId, user?.id]);
+
+  // Fetch participants for group chats (for online count)
+  useEffect(() => {
+    if (!selectedConv) { setConversationParticipantIds(new Set()); return; }
+    if (selectedConv.type === 'course' && selectedConv.course_id) {
+      courseChatApi.participants(selectedConv.course_id).then((res) => {
+        const ids = new Set<string>((res.data?.data ?? []).map((p: { user_id: string }) => p.user_id));
+        setConversationParticipantIds(ids);
+      }).catch(() => {});
+    } else if (selectedConv.type === 'programme' && selectedConv.programme_id) {
+      programmeChatApi.participants(selectedConv.programme_id).then((res) => {
+        const ids = new Set<string>((res.data?.data ?? []).map((p: { user_id: string }) => p.user_id));
+        setConversationParticipantIds(ids);
+      }).catch(() => {});
+    } else {
+      setConversationParticipantIds(new Set());
+    }
+  }, [selectedConvId]);
+
+  // Polling fallback: refresh active messages when WebSocket is unavailable
+  useEffect(() => {
+    if (!selectedConvId || getEcho()) return;
+    const id = setInterval(() => {
+      messagingApi.messages(selectedConvId).then((res) => {
+        const fetched: ApiMessage[] = res.data.data ?? res.data ?? [];
+        setMessages((prev) => (fetched.length !== prev.length ? fetched : prev));
+      }).catch(() => {});
+    }, 3000);
+    return () => clearInterval(id);
+  }, [selectedConvId]);
+
+  // Polling fallback: refresh conversation list when WebSocket is unavailable
+  useEffect(() => {
+    if (getEcho()) return;
+    const id = setInterval(() => {
+      chatAccessApi.myChats().then((res) => {
+        const data = res.data?.data ?? {};
+        const convs: ApiConversation[] =
+          activeTab === 'direct' ? (data.direct ?? []) :
+          activeTab === 'course' ? (data.courses ?? []) :
+          (data.programmes ?? []);
+        setConversations(convs);
+      }).catch(() => {});
+    }, 5000);
+    return () => clearInterval(id);
+  }, [activeTab]);
 
   // Presence channel for online/offline status
   useEffect(() => {
     if (!user) return;
-    const p = getEcho().join("online-users") as unknown as {
+    const echoPresence = getEcho();
+    if (!echoPresence) return;
+    const p = echoPresence.join("online-users") as unknown as {
       here:    (fn: (members: { id: string }[]) => void) => any;
       joining: (fn: (member: { id: string })  => void)   => any;
       leaving: (fn: (member: { id: string })  => void)   => any;
@@ -256,7 +333,7 @@ export function Chat() {
     p.here((ms: { id: string }[]) => setOnlineUsers(new Set(ms.map((m) => m.id))))
      .joining((m: { id: string }) => setOnlineUsers((prev) => new Set([...prev, m.id])))
      .leaving((m: { id: string }) => setOnlineUsers((prev) => { const s = new Set(prev); s.delete(m.id); return s; }));
-    return () => { getEcho().leave("online-users"); };
+    return () => { getEcho()?.leave("online-users"); };
   }, [user]);
 
   // Listen for new messages on all conversations to update conversation list
@@ -264,7 +341,9 @@ export function Chat() {
     if (conversations.length === 0) return;
     
     conversations.forEach((conv) => {
-      const ch = getEcho().private(`conversation.${conv.id}`);
+      const echoConv = getEcho();
+      if (!echoConv) return;
+      const ch = echoConv.private(`conversation.${conv.id}`);
       
       ch.listen(".message.sent", (data: ApiMessage) => {
         // Update conversation with new message info
@@ -275,7 +354,10 @@ export function Chat() {
                   ...c,
                   last_message: data.content ?? "📎 Attachment",
                   last_message_time: data.timestamp,
-                  unread_count: data.sender_id !== user?.id ? c.unread_count + 1 : 0,
+                  // Only increment if the message is from someone else AND this conv is not currently open
+                  unread_count: (data.sender_id !== user?.id && conv.id !== selectedConvIdRef.current)
+                    ? c.unread_count + 1
+                    : c.id === selectedConvIdRef.current ? 0 : c.unread_count,
                 } as ApiConversation)
               : c
           )
@@ -294,6 +376,8 @@ export function Chat() {
       const res = await messagingApi.sendMessage(selectedConvId, fd);
       const msg: ApiMessage = res.data.data ?? res.data;
       setMessages((prev) => [...prev, msg]);
+      // Sender always has 0 unread in the conversation they just sent to
+      setConversations((prev) => prev.map((c) => c.id === selectedConvId ? { ...c, unread_count: 0 } : c));
       setInput("");
       setFilePreview(null);
     } finally {
@@ -319,6 +403,11 @@ export function Chat() {
     }
   };
 
+  const handleInputEmojiClick = (emojiData: EmojiClickData) => {
+    setInput((prev) => prev + emojiData.emoji);
+    setShowInputEmojiPicker(false);
+  };
+
   const toggleEmojiPicker = (messageId: string) => {
     if (showEmojiPicker && emojiPickerMessageId === messageId) {
       setShowEmojiPicker(false);
@@ -342,6 +431,19 @@ export function Chat() {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
+
+  // Close input emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (inputEmojiPickerRef.current && !inputEmojiPickerRef.current.contains(event.target as Node)) {
+        setShowInputEmojiPicker(false);
+      }
+    };
+    if (showInputEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showInputEmojiPicker]);
 
   // Typing indicator handler
   const handleInputChange = (value: string) => {
@@ -423,13 +525,27 @@ export function Chat() {
 
   const isOnline = (id: string) => onlineUsers.has(id);
 
+  // Returns the ID of the other person in a direct conversation
+  const getOtherUserId = (convo: ApiConversation): string => {
+    if (user?.id && convo.owner_user_id === user.id) {
+      return convo.participant_user_id ?? '';
+    }
+    return convo.owner_user_id ?? '';
+  };
+
+  const onlineParticipantCount = [...conversationParticipantIds].filter((id) => onlineUsers.has(id)).length;
+
   const initials = (name: string) =>
     name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 
   const filteredConvos = conversations.filter(
     (c) =>
-      c.participant_name.toLowerCase().includes(searchConvo.toLowerCase()) ||
-      (c.participant_role ?? "").toLowerCase().includes(searchConvo.toLowerCase())
+      // Only show direct-type (or legacy null-type) conversations in the direct tab
+      (c.type === 'direct' || !c.type) &&
+      (
+        (c.participant_name ?? c.title ?? "").toLowerCase().includes(searchConvo.toLowerCase()) ||
+        (c.participant_role ?? "").toLowerCase().includes(searchConvo.toLowerCase())
+      )
   );
 
   // Filter courses/programmes based on search
@@ -518,6 +634,10 @@ export function Chat() {
         // Backend should return the existing conversation
         const existingConv = axiosErr.response.data?.conversation;
         if (existingConv?.id) {
+          // Merge into local list if not already present
+          setConversations((prev) =>
+            prev.find((c) => c.id === existingConv.id) ? prev : [existingConv as ApiConversation, ...prev]
+          );
           setSelectedConvId(existingConv.id);
           setShowNewMessageModal(false);
           setSelectedRecipient(null);
@@ -528,9 +648,9 @@ export function Chat() {
         } else {
           // Fallback: reload conversations and find by participant
           const res = await chatAccessApi.myChats();
-          const allChats = res.data.data ?? res.data ?? [];
-          setConversations(allChats);
-          const existing = allChats.find((c: ApiConversation) =>
+          const directList: ApiConversation[] = res.data?.data?.direct ?? [];
+          setConversations(directList);
+          const existing = directList.find((c: ApiConversation) =>
             c.type === 'direct' &&
             (c.participant_user_id === selectedRecipient || c.owner_user_id === selectedRecipient)
           );
@@ -693,7 +813,7 @@ export function Chat() {
           
           {/* DIRECT CONVERSATIONS LIST */}
           {activeTab === 'direct' && filteredConvos.map((convo) => {
-            const online = isOnline(convo.participant_user_id);
+            const online = isOnline(getOtherUserId(convo));
             const isGroupChat = convo.type === 'course' || convo.type === 'programme';
             return (
               <div key={convo.id}
@@ -705,7 +825,7 @@ export function Chat() {
                 style={{ backgroundColor: selectedConvId === convo.id ? "#eff6ff" : "transparent" }}>
                 <div className="relative flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center text-sm font-bold">
-                    {isGroupChat ? (convo.type === 'course' ? <BookOpen size={16} /> : <GraduationCap size={16} />) : initials(convo.participant_name)}
+                    {isGroupChat ? (convo.type === 'course' ? <BookOpen size={16} /> : <GraduationCap size={16} />) : initials(convo.participant_name ?? "")}
                   </div>
                   {!isGroupChat && online && (
                     <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white" style={{ backgroundColor: "#22c55e" }} />
@@ -759,18 +879,18 @@ export function Chat() {
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center text-sm font-bold">
                     {(selectedConv.type === 'course' || selectedConv.type === 'programme')
                       ? (selectedConv.type === 'course' ? <BookOpen size={16} /> : <GraduationCap size={16} />)
-                      : initials(getConversationName(selectedConv))}
+                      : initials(getConversationName(selectedConv) ?? "")}
                   </div>
-                  {selectedConv.type === 'direct' && isOnline(selectedConv.participant_user_id) && (
+                  {(selectedConv.type === 'direct' || !selectedConv.type) && isOnline(getOtherUserId(selectedConv)) && (
                     <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white" style={{ backgroundColor: "#22c55e" }} />
                   )}
                 </div>
                 <div className="min-w-0">
                   <p className="truncate" style={{ fontSize: "14px", fontWeight: 700, color: "#1e293b" }}>{getConversationName(selectedConv)}</p>
-                  <p className="truncate" style={{ fontSize: "11px", color: selectedConv.type === 'direct' && isOnline(selectedConv.participant_user_id) ? "#22c55e" : "#94a3b8", fontWeight: selectedConv.type === 'direct' && isOnline(selectedConv.participant_user_id) ? 500 : 400 }}>
-                    {selectedConv.type === 'direct'
-                      ? (isOnline(selectedConv.participant_user_id) ? "● Online" : selectedConv.participant_role)
-                      : (selectedConv.type === 'course' ? 'Course Chat' : 'Programme Chat')}
+                  <p className="truncate" style={{ fontSize: "11px", color: ((selectedConv.type === 'direct' || !selectedConv.type) && isOnline(getOtherUserId(selectedConv))) || (selectedConv.type === 'course' || selectedConv.type === 'programme' ? onlineParticipantCount > 0 : false) ? "#22c55e" : "#94a3b8", fontWeight: ((selectedConv.type === 'direct' || !selectedConv.type) && isOnline(getOtherUserId(selectedConv))) || (selectedConv.type === 'course' || selectedConv.type === 'programme' ? onlineParticipantCount > 0 : false) ? 500 : 400 }}>
+                    {(selectedConv.type === 'direct' || !selectedConv.type)
+                      ? (isOnline(getOtherUserId(selectedConv)) ? "● Online" : (selectedConv.participant_role ? `${selectedConv.participant_role.charAt(0).toUpperCase() + selectedConv.participant_role.slice(1)} · Direct` : 'Direct'))
+                      : (onlineParticipantCount > 0 ? `● ${onlineParticipantCount} online` : (selectedConv.type === 'course' ? 'Course Chat' : 'Programme Chat'))}
                   </p>
                 </div>
               </div>
@@ -1003,7 +1123,19 @@ export function Chat() {
             )}
 
             {/* Input */}
-            <div className="p-2 sm:p-4 border-t" style={{ borderColor: "#f1f5f9" }}>
+            <div className="p-2 sm:p-4 border-t relative" style={{ borderColor: "#f1f5f9" }}>
+              {showInputEmojiPicker && (
+                <div ref={inputEmojiPickerRef} className="absolute z-50 bottom-full mb-2 right-4" onClick={(e) => e.stopPropagation()}>
+                  <EmojiPicker
+                    onEmojiClick={handleInputEmojiClick}
+                    theme={Theme.LIGHT}
+                    width={280}
+                    height={350}
+                    searchPlaceholder="Search emoji..."
+                    skinTonesDisabled
+                  />
+                </div>
+              )}
               <div className="flex items-center gap-2 sm:gap-3 bg-white rounded-2xl border px-3 sm:px-4 py-2" style={{ borderColor: "#e2e8f0" }}>
                 <input ref={fileInputRef} type="file" className="hidden"
                   onChange={(e) => setFilePreview(e.target.files?.[0] ?? null)} />
@@ -1017,7 +1149,9 @@ export function Chat() {
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   className="flex-1 focus:outline-none text-slate-700 bg-transparent min-w-0"
                   style={{ fontSize: "13px" }} />
-                <button className="text-slate-400 hover:text-yellow-500 transition-colors flex-shrink-0 hidden sm:block" title="Emoji reactions on messages">
+                <button onClick={() => setShowInputEmojiPicker((prev) => !prev)}
+                  className="text-slate-400 hover:text-yellow-500 transition-colors flex-shrink-0 hidden sm:block"
+                  title="Add emoji to message">
                   <Smile size={17} />
                 </button>
                 <button onClick={handleSend} disabled={(!input.trim() && !filePreview) || sending}

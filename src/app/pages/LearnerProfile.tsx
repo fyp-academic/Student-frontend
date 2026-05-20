@@ -16,6 +16,10 @@ export function LearnerProfile() {
   const [selectedModes, setSelectedModes] = useState<string[]>(["video", "multimedia"]);
   const [pacePreference, setPacePreference] = useState("guided");
   const [supportNotes, setSupportNotes] = useState("");
+  const [varkStyle, setVarkStyle] = useState("");
+  const [declaredInterests, setDeclaredInterests] = useState<string[]>([]);
+  const [styleSaving, setStyleSaving] = useState(false);
+  const [styleSaved, setStyleSaved] = useState(false);
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [enrolledCourses, setEnrolledCourses] = useState<Record<string, unknown>[]>([]);
   const [skillData, setSkillData] = useState<{ subject: string; value: number }[]>([]);
@@ -30,9 +34,11 @@ export function LearnerProfile() {
       const p: Record<string, unknown> = r.data.data ?? r.data;
       setProfile(p);
       setBio(String(p.bio ?? ''));
-      if (p.preferred_modes)  setSelectedModes(p.preferred_modes as string[]);
-      if (p.pace_preference)  setPacePreference(String(p.pace_preference));
-      if (p.support_notes)    setSupportNotes(String(p.support_notes));
+      if (p.preferred_modes)    setSelectedModes(p.preferred_modes as string[]);
+      if (p.pace_preference)    setPacePreference(String(p.pace_preference));
+      if (p.support_notes)      setSupportNotes(String(p.support_notes));
+      if (p.vark_style)         setVarkStyle(String(p.vark_style));
+      if (p.declared_interests) setDeclaredInterests(p.declared_interests as string[]);
       if (p.skills)           setSkillData(p.skills as { subject: string; value: number }[]);
       if (p.achievements)     setAchievements(p.achievements as Record<string, unknown>[]);
     }).catch(() => {});
@@ -266,114 +272,164 @@ export function LearnerProfile() {
         </div>
       )}
 
-      {activeTab === "learning style" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="bg-white rounded-2xl p-5 space-y-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            <div className="flex items-center justify-between">
+      {activeTab === "learning style" && (() => {
+        const varkOptions = [
+          { id: "visual",      label: "Visual",           icon: "👁️",  desc: "Charts, diagrams, mind maps, videos" },
+          { id: "auditory",    label: "Auditory",         icon: "🎧",  desc: "Lectures, podcasts, verbal explanations" },
+          { id: "reading",     label: "Reading / Writing", icon: "📖",  desc: "Notes, PDFs, written summaries" },
+          { id: "kinesthetic", label: "Kinesthetic",      icon: "🛠️",  desc: "Labs, simulations, hands-on practice" },
+        ];
+        const interestOptions = [
+          "Algorithms", "Data Structures", "Databases", "Networking", "Machine Learning",
+          "Web Development", "Operating Systems", "Software Engineering", "Cybersecurity",
+          "Mobile Development", "Cloud Computing", "Mathematics",
+        ];
+        const toggleInterest = (item: string) =>
+          setDeclaredInterests(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+
+        const handleSaveStyle = async () => {
+          setStyleSaving(true);
+          setStyleSaved(false);
+          try {
+            await profileApi.updateLearningStyle({
+              vark_style:          varkStyle || null,
+              preferred_modes:     selectedModes,
+              pace_preference:     pacePreference,
+              declared_interests:  declaredInterests,
+              support_notes:       supportNotes,
+            });
+            setStyleSaved(true);
+            setTimeout(() => setStyleSaved(false), 3000);
+          } catch { /* silent */ } finally { setStyleSaving(false); }
+        };
+
+        return (
+          <div className="max-w-2xl">
+            <div className="bg-white rounded-2xl p-5 space-y-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>Learning Style Declaration</p>
+                  <p style={{ fontSize: "11px", color: "#94a3b8" }}>Used by AI advisor to personalise your nudges and resources</p>
+                </div>
+                {styleSaved && (
+                  <span className="flex items-center gap-1 text-green-600 text-xs font-semibold">
+                    <CheckCircle size={13} /> Saved
+                  </span>
+                )}
+              </div>
+
+              {/* VARK style */}
               <div>
-                <p style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>Learning Style Preferences</p>
-                <p style={{ fontSize: "11px", color: "#94a3b8" }}>Shared with AI companion + instructors</p>
+                <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b", marginBottom: "8px" }}>
+                  Primary learning style <span style={{ color: "#94a3b8", fontWeight: 400 }}>(VARK model — pick one)</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {varkOptions.map(v => (
+                    <button key={v.id} type="button" onClick={() => setVarkStyle(varkStyle === v.id ? "" : v.id)}
+                      className="text-left p-3 rounded-xl border transition-all"
+                      style={{
+                        borderColor: varkStyle === v.id ? "#2563eb" : "#e2e8f0",
+                        backgroundColor: varkStyle === v.id ? "#eff6ff" : "#f8fafc",
+                      }}>
+                      <p style={{ fontSize: "13px", fontWeight: 600, color: varkStyle === v.id ? "#1d4ed8" : "#1e293b" }}>
+                        {v.icon} {v.label}
+                      </p>
+                      <p style={{ fontSize: "11px", color: varkStyle === v.id ? "#3b82f6" : "#94a3b8" }}>{v.desc}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <span className="px-3 py-1 rounded-full text-white" style={{ fontSize: "11px", backgroundColor: "#2563eb" }}>
-                Adaptive Focus
-              </span>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {learningModes.map((mode) => {
-                const active = selectedModes.includes(mode.id);
-                return (
-                  <button
-                    type="button"
-                    key={mode.id}
-                    onClick={() => toggleMode(mode.id)}
-                    className="text-left p-3 rounded-2xl border transition-all"
-                    style={{
-                      borderColor: active ? "#2563eb" : "#e2e8f0",
-                      backgroundColor: active ? "#eff6ff" : "white",
-                      color: active ? "#1d4ed8" : "#475569",
-                    }}
-                  >
-                    <p style={{ fontSize: "13px", fontWeight: 600 }}>{mode.label}</p>
-                    <p style={{ fontSize: "11px", color: active ? "#1d4ed8" : "#94a3b8" }}>{mode.detail}</p>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="space-y-3">
-              <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b" }}>Preferred pace</p>
-              <div className="grid grid-cols-3 gap-2">
-                {["self-directed", "guided", "accelerated"].map((pace) => (
-                  <button
-                    key={pace}
-                    type="button"
-                    onClick={() => setPacePreference(pace)}
-                    className="py-2 rounded-xl border capitalize"
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      backgroundColor: pacePreference === pace ? "#2563eb" : "#f8fafc",
-                      color: pacePreference === pace ? "white" : "#475569",
-                      borderColor: pacePreference === pace ? "#2563eb" : "#e2e8f0",
-                    }}
-                  >
-                    {pace}
-                  </button>
-                ))}
+              {/* Content modes */}
+              <div>
+                <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b", marginBottom: "8px" }}>
+                  Preferred content formats <span style={{ color: "#94a3b8", fontWeight: 400 }}>(select all that apply)</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {learningModes.map(mode => {
+                    const active = selectedModes.includes(mode.id);
+                    return (
+                      <button type="button" key={mode.id} onClick={() => toggleMode(mode.id)}
+                        className="text-left p-2.5 rounded-xl border transition-all"
+                        style={{
+                          borderColor: active ? "#2563eb" : "#e2e8f0",
+                          backgroundColor: active ? "#eff6ff" : "white",
+                        }}>
+                        <p style={{ fontSize: "12px", fontWeight: 600, color: active ? "#1d4ed8" : "#475569" }}>{mode.label}</p>
+                        <p style={{ fontSize: "10px", color: active ? "#3b82f6" : "#94a3b8" }}>{mode.detail}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            <div>
-              <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b", marginBottom: "6px" }}>Context for support</p>
-              <textarea
-                value={supportNotes}
-                onChange={(e) => setSupportNotes(e.target.value)}
-                rows={3}
-                className="w-full rounded-2xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                style={{ fontSize: "12px", color: "#475569", borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
-                placeholder="Share what helps you most when concepts feel tough..."
-              />
-            </div>
+              {/* Pace */}
+              <div>
+                <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b", marginBottom: "6px" }}>Preferred learning pace</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "self-directed", label: "Self-directed", desc: "Learn at your own speed" },
+                    { id: "guided",        label: "Guided",        desc: "Follow course schedule" },
+                    { id: "accelerated",   label: "Accelerated",   desc: "Push beyond the pace" },
+                  ].map(p => (
+                    <button key={p.id} type="button" onClick={() => setPacePreference(p.id)}
+                      className="py-2 px-1 rounded-xl border text-center transition-all"
+                      style={{
+                        fontSize: "11px", fontWeight: 600,
+                        backgroundColor: pacePreference === p.id ? "#2563eb" : "#f8fafc",
+                        color: pacePreference === p.id ? "white" : "#475569",
+                        borderColor: pacePreference === p.id ? "#2563eb" : "#e2e8f0",
+                      }}>
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            <button
-              type="button"
-              className="w-full py-2.5 rounded-xl text-white font-semibold"
-              style={{ background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
-              onClick={() => profileApi.updatePreferences({
-                preferred_modes: selectedModes,
-                pace_preference: pacePreference,
-                support_notes:   supportNotes,
-              }).catch(() => {})}
-            >
-              Save preference snapshot
-            </button>
+              {/* Declared interests */}
+              <div>
+                <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b", marginBottom: "8px" }}>
+                  Declared subject interests <span style={{ color: "#94a3b8", fontWeight: 400 }}>(helps AI recommend relevant resources)</span>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {interestOptions.map(item => {
+                    const active = declaredInterests.includes(item);
+                    return (
+                      <button key={item} type="button" onClick={() => toggleInterest(item)}
+                        className="px-3 py-1 rounded-full border text-xs font-medium transition-all"
+                        style={{
+                          borderColor: active ? "#7c3aed" : "#e2e8f0",
+                          backgroundColor: active ? "#f5f3ff" : "white",
+                          color: active ? "#6d28d9" : "#64748b",
+                        }}>
+                        {item}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Support notes */}
+              <div>
+                <p style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b", marginBottom: "6px" }}>
+                  Note for AI advisor <span style={{ color: "#94a3b8", fontWeight: 400 }}>(optional)</span>
+                </p>
+                <textarea value={supportNotes} onChange={e => setSupportNotes(e.target.value)} rows={3}
+                  className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  style={{ fontSize: "12px", color: "#475569", borderColor: "#e2e8f0", backgroundColor: "#f8fafc", resize: "none" }}
+                  placeholder="e.g. I struggle with abstract concepts — worked examples help me most." />
+              </div>
+
+              <button type="button" onClick={handleSaveStyle} disabled={styleSaving}
+                className="w-full py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
+                style={{ background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}>
+                {styleSaving ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
+                {styleSaving ? "Saving…" : "Save learning profile"}
+              </button>
+            </div>
           </div>
-
-          <div className="bg-white rounded-2xl p-5 space-y-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            <p style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>How this powers interventions</p>
-            <div className="space-y-3" style={{ fontSize: "12px", color: "#475569" }}>
-              <div className="p-3 rounded-xl" style={{ backgroundColor: "#f8fafc" }}>
-                <p style={{ fontWeight: 700, color: "#1d4ed8" }}>Adaptive content routing</p>
-                <p>AI companion surfaces the best-fit format first and nudges instructors when a switch may reduce dropout risk.</p>
-              </div>
-              <div className="p-3 rounded-xl" style={{ backgroundColor: "#f8fafc" }}>
-                <p style={{ fontWeight: 700, color: "#0f172a" }}>At-risk monitoring</p>
-                <p>When performance dips, the system compares your selected styles with actual usage to recommend tailored recovery paths.</p>
-              </div>
-              <div className="p-3 rounded-xl" style={{ backgroundColor: "#f8fafc" }}>
-                <p style={{ fontWeight: 700, color: "#0f172a" }}>Instructor visibility</p>
-                <p>Faculty dashboards highlight which cohorts need video recaps vs. printable briefs during critical weeks.</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border p-3" style={{ borderColor: "#e2e8f0" }}>
-              <p style={{ fontSize: "11px", color: "#475569" }}>
-                Tip: Update these preferences anytime—changes sync instantly with the AI study planner and outreach workflows.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {activeTab === "courses" && (
         <div className="bg-white rounded-2xl p-5 space-y-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>

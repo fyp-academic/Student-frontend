@@ -3,6 +3,7 @@ import {
   FileText, Clock, CheckCircle, AlertCircle, Upload, Eye, Calendar,
   Loader2, X, Download, MessageSquare, Paperclip
 } from "lucide-react";
+import { useRealtime } from "../context/RealtimeContext";
 import { assignmentsApi, dashboardApi } from "../services/api";
 
 const tabs = ["All", "Pending", "Submitted", "Graded", "Overdue"];
@@ -57,6 +58,7 @@ export function Assignments() {
   const [activeTab, setActiveTab] = useState("All");
   const [assignments, setAssignments] = useState<AssignmentItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { refreshTrigger } = useRealtime();
 
   // Modals
   const [viewing, setViewing] = useState<AssignmentItem | null>(null);
@@ -162,7 +164,7 @@ export function Assignments() {
     }).finally(() => setLoading(false));
 
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshTrigger]);
 
   const filtered = activeTab === "All"
     ? assignments

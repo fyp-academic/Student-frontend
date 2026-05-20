@@ -1,7 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router";
 import { HelpCircle, Clock, CheckCircle, PlayCircle, Lock, Trophy, X, ChevronRight, Loader2 } from "lucide-react";
 import { quizApi, dashboardApi } from "../services/api";
+import { useProctoringMonitor } from '../hooks/useProctoringMonitor';
+import ViolationWarningModal from '../components/ViolationWarningModal';
+import { useRealtime } from "../context/RealtimeContext";
+import { useAiWidgetContext } from "../context/AiWidgetContext";
 
 type Quiz    = Record<string, unknown>;
 type QItem   = Record<string, unknown>;
@@ -9,12 +13,49 @@ type AItem   = Record<string, unknown>;
 
 const COLORS = ["#2563eb","#7c3aed","#0891b2","#059669","#dc2626","#f59e0b"];
 
+// Convert index to lowercase Roman numeral (i, ii, iii, iv, v...)
+const toLowerRoman = (n: number): string => {
+  const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+  const syms = ['m','cm','d','cd','c','xc','l','xl','x','ix','v','iv','i'];
+  let r = '';
+  for (let i = 0; i < vals.length; i++) {
+    while (n >= vals[i]) { r += syms[i]; n -= vals[i]; }
+  }
+  return r;
+};
+
+// Convert index to uppercase Roman numeral (I, II, III, IV, V...)
+const toUpperRoman = (n: number): string => {
+  const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+  const syms = ['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+  let r = '';
+  for (let i = 0; i < vals.length; i++) {
+    while (n >= vals[i]) { r += syms[i]; n -= vals[i]; }
+  }
+  return r;
+};
+
+const getChoiceLabel = (format: string | null | undefined, index: number): string => {
+  if (!format || format === 'none') return '';
+  const i = index + 1;
+  switch (format) {
+    case 'a,b,c...': return String.fromCharCode(96 + i) + '.';
+    case 'A,B,C...': return String.fromCharCode(64 + i) + '.';
+    case 'i,ii,iii...': return toLowerRoman(i) + '.';
+    case 'I,II,III...': return toUpperRoman(i) + '.';
+    case '1,2,3...': return `${i}.`;
+    default: return '';
+  }
+};
+
 const getScoreColor = (score: number) => score >= 90 ? "#16a34a" : score >= 80 ? "#2563eb" : score >= 70 ? "#f59e0b" : "#dc2626";
 const getScoreLabel = (score: number) => score >= 90 ? "Excellent" : score >= 80 ? "Good" : score >= 70 ? "Fair" : "Needs Improvement";
 
 export function Quizzes() {
   const location = useLocation();
   const startQuizId = (location.state as { startQuizId?: string } | null)?.startQuizId;
+  const { setContext } = useAiWidgetContext();
+  const { refreshTrigger } = useRealtime();
 
   const [activeFilter, setActiveFilter] = useState("All");
   const filters = ["All", "Available", "Completed", "Locked"];
@@ -32,6 +73,22 @@ export function Quizzes() {
   const [quizLoading, setQuizLoading]       = useState(false);
   const [submitted, setSubmitted]           = useState(false);
   const [result, setResult]                 = useState<Record<string, unknown> | null>(null);
+
+  // Proctoring: active when attemptId is set and quiz not yet submitted
+  const procSessionKey = activeQuiz && attemptId && !submitted ? attemptId : null;
+  const procForceSubmit = useCallback(() => {
+    setSubmitted(true);
+    setResult(null);
+  }, []);
+
+  const { webcamRef: procWebcamRef, canvasRef: procCanvasRef, warningCount: procWarningCount, lastViolation, dismissViolation } =
+    useProctoringMonitor({
+      sessionKey:    procSessionKey,
+      activityId:    String(activeQuiz?.activity_id ?? activeQuiz?.id ?? ''),
+      contextType:   'quiz',
+      quizAttemptId: attemptId ?? undefined,
+      onForceSubmit: procForceSubmit,
+    });
 
   useEffect(() => {
     let cancelled = false;
@@ -93,7 +150,7 @@ export function Quizzes() {
       }
     }).finally(() => setLoading(false));
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshTrigger]);
 
   const scored = quizzes.filter(q => q.score !== null && q.score !== undefined);
   const avgScore = scored.length
@@ -112,13 +169,24 @@ export function Quizzes() {
     setResult(null);
     setSelected({});
     setCurrentQ(0);
+    setAttemptId(null);
+    // Push restricted mode to AI widget
+    setContext({
+      currentPage:   '/quizzes',
+      topicId:       actId,
+      topicName:     String(quiz.title ?? quiz.name ?? 'Quiz'),
+      mode:          'restricted',
+      activityType:  'quiz',
+      quizAttemptId: undefined,
+    });
     try {
       const [startRes, qRes] = await Promise.all([
         quizApi.start(actId),
         quizApi.questions(actId),
       ]);
       const attemptData = startRes.data.data ?? startRes.data ?? {};
-      setAttemptId(String((attemptData as Record<string,unknown>).id ?? ''));
+      const newAttemptId = String((attemptData as Record<string,unknown>).id ?? '');
+      setAttemptId(newAttemptId);
       const qs: QItem[] = qRes.data.data ?? qRes.data ?? [];
       setQuestions(qs);
       // Load answer options — backend already eager-loads answers with questions
@@ -155,6 +223,7 @@ export function Quizzes() {
       const r = await quizApi.submit(attemptId, { responses });
       setResult(r.data.data ?? r.data ?? {});
       setSubmitted(true);
+      setContext({ mode: 'remediation', quizAttemptId: attemptId ?? undefined });
     } catch (err: any) {
       console.error('Failed to submit quiz:', err);
       alert('Failed to submit quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
@@ -169,6 +238,10 @@ export function Quizzes() {
 
   return (
     <div className="space-y-6">
+      {/* ── Proctoring hidden elements ── */}
+      <video ref={procWebcamRef} autoPlay muted playsInline style={{ display: 'none' }} />
+      <canvas ref={procCanvasRef} style={{ display: 'none' }} />
+      <ViolationWarningModal violation={lastViolation} warningCount={procWarningCount} onAcknowledge={dismissViolation} />
       <div>
         <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>Quizzes</h1>
         <p style={{ fontSize: "14px", color: "#64748b", marginTop: "2px" }}>Test your knowledge with course quizzes</p>
@@ -310,16 +383,26 @@ export function Quizzes() {
           <div className="absolute inset-0 bg-slate-900/60" onClick={() => !quizLoading && setActiveQuiz(null)} />
           <div className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden flex flex-col" style={{ maxHeight: "90vh", boxShadow: "0 30px 70px rgba(15,23,42,0.3)" }}>
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div>
-                <p className="font-bold text-gray-900" style={{ fontSize: "15px" }}>{String(activeQuiz.title ?? activeQuiz.name ?? 'Quiz')}</p>
-                {!submitted && questions.length > 0 && (
-                  <p style={{ fontSize: "12px", color: "#94a3b8" }}>Question {currentQ + 1} of {questions.length}</p>
-                )}
+            <div className="border-b border-gray-100">
+              <div className="flex items-center justify-between px-6 py-4">
+                <div>
+                  <p className="font-bold text-gray-900" style={{ fontSize: "15px" }}>{String(activeQuiz.title ?? activeQuiz.name ?? 'Quiz')}</p>
+                  {!submitted && questions.length > 0 && (
+                    <p style={{ fontSize: "12px", color: "#94a3b8" }}>Question {currentQ + 1} of {questions.length}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {!submitted && procSessionKey && (
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${procWarningCount >= 3 ? 'bg-red-100 text-red-600' : procWarningCount > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-600'}`}>
+                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${procWarningCount >= 3 ? 'bg-red-500' : procWarningCount > 0 ? 'bg-yellow-500' : 'bg-green-500'}`} />
+                      {procWarningCount === 0 ? 'Proctored' : `${procWarningCount} Warning${procWarningCount !== 1 ? 's' : ''}`}
+                    </div>
+                  )}
+                  <button onClick={() => setActiveQuiz(null)} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200" aria-label="Close quiz">
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
-              <button onClick={() => setActiveQuiz(null)} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200" aria-label="Close quiz">
-                <X size={16} />
-              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
@@ -374,13 +457,14 @@ export function Quizzes() {
                         const aid  = String((ans as Record<string,unknown>).id ?? ai);
                         const text = String((ans as Record<string,unknown>).answer_text ?? (ans as Record<string,unknown>).text ?? `Option ${ai + 1}`);
                         const isSel = selected[qid] === aid;
+                        const label = getChoiceLabel(String(q.choice_numbering ?? q.choiceNumbering ?? ''), ai);
                         return (
                           <button
                             key={aid}
                             role="radio"
                             aria-checked={isSel}
                             onClick={() => setSelected(prev => ({ ...prev, [qid]: aid }))}
-                            className="w-full text-left px-4 py-3 rounded-xl border transition-all"
+                            className="w-full text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-2"
                             style={{
                               borderColor: isSel ? "#2563eb" : "#e2e8f0",
                               backgroundColor: isSel ? "#eff6ff" : "white",
@@ -389,11 +473,14 @@ export function Quizzes() {
                               fontSize: "13px",
                             }}
                           >
-                            <span className="inline-flex w-5 h-5 rounded-full border-2 mr-3 items-center justify-center flex-shrink-0 align-middle"
+                            <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0"
                               style={{ borderColor: isSel ? "#2563eb" : "#d1d5db", backgroundColor: isSel ? "#2563eb" : "transparent" }}>
                               {isSel && <span className="w-2 h-2 rounded-full bg-white" />}
                             </span>
-                            {text}
+                            {label && (
+                              <span className="font-semibold text-gray-500 flex-shrink-0 min-w-[1.5rem] text-right">{label}</span>
+                            )}
+                            <span>{text}</span>
                           </button>
                         );
                       })}

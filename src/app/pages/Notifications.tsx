@@ -4,6 +4,7 @@ import {
   CheckCircle, Trash2,
 } from "lucide-react";
 import { notificationsApi } from "../services/api";
+import { useRealtime } from "../context/RealtimeContext";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
@@ -42,15 +43,17 @@ let echoInstance: Echo<'reverb'> | null = null;
 function getEchoInstance(): Echo<'reverb'> {
   if (!echoInstance) {
     (window as unknown as Record<string, unknown>).Pusher = Pusher;
+    const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'https';
+    const tls = scheme === 'https';
     echoInstance = new Echo({
       broadcaster:  'reverb',
       key:          import.meta.env.VITE_REVERB_APP_KEY,
       wsHost:       import.meta.env.VITE_REVERB_HOST,
       wsPort:       Number(import.meta.env.VITE_REVERB_PORT),
       wssPort:      Number(import.meta.env.VITE_REVERB_PORT),
-      forceTLS:     true,
-      enabledTransports: ['ws', 'wss'],
-      authEndpoint: 'https://api.codagenz.com/broadcasting/auth',
+      forceTLS:     tls,
+      enabledTransports: tls ? ['ws', 'wss'] : ['ws'],
+      authEndpoint: `${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://localhost:8000'}/api/broadcasting/auth`,
       auth: { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') ?? ''}` } },
     } as ConstructorParameters<typeof Echo>[0]);
   }
@@ -63,6 +66,7 @@ export function Notifications() {
   const echoRef = useRef<Echo<'reverb'> | null>(null);
   const channelRef = useRef<any>(null);
   const filters = ["All", "Unread", "Assignments", "Grades", "Announcements"];
+  const { decrementUnread, setUnreadCount } = useRealtime();
 
   // Fetch initial notifications
   useEffect(() => {
@@ -126,14 +130,19 @@ export function Notifications() {
 
   const markAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
     notificationsApi.markAllRead().catch(() => {});
   };
   const markRead = (id: string) => {
+    const wasUnread = notifications.find((n) => n.id === id && !n.read);
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    if (wasUnread) decrementUnread();
     notificationsApi.markRead(id).catch(() => {});
   };
   const deleteNotif = (id: string) => {
+    const wasUnread = notifications.find((n) => n.id === id && !n.read);
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (wasUnread) decrementUnread();
     notificationsApi.remove(id).catch(() => {});
   };
 

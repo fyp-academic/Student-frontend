@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Target, PlayCircle, RotateCcw, Zap, Star, Clock, CheckCircle, TrendingUp, Loader2 } from "lucide-react";
 import { coursesApi, activitiesApi, quizApi } from "../services/api";
+import { useAiWidgetContext } from "../context/AiWidgetContext";
 
 type DrillItem   = Record<string, unknown>;
 type CategoryItem = { id: string; title: string; code: string; color: string; drills: DrillItem[] };
@@ -20,6 +21,11 @@ export function Practice() {
   const [categories, setCategories]         = useState<CategoryItem[]>([]);
   const [loading, setLoading]               = useState(true);
   const [attemptMap, setAttemptMap]         = useState<Record<string, DrillItem>>({}); // activityId → best attempt
+  const { setContext } = useAiWidgetContext();
+
+  useEffect(() => {
+    setContext({ currentPage: '/practice', mode: 'revision' });
+  }, [setContext]);
 
   useEffect(() => {
     (async () => {

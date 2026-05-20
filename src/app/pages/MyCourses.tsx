@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { NavLink } from "react-router";
-import { BookOpen, Clock, TrendingUp, CheckCircle, PlayCircle, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { NavLink, useNavigate } from "react-router";
+import { BookOpen, Clock, TrendingUp, CheckCircle, PlayCircle, Loader2, LayoutGrid, List, MoreVertical } from "lucide-react";
+import { useRealtime } from "../context/RealtimeContext";
 import { coursesApi } from "../services/api";
 
 const tabs = ["All", "In Progress", "Completed", "Not Started"];
@@ -21,15 +22,22 @@ function deriveStatus(progress: number): string {
 
 export function MyCourses() {
   const [activeTab, setActiveTab]   = useState("All");
+  const [viewMode, setViewMode]     = useState<'grid' | 'list'>('grid');
   const [courses, setCourses]       = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading]       = useState(true);
+  const [openMenuId, setOpenMenuId] = useState<string>('');
+  const [unenrollingId, setUnenrollingId] = useState<string>('');
+  const navigate = useNavigate();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { refreshTrigger } = useRealtime();
 
   useEffect(() => {
+    setLoading(true);
     coursesApi.myCourses()
       .then(r => setCourses(r.data.data ?? r.data ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshTrigger]);
 
   const enriched = courses.map((c, i) => ({
     id:           String(c.id),
@@ -46,6 +54,27 @@ export function MyCourses() {
   }));
 
   const filtered = activeTab === "All" ? enriched : enriched.filter((c) => c.status === activeTab);
+
+  const handleUnenroll = async (courseId: string) => {
+    setUnenrollingId(courseId);
+    try {
+      await coursesApi.leave(courseId);
+      setCourses(prev => prev.map(c =>
+        String(c.id) === courseId ? { ...c, is_enrolled: false, enrolled: false } : c
+      ));
+    } catch { /* ignore */ }
+    finally { setUnenrollingId(''); setOpenMenuId(''); }
+  };
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId('');
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -81,27 +110,41 @@ export function MyCourses() {
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className="px-4 py-2 rounded-xl border transition-all"
-            style={{
-              fontSize: "12px",
-              fontWeight: activeTab === tab ? 600 : 400,
-              backgroundColor: activeTab === tab ? "#2563eb" : "white",
-              color: activeTab === tab ? "white" : "#475569",
-              borderColor: activeTab === tab ? "#2563eb" : "#e2e8f0",
-            }}
-          >
-            {tab}
+      {/* Tabs + View Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className="px-4 py-2 rounded-xl border transition-all"
+              style={{
+                fontSize: "12px",
+                fontWeight: activeTab === tab ? 600 : 400,
+                backgroundColor: activeTab === tab ? "#2563eb" : "white",
+                color: activeTab === tab ? "white" : "#475569",
+                borderColor: activeTab === tab ? "#2563eb" : "#e2e8f0",
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 rounded-xl border p-0.5" style={{ borderColor: "#e2e8f0" }}>
+          <button onClick={() => setViewMode('grid')} title="Grid view"
+            className="p-1.5 rounded-lg transition-all"
+            style={{ backgroundColor: viewMode === 'grid' ? '#2563eb' : 'transparent', color: viewMode === 'grid' ? 'white' : '#64748b' }}>
+            <LayoutGrid size={15} />
           </button>
-        ))}
+          <button onClick={() => setViewMode('list')} title="List view"
+            className="p-1.5 rounded-lg transition-all"
+            style={{ backgroundColor: viewMode === 'list' ? '#2563eb' : 'transparent', color: viewMode === 'list' ? 'white' : '#64748b' }}>
+            <List size={15} />
+          </button>
+        </div>
       </div>
 
-      {/* Courses List */}
+      {/* Courses */}
       {loading && (
         <div className="flex items-center justify-center py-16">
           <Loader2 size={28} className="animate-spin text-blue-400" />
@@ -113,92 +156,154 @@ export function MyCourses() {
           <p>No courses found.</p>
         </div>
       )}
-      <div className="space-y-4">
-        {!loading && filtered.map((course) => (
-          <div
-            key={course.id}
-            className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
-          >
-            <div className="flex">
-              {/* Thumbnail — colour block (no external image required) */}
-              <div className="w-32 flex-shrink-0 hidden sm:flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}55)` }}>
-                <span className="font-bold" style={{ fontSize: "13px", color: course.color }}>{course.code || 'COURSE'}</span>
+
+      {/* Grid View */}
+      {!loading && viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filtered.map((course) => (
+            <div
+              key={course.id}
+              className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-1"
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
+            >
+              <div className="h-28 flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}66)` }}>
+                <span className="font-bold" style={{ fontSize: "15px", color: course.color }}>{course.code || 'COURSE'}</span>
+                {course.status === "Completed" && (
+                  <div className="absolute top-3 right-3"><CheckCircle size={16} color="#22c55e" /></div>
+                )}
               </div>
+              <div className="p-4">
+                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#1e293b", lineHeight: "1.4" }}>{course.title}</h3>
+                <p style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>{course.instructor}</p>
 
-              {/* Content */}
-              <div className="flex-1 p-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>{course.title}</h3>
-                      {course.status === "Completed" && <CheckCircle size={15} color="#22c55e" />}
-                    </div>
-                    <p style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>{course.instructor}</p>
-
-                    {/* Progress */}
-                    <div className="mt-3 max-w-sm">
-                      <div className="flex items-center justify-between mb-1">
-                        <span style={{ fontSize: "11px", color: "#64748b" }}>
-                          {course.lessonsDone}/{course.lessonsTotal} lessons
-                        </span>
-                        <span style={{ fontSize: "12px", fontWeight: 600, color: course.color }}>
-                          {course.progress}%
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${course.progress}%`,
-                            backgroundColor: course.progress === 100 ? "#22c55e" : course.color,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 mt-2">
-                      {course.lastActivity && (
-                        <div className="flex items-center gap-1 text-slate-400">
-                          <Clock size={11} />
-                          <span style={{ fontSize: "11px" }}>{course.lastActivity}</span>
-                        </div>
-                      )}
-                    </div>
+                {/* Progress */}
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span style={{ fontSize: "11px", color: "#64748b" }}>{course.lessonsDone}/{course.lessonsTotal} lessons</span>
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: course.color }}>{course.progress}%</span>
                   </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
+                    <div className="h-full rounded-full" style={{ width: `${course.progress}%`, backgroundColor: course.progress === 100 ? "#22c55e" : course.color }} />
+                  </div>
+                </div>
 
-                  <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3">
-                    <div className="text-center">
-                      <p style={{ fontSize: "11px", color: "#94a3b8" }}>Grade</p>
-                      <p style={{ fontSize: "18px", fontWeight: 700, color: gradeColors[course.grade] || "#1e293b" }}>
-                        {course.grade}
-                      </p>
-                    </div>
-                    <button
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all"
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        backgroundColor: course.status === "Completed" ? "#f0fdf4" : "#eff6ff",
-                        color: course.status === "Completed" ? "#16a34a" : "#2563eb",
-                        border: `1px solid ${course.status === "Completed" ? "#bbf7d0" : "#bfdbfe"}`,
-                      }}
-                    >
-                      {course.status === "Not Started" ? (
-                        <><PlayCircle size={13} /> Start</>
-                      ) : course.status === "Completed" ? (
-                        <><CheckCircle size={13} /> Review</>
-                      ) : (
-                        <><TrendingUp size={13} /> Continue</>
-                      )}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t" style={{ borderColor: "#f1f5f9" }}>
+                  <div className="text-center">
+                    <p style={{ fontSize: "10px", color: "#94a3b8" }}>Grade</p>
+                    <p style={{ fontSize: "16px", fontWeight: 700, color: gradeColors[course.grade] || "#1e293b" }}>{course.grade}</p>
+                  </div>
+                  <div className="relative">
+                    <button onClick={() => setOpenMenuId(openMenuId === course.id ? '' : course.id)}
+                      className="p-2 rounded-lg hover:bg-slate-100 transition-colors" style={{ color: "#64748b" }}>
+                      <MoreVertical size={16} />
                     </button>
+                    {openMenuId === course.id && (
+                      <div ref={menuRef} className="absolute right-0 bottom-full mb-1 z-20 bg-white rounded-xl border py-1" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.1)", borderColor: "#e2e8f0", minWidth: "120px" }}>
+                        <button onClick={() => { setOpenMenuId(''); navigate('/lessons', { state: { courseId: course.id } }); }}
+                          className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 transition-colors" style={{ fontSize: "12px", color: "#1e293b", fontWeight: 500 }}>
+                          <PlayCircle size={13} color="#2563eb" /> Start
+                        </button>
+                        <div className="mx-2" style={{ height: "1px", backgroundColor: "#f1f5f9" }} />
+                        <button onClick={() => handleUnenroll(course.id)}
+                          disabled={unenrollingId === course.id}
+                          className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 transition-colors disabled:opacity-50" style={{ fontSize: "12px", color: "#dc2626", fontWeight: 500 }}>
+                          {unenrollingId === course.id ? <Loader2 size={13} className="animate-spin" /> : <><PlayCircle size={13} /> Unenroll</>}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* List View */}
+      {!loading && viewMode === 'list' && (
+        <div className="space-y-4">
+          {filtered.map((course) => (
+            <div
+              key={course.id}
+              className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
+            >
+              <div className="flex">
+                {/* Thumbnail — colour block (no external image required) */}
+                <div className="w-32 flex-shrink-0 hidden sm:flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}55)` }}>
+                  <span className="font-bold" style={{ fontSize: "13px", color: course.color }}>{course.code || 'COURSE'}</span>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>{course.title}</h3>
+                        {course.status === "Completed" && <CheckCircle size={15} color="#22c55e" />}
+                      </div>
+                      <p style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>{course.instructor}</p>
+
+                      {/* Progress */}
+                      <div className="mt-3 max-w-sm">
+                        <div className="flex items-center justify-between mb-1">
+                          <span style={{ fontSize: "11px", color: "#64748b" }}>
+                            {course.lessonsDone}/{course.lessonsTotal} lessons
+                          </span>
+                          <span style={{ fontSize: "12px", fontWeight: 600, color: course.color }}>
+                            {course.progress}%
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
+                          <div className="h-full rounded-full" style={{ width: `${course.progress}%`, backgroundColor: course.progress === 100 ? "#22c55e" : course.color }} />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 mt-2">
+                        {course.lastActivity && (
+                          <div className="flex items-center gap-1 text-slate-400">
+                            <Clock size={11} />
+                            <span style={{ fontSize: "11px" }}>{course.lastActivity}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3">
+                      <div className="text-center">
+                        <p style={{ fontSize: "11px", color: "#94a3b8" }}>Grade</p>
+                        <p style={{ fontSize: "18px", fontWeight: 700, color: gradeColors[course.grade] || "#1e293b" }}>
+                          {course.grade}
+                        </p>
+                      </div>
+                      <div className="relative">
+                        <button onClick={() => setOpenMenuId(openMenuId === course.id ? '' : course.id)}
+                          className="p-2 rounded-lg hover:bg-slate-100 transition-colors" style={{ color: "#64748b" }}>
+                          <MoreVertical size={16} />
+                        </button>
+                        {openMenuId === course.id && (
+                          <div ref={menuRef} className="absolute right-0 bottom-full mb-1 z-20 bg-white rounded-xl border py-1" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.1)", borderColor: "#e2e8f0", minWidth: "120px" }}>
+                            <button onClick={() => { setOpenMenuId(''); navigate('/lessons', { state: { courseId: course.id } }); }}
+                              className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 transition-colors" style={{ fontSize: "12px", color: "#1e293b", fontWeight: 500 }}>
+                              <PlayCircle size={13} color="#2563eb" /> Start
+                            </button>
+                            <div className="mx-2" style={{ height: "1px", backgroundColor: "#f1f5f9" }} />
+                            <button onClick={() => handleUnenroll(course.id)}
+                              disabled={unenrollingId === course.id}
+                              className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 transition-colors disabled:opacity-50" style={{ fontSize: "12px", color: "#dc2626", fontWeight: 500 }}>
+                              {unenrollingId === course.id ? <Loader2 size={13} className="animate-spin" /> : <><PlayCircle size={13} /> Unenroll</>}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

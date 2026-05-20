@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, NavLink } from "react-router";
 import { Sidebar } from "./Sidebar";
+import AiWidget from "./AiWidget/AiWidget";
+import { AiWidgetProvider } from "../context/AiWidgetContext";
 import { useAuth } from "../context/AuthContext";
-import { profileApi, notificationsApi } from "../services/api";
+import { useRealtime } from "../context/RealtimeContext";
+import { profileApi } from "../services/api";
 import {
   Bell,
   Search,
   Menu,
   ChevronRight,
   LayoutDashboard,
-  MessageCircle,
-  Sparkles,
 } from "lucide-react";
 
 const breadcrumbMap: Record<string, string> = {
@@ -19,14 +20,10 @@ const breadcrumbMap: Record<string, string> = {
   sessions: "Live Sessions / Sessions",
   catalog: "Learning Catalog / Browse Courses",
   "my-courses": "My Courses / Enrolled List",
-  "course-feed": "Course Spaces / Course Feed",
-  "course-forum": "Course Spaces / Course Forum",
-  "course-progress": "Course Spaces / Course Progress",
-  lessons: "Learning Flow / Lessons",
+  lessons: "Learning Flow / Lesson Player",
   activities: "Learning Flow / Activities",
   assessments: "Learning Flow / Assessments",
   assignments: "Learning Flow / Assignments",
-  quizzes: "Learning Flow / Quizzes",
   practice: "Learning Flow / Practice",
   interactive: "Learning Flow / Interactive Activities",
   notifications: "Communication / Notifications",
@@ -37,23 +34,15 @@ const breadcrumbMap: Record<string, string> = {
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [aiGuideOpen, setAiGuideOpen] = useState(false);
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
-  const [notifCount, setNotifCount] = useState(0);
   const location = useLocation();
   const { user } = useAuth();
+  const { unreadCount: notifCount } = useRealtime();
 
   useEffect(() => {
     profileApi.get().then(r => {
       const p: Record<string, unknown> = r.data.data ?? r.data;
       setProfile(p);
-    }).catch(() => {});
-
-    // Fetch notification count
-    notificationsApi.list().then(r => {
-      const raw: Record<string, unknown>[] = r.data.data ?? r.data ?? [];
-      const unreadCount = raw.filter((n: Record<string, unknown>) => !n.read).length;
-      setNotifCount(unreadCount);
     }).catch(() => {});
   }, []);
 
@@ -63,7 +52,10 @@ export function Layout() {
   const breadcrumb = breadcrumbMap[pathKey] || "Dashboard";
   const parts = breadcrumb.split(" / ");
 
+  const isLessonPlayer = location.pathname === '/lessons';
+
   return (
+    <AiWidgetProvider>
     <>
       <style>{`
         @keyframes ringPulse {
@@ -73,15 +65,18 @@ export function Layout() {
         }
       `}</style>
       <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#f0f5ff" }}>
-        <Sidebar
-          collapsed={collapsed}
-          onToggle={() => setCollapsed(!collapsed)}
-          mobileOpen={mobileMenuOpen}
-          onMobileClose={() => setMobileMenuOpen(false)}
-        />
+        {!isLessonPlayer && (
+          <Sidebar
+            collapsed={collapsed}
+            onToggle={() => setCollapsed(!collapsed)}
+            mobileOpen={mobileMenuOpen}
+            onMobileClose={() => setMobileMenuOpen(false)}
+          />
+        )}
 
         <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Top Header */}
+        {/* Top Header — hidden on Lesson Player */}
+        {!isLessonPlayer && (
         <header
           className="flex items-center justify-between px-6 py-3 bg-white border-b flex-shrink-0"
           style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
@@ -165,78 +160,20 @@ export function Layout() {
             </NavLink>
           </div>
         </header>
+        )}
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto" style={{ backgroundColor: "#f0f5ff" }}>
-          <div className="p-6">
+        <main className="flex-1 overflow-y-auto" style={{ backgroundColor: isLessonPlayer ? "#f8fafc" : "#f0f5ff" }}>
+          <div className={isLessonPlayer ? "" : "p-6"}>
             <Outlet />
           </div>
         </main>
 
-        {/* AI Guide Bubble */}
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-          {aiGuideOpen && (
-            <div
-              className="w-72 rounded-2xl p-4 bg-white"
-              style={{ boxShadow: "0 15px 40px rgba(37,99,235,0.2)", border: "1px solid #dbeafe" }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <div
-                  className="p-2 rounded-xl"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #3b82f6)" }}
-                >
-                  <Sparkles size={16} color="#fff" />
-                </div>
-                <div>
-                  <p style={{ fontSize: "13px", fontWeight: 700, color: "#1e293b" }}>AI Learning Companion</p>
-                  <p style={{ fontSize: "11px", color: "#64748b" }}>Personalized nudges in real time</p>
-                </div>
-              </div>
-              <ul className="space-y-2" style={{ fontSize: "12px", color: "#475569" }}>
-                <li>• Adapts to your pace & style</li>
-                <li>• Highlights gaps from prior knowledge</li>
-                <li>• Flags at-risk moments early</li>
-                <li>• Suggests study plans & next lessons</li>
-              </ul>
-              <button
-                className="mt-3 w-full py-2 rounded-xl text-white font-semibold"
-                style={{ background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
-              >
-                Open Smart Chat
-              </button>
-            </div>
-          )}
-
-          <button
-            onClick={() => setAiGuideOpen((prev) => !prev)}
-            className="relative w-12 h-12 rounded-full shadow-2xl flex items-center justify-center"
-            style={{
-              background: aiGuideOpen ? "linear-gradient(135deg, #1d4ed8, #1e40af)" : "linear-gradient(135deg, #2563eb, #3b82f6)",
-              boxShadow: "0 12px 32px rgba(37,99,235,0.35)",
-            }}
-            aria-label="Open AI learning companion"
-          >
-            <div className="text-white">
-              <MessageCircle size={22} />
-            </div>
-            <span
-              className="absolute -top-1 -right-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
-              style={{ backgroundColor: "#22c55e", boxShadow: "0 0 0 2px #f0f5ff" }}
-            >
-              AI
-            </span>
-            <span
-              className="absolute inset-0 rounded-full border border-white/30"
-              style={{ boxShadow: "0 0 15px rgba(255,255,255,0.35)" }}
-            />
-            <span
-              className="absolute -inset-1.5 rounded-full pointer-events-none"
-              style={{ border: "2px solid rgba(34,197,94,0.45)", animation: "ringPulse 2.2s ease-out infinite" }}
-            />
-          </button>
-        </div>
+        {/* AI Tutor Widget — auto-detects page context */}
+        <AiWidget />
       </div>
     </div>
     </>
+    </AiWidgetProvider>
   );
 }

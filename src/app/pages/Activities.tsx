@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { PlayCircle, CheckCircle, Clock, Star, Lock, Loader2 } from "lucide-react";
+import { useRealtime } from "../context/RealtimeContext";
 import { coursesApi, activitiesApi } from "../services/api";
 
 type Act = Record<string, unknown>;
@@ -38,8 +39,10 @@ const typeColors: Record<string, { bg: string; text: string }> = {
 export function Activities() {
   const [activities, setActivities] = useState<Act[]>([]);
   const [loading, setLoading]       = useState(true);
+  const { refreshTrigger } = useRealtime();
 
   useEffect(() => {
+    setLoading(true);
     (async () => {
       try {
         const cRes = await coursesApi.myCourses();
@@ -67,7 +70,7 @@ export function Activities() {
         setActivities(all);
       } catch { /* ignore */ } finally { setLoading(false); }
     })();
-  }, []);
+  }, [refreshTrigger]);
 
   const done      = activities.filter(a => String(a.completion_status ?? a.status ?? '').toLowerCase() === 'completed').length;
   const available = activities.filter(a => { const s = String(a.completion_status ?? a.status ?? '').toLowerCase(); return s !== 'completed' && s !== 'locked'; }).length;

@@ -227,10 +227,8 @@ export default function Register() {
     }`;
 
   return (
-    <div className="min-h-screen flex items-start justify-center p-6 sm:p-10 bg-gray-50 overflow-y-auto">
-        <div className="w-full max-w-md py-6">
-
-          {registered ? (
+    <>
+      {registered ? (
             <div className="text-center">
               <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Mail className="w-10 h-10 text-emerald-600" />
@@ -525,7 +523,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm shadow-lg shadow-indigo-200 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-lg bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating account…</>
@@ -544,7 +542,6 @@ export default function Register() {
           </div>
           </>
           )}
-        </div>
-    </div>
+    </>
   );
 }

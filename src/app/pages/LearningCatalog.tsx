@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router";
 import { Search, Filter, Star, Clock, Users, BookOpen, ChevronRight, X, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { coursesApi, categoriesApi } from "../services/api";
 
@@ -23,7 +24,8 @@ export function LearningCatalog() {
   const [categories, setCategories]   = useState<string[]>(["All"]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
-  const [enrolling, setEnrolling]     = useState<string | null>(null);
+  const [enrolling, setEnrolling] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const loadCatalog = useCallback(() => {
     setLoading(true);
@@ -286,7 +288,10 @@ export function LearningCatalog() {
                   </div>
                   <button
                     disabled={isEnrollingThis}
-                    onClick={() => handleEnroll(id, isEnrolled)}
+                    onClick={() => {
+                      if (isEnrolled) navigate('/lessons', { state: { courseId: id } });
+                      else handleEnroll(id, isEnrolled);
+                    }}
                     className="w-full mt-3 py-2 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60"
                     style={{
                       fontSize: "13px", fontWeight: 600,

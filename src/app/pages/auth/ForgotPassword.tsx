@@ -93,9 +93,8 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-start justify-center p-6 sm:p-10 bg-gray-50 overflow-y-auto">
-      <div className="w-full max-w-md py-6">
-        <Link
+    <>
+      <Link
           to="/login"
           className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 mb-6 transition-colors"
         >
@@ -136,7 +135,7 @@ export default function ForgotPassword() {
               <button
                 type="submit"
                 disabled={emailLoading}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm shadow-lg shadow-indigo-200 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {emailLoading ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
@@ -233,7 +232,7 @@ export default function ForgotPassword() {
               <button
                 type="submit"
                 disabled={otpLoading}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm shadow-lg shadow-indigo-200 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {otpLoading ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Resetting…</>
@@ -283,7 +282,6 @@ export default function ForgotPassword() {
             </Link>
           </p>
         )}
-      </div>
-    </div>
+    </>
   );
 }

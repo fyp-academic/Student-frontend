@@ -16,6 +16,7 @@ interface AuthUser {
   education_level?: string;
   nationality?: string;
   college_id?: string;
+  programme?: string;
 }
 
 interface AuthContextType {
@@ -70,6 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const u    = data.user  ?? data.data;
     localStorage.setItem('auth_token', t);
     localStorage.setItem('auth_user',  JSON.stringify(u));
+    if (data.login_session_id) {
+      localStorage.setItem('login_session_id', data.login_session_id);
+    }
     setToken(t);
     setUser(u);
   };
@@ -80,9 +84,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    try { await authApi.logout(); } catch { /* ignore */ }
+    try {
+      const sessionId = localStorage.getItem('login_session_id');
+      await authApi.logout(sessionId ?? undefined);
+    } catch { /* ignore */ }
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
+    localStorage.removeItem('login_session_id');
     setToken(null);
     setUser(null);
   };

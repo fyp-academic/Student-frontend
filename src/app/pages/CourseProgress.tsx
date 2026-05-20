@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
 import { TrendingUp, Award, BookOpen, Target, Loader2 } from "lucide-react";
 import { dashboardApi } from "../services/api";
+import { useRealtime } from "../context/RealtimeContext";
+import { useAiWidgetContext } from "../context/AiWidgetContext";
 
 type EnrollRow = Record<string, unknown>;
 
@@ -18,14 +20,21 @@ const gradeColor = (g: string) =>
 export function CourseProgress() {
   const [enrollments, setEnrollments] = useState<EnrollRow[]>([]);
   const [loading, setLoading]         = useState(true);
+  const { setContext } = useAiWidgetContext();
+  const { refreshTrigger } = useRealtime();
 
   useEffect(() => {
+    setContext({ currentPage: '/course-progress', mode: 'reflection' });
+  }, [setContext]);
+
+  useEffect(() => {
+    setLoading(true);
     dashboardApi.studentHub().then(r => {
       const data = r.data ?? {};
       const rows: EnrollRow[] = data.enrolled_courses ?? data.data?.enrolled_courses ?? [];
       setEnrollments(rows);
     }).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  }, [refreshTrigger]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;

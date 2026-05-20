@@ -3,11 +3,13 @@ import { useParams, useNavigate } from "react-router";
 import { BookOpen, GraduationCap, Clock, ChevronLeft, Loader2, Users, CheckCircle, PlayCircle } from "lucide-react";
 import { coursesApi } from "../services/api";
 import { useToast } from "../hooks/use-toast";
+import { useAiWidgetContext } from "../context/AiWidgetContext";
 
 export default function CourseDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setContext } = useAiWidgetContext();
   const [course, setCourse] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
@@ -19,6 +21,14 @@ export default function CourseDetail() {
       .then((r) => {
         const data = r.data.data ?? r.data ?? null;
         setCourse(data);
+        if (data) {
+          setContext({
+            currentPage: `/courses/${id}`,
+            courseId:     id,
+            courseName:  String(data.name ?? data.short_name ?? ''),
+            mode:        'study',
+          });
+        }
       })
       .catch(() => {
         toast({

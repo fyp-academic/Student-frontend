@@ -6,16 +6,8 @@ import {
   LayoutDashboard,
   BookOpen,
   GraduationCap,
-  LayoutGrid,
-  Rss,
-  MessageSquare,
-  TrendingUp,
   Zap,
   FileText,
-  ClipboardList,
-  HelpCircle,
-  Target,
-  MousePointerClick,
   Bell,
   MessageCircle,
   UserCircle,
@@ -23,7 +15,6 @@ import {
   ChevronRight,
   Search,
   ListChecks,
-  Activity,
   Menu,
   X,
   BookMarked,
@@ -38,6 +29,7 @@ import {
   CheckCircle,
   Users,
   Video,
+  TrendingUp,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -113,29 +105,12 @@ const navGroups: NavGroup[] = [
     items: [{ label: "Enrolled List", icon: ListChecks, path: "/my-courses" }],
   },
   {
-    id: "course-spaces",
-    label: "Course Spaces",
-    icon: LayoutGrid,
-    defaultOpen: true,
-    items: [
-      { label: "Course Feed", icon: Rss, path: "/course-feed" },
-      { label: "Course Forum", icon: MessageSquare, path: "/course-forum" },
-      { label: "Course Progress", icon: TrendingUp, path: "/course-progress" },
-    ],
-  },
-  {
     id: "learning-flow",
     label: "Learning Flow",
     icon: Zap,
-    defaultOpen: false,
+    defaultOpen: true,
     items: [
       { label: "Lessons", icon: BookMarked, path: "/lessons" },
-      { label: "Activities", icon: Activity, path: "/activities" },
-      { label: "Assessments", icon: ClipboardList, path: "/assessments" },
-      { label: "Assignments", icon: FileText, path: "/assignments", badge: 0 },
-      { label: "Quizzes", icon: HelpCircle, path: "/quizzes" },
-      { label: "Practice", icon: Target, path: "/practice" },
-      { label: "Interactive Activities", icon: MousePointerClick, path: "/interactive" },
     ],
   },
   {
@@ -154,6 +129,13 @@ const navGroups: NavGroup[] = [
     icon: UserCircle,
     defaultOpen: true,
     items: [{ label: "Learner Profile", icon: UserCircle, path: "/profile" }],
+  },
+  {
+    id: "engagement",
+    label: "My Engagement",
+    icon: TrendingUp,
+    defaultOpen: true,
+    items: [{ label: "Engagement & AI Tips", icon: TrendingUp, path: "/engagement" }],
   },
 ];
 

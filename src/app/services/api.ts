@@ -117,6 +117,7 @@ export const proctoringApi = {
 // ─── Lesson ───────────────────────────────────────────────────────────────────
 export const lessonApi = {
   listPages: (activityId: string) => api.get(`/activities/${activityId}/lesson-pages`),
+  markViewed: (pageId: string) => api.post(`/lesson-pages/${pageId}/viewed`),
 };
 
 // ─── Forum ────────────────────────────────────────────────────────────────────

@@ -137,6 +137,7 @@ export function Chat() {
   const hasSentTypingRef = useRef(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const inputEmojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiClickGuardRef = useRef(false);
   const selectedConvIdRef = useRef<string | null>(selectedConvId);
 
   // Keep ref in sync with state (used inside WS closures to avoid stale captures)
@@ -398,14 +399,18 @@ export function Chat() {
   };
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
-    if (emojiPickerMessageId) {
-      handleReact(emojiPickerMessageId, emojiData.emoji);
-    }
+    if (emojiClickGuardRef.current || !emojiPickerMessageId) return;
+    emojiClickGuardRef.current = true;
+    handleReact(emojiPickerMessageId, emojiData.emoji);
+    setTimeout(() => { emojiClickGuardRef.current = false; }, 300);
   };
 
   const handleInputEmojiClick = (emojiData: EmojiClickData) => {
+    if (emojiClickGuardRef.current) return;
+    emojiClickGuardRef.current = true;
     setInput((prev) => prev + emojiData.emoji);
     setShowInputEmojiPicker(false);
+    setTimeout(() => { emojiClickGuardRef.current = false; }, 300);
   };
 
   const toggleEmojiPicker = (messageId: string) => {
@@ -929,15 +934,6 @@ export function Chat() {
               </div>
             )}
 
-            {/* Typing Indicator */}
-            {typingUsers.length > 0 && (
-              <div className="px-4 py-1 border-b" style={{ borderColor: "#f1f5f9", backgroundColor: "#f8fafc" }}>
-                <p style={{ fontSize: "11px", color: "#64748b" }}>
-                  {typingUsers.map((u) => u.user_name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-                </p>
-              </div>
-            )}
-
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4" style={{ backgroundColor: "#f8fafc" }}>
               {messages.length === 0 ? (
@@ -1107,6 +1103,20 @@ export function Chat() {
                     </>
                   );
                 })()}
+              </div>
+            )}
+
+            {/* Typing Indicator — positioned just above input */}
+            {typingUsers.length > 0 && (
+              <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: "#f8fafc" }}>
+                <div className="flex items-end gap-1 h-5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <p style={{ fontSize: "12px", color: "#64748b" }}>
+                  {typingUsers.map((u) => u.user_name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing
+                </p>
               </div>
             )}
 

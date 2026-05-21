@@ -59,6 +59,11 @@ export function Lessons() {
   const [videoError, setVideoError] = useState(false);
   const [resourceUrl, setResourceUrl] = useState<string>('');
 
+  // Lesson multi-page state
+  const [lessonPages, setLessonPages] = useState<Array<{ id: string; title: string; content: string; is_viewed?: boolean; sort_order?: number }>>([]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [lessonPagesLoading, setLessonPagesLoading] = useState(false);
+
   // Inline quiz runner state
   const [quizMode, setQuizMode] = useState<'idle' | 'running' | 'submitted'>('idle');
   const [quizQuestions, setQuizQuestions] = useState<Record<string, unknown>[]>([]);
@@ -79,6 +84,7 @@ export function Lessons() {
   const [procKey, setProcKey] = useState<string | null>(null);
   const procCourseId = useRef<string>('');
   const procActivityId = useRef<string>('');
+  const lastAutoOpenedId = useRef<string>('');
 
   // Inline forum state
   const [forumDiscussions, setForumDiscussions] = useState<Record<string, unknown>[]>([]);
@@ -228,6 +234,7 @@ export function Lessons() {
   // Open activity content
   const openActivity = useCallback(async (act: Activity) => {
     const aid = String(act.id ?? '');
+    lastAutoOpenedId.current = aid;
     const title = String(act.name ?? act.title ?? 'Activity');
     const rType = rawTypeOf(act);
     if (rawStatusOf(act) === 'locked') return;
@@ -238,6 +245,8 @@ export function Lessons() {
     setContentHtml('');
     setVideoError(false);
     setResourceUrl('');
+    // Reset lesson state
+    setLessonPages([]); setCurrentPageIndex(0);
     // Reset inline quiz/assignment/forum state
     setQuizMode('idle'); setQuizQuestions([]); setQuizAnswers({}); setQuizSelected({}); setQuizCurrentQ(0); setQuizResult(null);
     setAssignMode('idle'); setAssignText(''); setAssignFile(null);
@@ -252,7 +261,15 @@ export function Lessons() {
     try {
       if (rType === 'video') {
         const settings = (act.settings ?? {}) as Record<string, unknown>;
-        let url = String(settings.videoUrl ?? settings.video_url ?? settings.url ?? act.url ?? act.video_url ?? act.file_url ?? '');
+        let url = '';
+        const videoPath = String(settings.videoPath ?? settings.video_path ?? '');
+        if (videoPath) {
+          const base = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
+          const origin = base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
+          url = videoPath.startsWith('/') ? `${origin}${videoPath}` : `${origin}/storage/${videoPath}`;
+        } else {
+          url = String(settings.videoUrl ?? settings.video_url ?? settings.url ?? act.url ?? act.video_url ?? act.file_url ?? '');
+        }
         if (url && !url.match(/^https?:\/\//i)) {
           const base = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
           const origin = base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
@@ -261,18 +278,36 @@ export function Lessons() {
         setVideoUrl(url);
       } else if (rType === 'page' || rType === 'lesson') {
         try {
+          setLessonPagesLoading(true);
           const res = await lessonApi.listPages(aid);
           const pages = res.data.data ?? res.data ?? [];
-          const fp = pages[0];
-          setContentHtml(String(fp?.content ?? act.description ?? (act.settings as any)?.content ?? 'No content available'));
+          if (pages.length > 0) {
+            setLessonPages(pages);
+            setCurrentPageIndex(0);
+            // Mark first page as viewed
+            const firstPage = pages[0];
+            if (firstPage?.id) {
+              try { await lessonApi.markViewed(firstPage.id); } catch { /* silent */ }
+            }
+            // Check if all pages viewed and mark activity complete
+            const allViewed = pages.every((p: any) => p.is_viewed);
+            if (allViewed) {
+              try {
+                await activitiesApi.complete(aid, 'viewed');
+                setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === aid ? { ...a, completion_status: 'completed' } : a) })));
+              } catch { /* silent */ }
+            }
+          } else {
+            // Fallback: no lesson pages, show activity description
+            setContentHtml(String(act.description ?? (act.settings as any)?.content ?? 'No content available'));
+            try {
+              await activitiesApi.complete(aid, 'viewed');
+              setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === aid ? { ...a, completion_status: 'completed' } : a) })));
+            } catch { /* silent */ }
+          }
         } catch {
           setContentHtml(String(act.description ?? (act.settings as any)?.content ?? 'No content available'));
-        }
-        // Auto-mark as viewed; update sidebar tick in-memory (no blink)
-        try {
-          await activitiesApi.complete(aid, 'viewed');
-          setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === aid ? { ...a, completion_status: 'completed' } : a) })));
-        } catch { /* silent */ }
+        } finally { setLessonPagesLoading(false); }
       } else if (rType === 'quiz') {
         setContentHtml(`<div style="text-align:center;padding:48px 20px"><div style="width:64px;height:64px;border-radius:16px;background:#f5f3ff;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><h3 style="font-size:16px;font-weight:600;color:#1e293b;margin-bottom:8px">${title}</h3><p style="font-size:13px;color:#64748b">Ready to test your knowledge? Click Start Quiz below.</p></div>`);
       } else if (rType === 'assignment') {
@@ -290,7 +325,16 @@ export function Lessons() {
           setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === aid ? { ...a, completion_status: 'completed' } : a) })));
         } catch { /* silent */ }
       } else if (rType === 'file') {
-        let url = String((act.settings as Record<string, unknown>)?.fileUrl ?? (act.settings as Record<string, unknown>)?.file_url ?? act.url ?? act.file_url ?? act.external_url ?? '');
+        const fileSettings = (act.settings ?? {}) as Record<string, unknown>;
+        let url = '';
+        const filePath = String(fileSettings.filePath ?? fileSettings.file_path ?? '');
+        if (filePath) {
+          const base = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
+          const origin = base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
+          url = filePath.startsWith('/') ? `${origin}${filePath}` : `${origin}/storage/${filePath}`;
+        } else {
+          url = String(fileSettings.fileUrl ?? fileSettings.file_url ?? act.url ?? act.file_url ?? act.external_url ?? '');
+        }
         if (url && !url.match(/^https?:\/\//i)) {
           const base = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
           const origin = base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
@@ -324,12 +368,13 @@ export function Lessons() {
 
   // Auto-open first activity when sections load
   useEffect(() => {
-    if (activeActivityId && allActivities.length > 0 && !contentHtml && !videoUrl && !resourceUrl && !contentLoading) {
+    if (activeActivityId && allActivities.length > 0 && !contentHtml && !videoUrl && !resourceUrl && !contentLoading && lessonPages.length === 0) {
+      if (lastAutoOpenedId.current === activeActivityId) return;
       const act = allActivities.find(a => String(a.id ?? '') === activeActivityId);
       if (act) openActivity(act);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeActivityId, sections]);
+  }, [activeActivityId, sections, lessonPages]);
 
   const goNext = () => { if (nextActivity) openActivity(nextActivity); };
   const handleMarkComplete = async () => {
@@ -339,6 +384,30 @@ export function Lessons() {
       await loadSections(selectedCourseId);
     } catch { /* ignore */ }
   };
+
+  // ─── Lesson Navigation ───────────────────────────────────────────────────
+  const goToLessonPage = async (index: number) => {
+    if (index < 0 || index >= lessonPages.length) return;
+    setCurrentPageIndex(index);
+    const page = lessonPages[index];
+    if (page?.id && !page.is_viewed) {
+      try {
+        await lessonApi.markViewed(page.id);
+        setLessonPages(prev => prev.map((p, i) => i === index ? { ...p, is_viewed: true } : p));
+      } catch { /* silent */ }
+    }
+    // Check if all pages viewed and mark activity complete
+    const updatedPages = lessonPages.map((p, i) => i === index ? { ...p, is_viewed: true } : p);
+    const allViewed = updatedPages.every(p => p.is_viewed);
+    if (allViewed && activeActivityId) {
+      try {
+        await activitiesApi.complete(activeActivityId, 'viewed');
+        setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === activeActivityId ? { ...a, completion_status: 'completed' } : a) })));
+      } catch { /* silent */ }
+    }
+  };
+  const goToPrevPage = () => goToLessonPage(currentPageIndex - 1);
+  const goToNextPage = () => goToLessonPage(currentPageIndex + 1);
 
   // ─── Inline Quiz: start ─────────────────────────────────────────────────
   const handleStartQuiz = async () => {
@@ -1008,14 +1077,107 @@ export function Lessons() {
                       )}
                     </div>
                   )}
+                  {/* ── MULTI-PAGE LESSON VIEWER ── */}
+                  {(currentRawType === 'page' || currentRawType === 'lesson') && lessonPages.length > 0 && (
+                    <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                      {/* Page list / progress header */}
+                      <div className="px-5 py-3 border-b" style={{ borderColor: "#f1f5f9", backgroundColor: "#fafafa" }}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>
+                            Page {currentPageIndex + 1} of {lessonPages.length}
+                          </span>
+                          <span style={{ fontSize: "11px", color: "#64748b" }}>
+                            {lessonPages.filter(p => p.is_viewed).length}/{lessonPages.length} viewed
+                          </span>
+                        </div>
+                        <div className="flex gap-1.5">
+                          {lessonPages.map((p, i) => (
+                            <button
+                              key={p.id ?? i}
+                              onClick={() => goToLessonPage(i)}
+                              className="flex-1 h-1.5 rounded-full transition-colors"
+                              style={{
+                                backgroundColor: i === currentPageIndex ? "#2563eb" : p.is_viewed ? "#22c55e" : "#e2e8f0",
+                              }}
+                              title={p.title ?? `Page ${i + 1}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Current page content */}
+                      <div className="px-6 py-5">
+                        {lessonPagesLoading ? (
+                          <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                        ) : (
+                          <>
+                            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", marginBottom: 16 }}>
+                              {lessonPages[currentPageIndex]?.title ?? 'Page'}
+                            </h2>
+                            <div
+                              className="prose prose-slate max-w-none"
+                              dangerouslySetInnerHTML={{ __html: lessonPages[currentPageIndex]?.content ?? '' }}
+                            />
+                          </>
+                        )}
+                      </div>
+
+                      {/* Navigation footer */}
+                      <div className="px-6 py-4 border-t flex items-center justify-between" style={{ borderColor: "#f1f5f9" }}>
+                        <button
+                          disabled={currentPageIndex === 0}
+                          onClick={goToPrevPage}
+                          className="px-4 py-2 rounded-xl border disabled:opacity-40 transition-colors"
+                          style={{ fontSize: "13px", color: "#475569", borderColor: "#e2e8f0" }}
+                        >
+                          ← Previous
+                        </button>
+                        <div className="flex gap-1">
+                          {lessonPages.map((p, i) => (
+                            <button
+                              key={p.id ?? i}
+                              onClick={() => goToLessonPage(i)}
+                              className="w-7 h-7 rounded-lg text-xs font-medium transition-colors flex items-center justify-center"
+                              style={{
+                                backgroundColor: i === currentPageIndex ? "#eff6ff" : "transparent",
+                                color: i === currentPageIndex ? "#2563eb" : p.is_viewed ? "#22c55e" : "#94a3b8",
+                                border: i === currentPageIndex ? "1px solid #bfdbfe" : "1px solid transparent",
+                              }}
+                            >
+                              {p.is_viewed && i !== currentPageIndex ? <CheckCircle size={14} /> : i + 1}
+                            </button>
+                          ))}
+                        </div>
+                        {currentPageIndex < lessonPages.length - 1 ? (
+                          <button
+                            onClick={goToNextPage}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white"
+                            style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#2563eb" }}
+                          >
+                            Next →
+                          </button>
+                        ) : (
+                          <button
+                            onClick={goNext}
+                            disabled={!nextActivity}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white disabled:opacity-60"
+                            style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#16a34a" }}
+                          >
+                            {nextActivity ? <>Finish <ArrowRight size={14} /></> : 'Completed'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {currentRawType === 'file' && !resourceUrl && contentHtml && (
                     <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                       <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
                     </div>
                   )}
 
-                  {/* ── OTHER CONTENT (page, lesson, url) ── */}
-                  {currentRawType !== 'quiz' && currentRawType !== 'assignment' && currentRawType !== 'forum' && currentRawType !== 'file' && contentHtml && (
+                  {/* ── OTHER CONTENT (url, fallback) ── */}
+                  {currentRawType !== 'quiz' && currentRawType !== 'assignment' && currentRawType !== 'forum' && currentRawType !== 'file' && currentRawType !== 'page' && currentRawType !== 'lesson' && contentHtml && (
                     <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                       <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
                     </div>

@@ -63,6 +63,8 @@ export function useProctoringMonitor({
 
   // Mobile: rate-limit browser_blur false positives
   const blurViolCoolRef    = useRef(false);
+  const fullscreenActiveRef = useRef(false);
+  const fullscreenGraceRef  = useRef(false);
 
   // Audio monitoring
   const audioContextRef    = useRef<AudioContext | null>(null);
@@ -102,19 +104,21 @@ export function useProctoringMonitor({
 
   // ── Fullscreen ───────────────────────────────────────────────────────────────
 
-  const requestFullscreen = useCallback(() => {
-    // iOS Safari does not support requestFullscreen at all — skip to avoid errors
+  const requestFullscreen = useCallback(async () => {
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isIOS) return;
     const el = document.documentElement as HTMLElement & {
-      webkitRequestFullscreen?: () => void;
-      mozRequestFullScreen?: () => void;
+      webkitRequestFullscreen?: () => Promise<void>;
+      mozRequestFullScreen?: () => Promise<void>;
     };
+    fullscreenGraceRef.current = true;
     try {
-      if (el.requestFullscreen)             el.requestFullscreen();
-      else if (el.webkitRequestFullscreen)  el.webkitRequestFullscreen();
-      else if (el.mozRequestFullScreen)     el.mozRequestFullScreen();
+      if (el.requestFullscreen)             await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen)  await el.webkitRequestFullscreen();
+      else if (el.mozRequestFullScreen)     await el.mozRequestFullScreen();
     } catch { /* fullscreen unavailable */ }
+    // Grace period: ignore fullscreen_exit for 3s after requesting
+    setTimeout(() => { fullscreenGraceRef.current = false; }, 3000);
   }, []);
 
   // ── Frame capture + movement detection ──────────────────────────────────────
@@ -335,6 +339,8 @@ export function useProctoringMonitor({
     audioViolCoolRef.current  = false;
     audioHighTicksRef.current = 0;
     blurViolCoolRef.current   = false;
+    fullscreenActiveRef.current = false;
+    fullscreenGraceRef.current  = false;
 
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -366,11 +372,16 @@ export function useProctoringMonitor({
 
     // fullscreen listeners — skip entirely on iOS (API not supported)
     const onFullscreen = () => {
+      if (fullscreenGraceRef.current) return;
       const doc = document as Document & {
         webkitFullscreenElement?: Element | null;
         mozFullScreenElement?: Element | null;
       };
-      if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement) {
+      const isFullscreen = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement);
+      if (isFullscreen) {
+        fullscreenActiveRef.current = true;
+      } else if (fullscreenActiveRef.current) {
+        fullscreenActiveRef.current = false;
         logViolation('fullscreen_exit');
       }
     };

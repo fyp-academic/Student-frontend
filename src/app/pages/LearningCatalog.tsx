@@ -200,7 +200,7 @@ export function LearningCatalog() {
             const code       = String(course.short_name ?? course.shortName ?? course.code ?? "");
             const instructor = String(course.instructor ?? course.instructor_name ?? "");
             const level      = String(course.level ?? "");
-            const description = String(course.description ?? course.summary ?? "");
+            const description = String(course.description ?? course.summary ?? "").replace(/<[^>]*>/g, '').trim();
             const image      = String(course.image ?? course.image_url ?? "");
             const rating     = Number(course.rating ?? 0);
             const reviews    = Number(course.reviews_count ?? course.reviews ?? 0);
@@ -215,6 +215,7 @@ export function LearningCatalog() {
             return (
               <div
                 key={id}
+                onClick={() => navigate(`/courses/${id}`)}
                 className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-1 cursor-pointer"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
               >
@@ -288,7 +289,8 @@ export function LearningCatalog() {
                   </div>
                   <button
                     disabled={isEnrollingThis}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (isEnrolled) navigate('/lessons', { state: { courseId: id } });
                       else handleEnroll(id, isEnrolled);
                     }}

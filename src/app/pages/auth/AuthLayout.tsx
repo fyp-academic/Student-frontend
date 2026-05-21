@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router';
 import { Menu } from 'lucide-react';
+import studentImage from '../../../assets/Student.jpg';
 
 function TwitterIcon({ className }: { className?: string }) {
   return (
@@ -24,7 +25,7 @@ export default function AuthLayout() {
       {/* Left panel — image with organic wave */}
       <div className="hidden lg:block lg:w-[48%] relative overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80"
+          src={studentImage}
           alt="Students studying"
           className="absolute inset-0 w-full h-full object-cover"
         />

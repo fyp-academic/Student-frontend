@@ -93,7 +93,7 @@ export default function CourseDetail() {
   const title = String(course.name ?? course.title ?? "Unnamed Course");
   const code = String(course.short_name ?? course.shortName ?? course.code ?? "");
   const instructor = String(course.instructor ?? course.instructor_name ?? "");
-  const description = String(course.description ?? course.summary ?? "");
+  const description = String(course.description ?? course.summary ?? "").replace(/<[^>]*>/g, '').trim();
   const image = String(course.image ?? course.image_url ?? "");
   const duration = String(course.duration ?? "");
   const students = Number(course.enrolled_students ?? course.students ?? 0);

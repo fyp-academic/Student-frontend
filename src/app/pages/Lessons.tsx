@@ -58,6 +58,7 @@ export function Lessons() {
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [videoError, setVideoError] = useState(false);
   const [resourceUrl, setResourceUrl] = useState<string>('');
+  const [fileMimeType, setFileMimeType] = useState<string>('');
 
   // Lesson multi-page state
   const [lessonPages, setLessonPages] = useState<Array<{ id: string; title: string; content: string; is_viewed?: boolean; sort_order?: number }>>([]);
@@ -341,6 +342,7 @@ export function Lessons() {
           url = url.startsWith('/') ? `${origin}${url}` : `${origin}/${url}`;
         }
         setResourceUrl(url);
+        setFileMimeType(String(fileSettings.mimeType ?? ''));
         const fileName = String((act.settings as Record<string, unknown>)?.fileName ?? act.name ?? title);
         const fileSize = String((act.settings as Record<string, unknown>)?.fileSize ?? '');
         if (!url) {
@@ -1057,29 +1059,60 @@ export function Lessons() {
                   )}
 
                   {/* ── FILE VIEWER ── */}
-                  {currentRawType === 'file' && resourceUrl && (
-                    <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
-                          <File size={32} style={{ color: "#2563eb" }} />
-                        </div>
-                        <p className="text-base font-semibold text-gray-900 mb-1">{contentTitle}</p>
-                        <p className="text-sm text-gray-500 mb-6">Click below to open or download this file.</p>
-                        <div className="flex flex-wrap justify-center gap-3">
-                          <a href={resourceUrl} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-all hover:opacity-90"
-                            style={{ backgroundColor: "#2563eb", fontSize: "14px" }}>
-                            <ExternalLink size={16} /> Open in New Tab
-                          </a>
-                          <a href={resourceUrl} download
-                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium border transition-all hover:bg-gray-50"
-                            style={{ color: "#374151", borderColor: "#d1d5db", fontSize: "14px" }}>
-                            <Download size={16} /> Download
-                          </a>
-                        </div>
+                  {currentRawType === 'file' && resourceUrl && (() => {
+                    const rawExt = (resourceUrl.split('?')[0].split('#')[0].split('.').pop() ?? '').toLowerCase();
+                    const mime = fileMimeType.toLowerCase();
+                    const isVideo = mime.startsWith('video/') || ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v', 'wmv', 'flv'].includes(rawExt);
+                    const isAudio = !isVideo && (mime.startsWith('audio/') || ['mp3', 'wav', 'aac', 'm4a', 'flac', 'oga', 'opus'].includes(rawExt));
+                    const isImage = !isVideo && !isAudio && (mime.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'].includes(rawExt));
+                    const isPdf = mime === 'application/pdf' || rawExt === 'pdf';
+                    const isOffice = !isPdf && (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'odt', 'odp', 'ods'].includes(rawExt) || mime.includes('officedocument') || mime.includes('ms-powerpoint') || mime.includes('ms-excel') || mime.includes('msword'));
+                    const needsDocViewer = isPdf || isOffice;
+                    const docViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(resourceUrl)}&embedded=true`;
+                    return (
+                      <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                        {isVideo && (
+                          <video controls className="w-full rounded-xl" style={{ maxHeight: "calc(100vh - 260px)", minHeight: "200px", display: "block" }}>
+                            <source src={resourceUrl} type={fileMimeType || undefined} />
+                            <p className="text-sm text-gray-500 p-4">Your browser does not support this video format.</p>
+                          </video>
+                        )}
+                        {isAudio && (
+                          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4"><File size={32} style={{ color: "#2563eb" }} /></div>
+                            <p className="text-base font-semibold text-gray-900 mb-6">{contentTitle}</p>
+                            <audio controls className="w-full max-w-md mb-4">
+                              <source src={resourceUrl} type={fileMimeType || undefined} />
+                            </audio>
+                            <a href={resourceUrl} download className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1"><Download size={14} /> Download</a>
+                          </div>
+                        )}
+                        {isImage && (
+                          <div className="flex flex-col items-center p-4" style={{ backgroundColor: "#f8fafc" }}>
+                            <img src={resourceUrl} alt={contentTitle} className="max-w-full rounded-lg" style={{ maxHeight: "calc(100vh - 300px)", objectFit: "contain" }} />
+                            <div className="mt-3 flex gap-4">
+                              <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1"><ExternalLink size={14} /> Open full size</a>
+                              <a href={resourceUrl} download className="text-sm text-gray-600 hover:underline inline-flex items-center gap-1"><Download size={14} /> Download</a>
+                            </div>
+                          </div>
+                        )}
+                        {needsDocViewer && (
+                          <iframe src={docViewerUrl} className="w-full" style={{ height: "calc(100vh - 260px)", minHeight: "400px", border: "none" }} title={contentTitle} allow="fullscreen" />
+                        )}
+                        {!isVideo && !isAudio && !isImage && !needsDocViewer && (
+                          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4"><File size={32} style={{ color: "#2563eb" }} /></div>
+                            <p className="text-base font-semibold text-gray-900 mb-1">{contentTitle}</p>
+                            <p className="text-sm text-gray-500 mb-6">Click below to open or download this file.</p>
+                            <div className="flex flex-wrap justify-center gap-3">
+                              <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-all hover:opacity-90" style={{ backgroundColor: "#2563eb", fontSize: "14px" }}><ExternalLink size={16} /> Open in New Tab</a>
+                              <a href={resourceUrl} download className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium border transition-all hover:bg-gray-50" style={{ color: "#374151", borderColor: "#d1d5db", fontSize: "14px" }}><Download size={16} /> Download</a>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   {/* ── MULTI-PAGE LESSON VIEWER ── */}
                   {(currentRawType === 'page' || currentRawType === 'lesson') && lessonPages.length > 0 && (
                     <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>

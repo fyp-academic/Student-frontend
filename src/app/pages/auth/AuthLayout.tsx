@@ -1,6 +1,5 @@
 import React from 'react';
 import { Outlet } from 'react-router';
-import { Menu } from 'lucide-react';
 import studentImage from '../../../assets/Student.jpg';
 
 function TwitterIcon({ className }: { className?: string }) {
@@ -68,18 +67,7 @@ export default function AuthLayout() {
 
       {/* Right panel — form content */}
       <div className="w-full lg:w-[52%] flex flex-col bg-white relative">
-        {/* Hamburger menu */}
-        <div className="flex justify-end p-6 lg:p-8">
-          <button
-            type="button"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Menu"
-          >
-            <Menu className="w-6 h-6 text-gray-700" />
-          </button>
-        </div>
-
-        <div className="flex-1 flex items-center justify-center px-8 sm:px-12 lg:px-16 xl:px-24 -mt-8 lg:-mt-12 overflow-y-auto">
+        <div className="flex-1 flex items-start justify-center px-8 sm:px-12 lg:px-16 xl:px-24 pt-6 lg:pt-8 overflow-y-auto">
           <div className="w-full max-w-md py-8">
             <Outlet />
           </div>

@@ -285,7 +285,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
             </div>
             <div>
               <p className="text-white" style={{ fontSize: "13px", fontWeight: 700, lineHeight: "1.2" }}>
-                UniLearn LMS
+                APES LMS
               </p>
               <p style={{ fontSize: "10px", color: "#93c5fd" }}>University Portal</p>
             </div>

@@ -58,7 +58,6 @@ export function Lessons() {
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [videoError, setVideoError] = useState(false);
   const [resourceUrl, setResourceUrl] = useState<string>('');
-  const [fileMimeType, setFileMimeType] = useState<string>('');
 
   // Lesson multi-page state
   const [lessonPages, setLessonPages] = useState<Array<{ id: string; title: string; content: string; is_viewed?: boolean; sort_order?: number }>>([]);
@@ -246,7 +245,6 @@ export function Lessons() {
     setContentHtml('');
     setVideoError(false);
     setResourceUrl('');
-    setFileMimeType('');
     // Reset lesson state
     setLessonPages([]); setCurrentPageIndex(0);
     // Reset inline quiz/assignment/forum state
@@ -343,7 +341,6 @@ export function Lessons() {
           url = url.startsWith('/') ? `${origin}${url}` : `${origin}/${url}`;
         }
         setResourceUrl(url);
-        setFileMimeType(String((act.settings as Record<string, unknown>)?.mimeType ?? ''));
         const fileName = String((act.settings as Record<string, unknown>)?.fileName ?? act.name ?? title);
         const fileSize = String((act.settings as Record<string, unknown>)?.fileSize ?? '');
         if (!url) {
@@ -567,80 +564,7 @@ export function Lessons() {
   const currentRawType = activeActivity ? rawTypeOf(activeActivity) : '';
   const currentStatKey = activeActivity ? statKeyOf(activeActivity) : '';
 
-  // File content viewer helper — handles PDF, images, video, audio, Office docs, text
-  const renderFileContent = () => {
-    if (!resourceUrl) return null;
-    const ext = resourceUrl.toLowerCase().split('?')[0].split('.').pop() ?? '';
-    const mime = fileMimeType.toLowerCase();
-    const isPdf    = ext === 'pdf' || mime.includes('pdf');
-    const isImage  = ['jpg','jpeg','png','gif','svg','webp','bmp','ico'].includes(ext) || mime.startsWith('image/');
-    const isVideo  = ['mp4','webm','mov','avi','mkv','ogv'].includes(ext) || mime.startsWith('video/');
-    const isAudio  = ['mp3','wav','ogg','m4a','aac','flac'].includes(ext) || mime.startsWith('audio/');
-    const isOffice = ['doc','docx','ppt','pptx','xls','xlsx'].includes(ext) ||
-      mime.includes('wordprocessingml') || mime.includes('presentationml') || mime.includes('spreadsheetml') ||
-      mime.includes('msword') || mime.includes('powerpoint') || mime.includes('excel');
-    const isText   = ['txt','csv','json','xml','md'].includes(ext) || (mime.startsWith('text/') && !isOffice);
-    if (isPdf) {
-      return <iframe src={resourceUrl} className="w-full" style={{ height: 'calc(100vh - 260px)', minHeight: '500px', border: 'none' }} title={contentTitle} />;
-    }
-    if (isImage) {
-      return (
-        <div className="flex items-center justify-center p-6" style={{ backgroundColor: '#f8fafc', minHeight: '320px' }}>
-          <img src={resourceUrl} alt={contentTitle} style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 320px)', objectFit: 'contain', borderRadius: '8px' }} />
-        </div>
-      );
-    }
-    if (isVideo) {
-      return (
-        <video controls className="w-full" style={{ maxHeight: 'calc(100vh - 260px)', background: '#000' }}>
-          <source src={resourceUrl} type={fileMimeType || undefined} />
-          Your browser does not support this video format.
-        </video>
-      );
-    }
-    if (isAudio) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 px-6">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: '#f5f3ff' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-          </div>
-          <p className="text-base font-semibold mb-4" style={{ color: '#1e293b' }}>{contentTitle}</p>
-          <audio controls className="w-full" style={{ maxWidth: '480px' }}>
-            <source src={resourceUrl} type={fileMimeType || undefined} />
-          </audio>
-        </div>
-      );
-    }
-    if (isOffice) {
-      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(resourceUrl)}&embedded=true`;
-      return <iframe src={viewerUrl} className="w-full" style={{ height: 'calc(100vh - 260px)', minHeight: '500px', border: 'none' }} title={contentTitle} />;
-    }
-    if (isText) {
-      return <iframe src={resourceUrl} className="w-full" style={{ height: 'calc(100vh - 260px)', minHeight: '400px', border: 'none' }} title={contentTitle} />;
-    }
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
-          <File size={32} style={{ color: '#2563eb' }} />
-        </div>
-        <p className="text-base font-semibold text-gray-900 mb-1">{contentTitle}</p>
-        <p className="text-sm text-gray-500 mb-6">Click to open or download this file.</p>
-        <div className="flex gap-3">
-          <a href={resourceUrl} target="_blank" rel="noopener"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all hover:bg-gray-100"
-            style={{ fontSize: '13px', color: '#374151', border: '1px solid #d1d5db' }}>
-            <ExternalLink size={15} /> Open
-          </a>
-          <a href={resourceUrl} target="_blank" rel="noopener" download
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium transition-all hover:opacity-90"
-            style={{ backgroundColor: '#2563eb', fontSize: '13px' }}>
-            <Download size={15} /> Download
-          </a>
-        </div>
-      </div>
-    );
-  };
-
+  // Video embed helper
   const renderVideo = () => {
     if (!videoUrl) return null;
     const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -1135,7 +1059,25 @@ export function Lessons() {
                   {/* ── FILE VIEWER ── */}
                   {currentRawType === 'file' && resourceUrl && (
                     <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                      {renderFileContent()}
+                      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
+                          <File size={32} style={{ color: "#2563eb" }} />
+                        </div>
+                        <p className="text-base font-semibold text-gray-900 mb-1">{contentTitle}</p>
+                        <p className="text-sm text-gray-500 mb-6">Click below to open or download this file.</p>
+                        <div className="flex flex-wrap justify-center gap-3">
+                          <a href={resourceUrl} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-all hover:opacity-90"
+                            style={{ backgroundColor: "#2563eb", fontSize: "14px" }}>
+                            <ExternalLink size={16} /> Open in New Tab
+                          </a>
+                          <a href={resourceUrl} download
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium border transition-all hover:bg-gray-50"
+                            style={{ color: "#374151", borderColor: "#d1d5db", fontSize: "14px" }}>
+                            <Download size={16} /> Download
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   )}
                   {/* ── MULTI-PAGE LESSON VIEWER ── */}

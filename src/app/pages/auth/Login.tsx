@@ -249,12 +249,12 @@ export default function Login() {
             </form>
 
             {/* Create account */}
-            <Link
-              to="/register"
-              className="mt-8 block w-full py-3 rounded-lg bg-[#1e3a5f] hover:bg-[#152a45] text-white text-center font-semibold text-sm transition-all"
-            >
-              Create account
-            </Link>
+            <p className="mt-8 text-center text-sm text-gray-600">
+              Don&apos;t have an account?{' '}
+              <Link to="/register" className="inline-block px-3 py-1 rounded-md bg-[#1e3a5f] text-white font-semibold hover:bg-[#152a45] transition-colors">
+                Create account
+              </Link>
+            </p>
     </>
   );
 }

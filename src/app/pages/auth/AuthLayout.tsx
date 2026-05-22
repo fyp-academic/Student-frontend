@@ -72,15 +72,6 @@ export default function AuthLayout() {
             <Outlet />
           </div>
         </div>
-
-        {/* Decorative arcs — bottom right */}
-        <div className="absolute bottom-0 right-0 w-44 h-44 pointer-events-none overflow-visible">
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <path d="M100,12 A88,88 0 0,1 12,100" fill="none" stroke="#1e3a5f" strokeWidth="10" strokeLinecap="round" />
-            <path d="M100,30 A70,70 0 0,1 30,100" fill="none" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" />
-            <path d="M100,48 A52,52 0 0,1 48,100" fill="none" stroke="#1e3a5f" strokeWidth="4" strokeLinecap="round" />
-          </svg>
-        </div>
       </div>
     </div>
   );

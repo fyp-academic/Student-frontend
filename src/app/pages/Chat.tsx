@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Search, MoreHorizontal, Paperclip, Smile, X, Download, MessageSquare, Trash2, Pin, Check, CheckCheck, BookOpen, GraduationCap, Users, Clock, ArrowLeft } from "lucide-react";
-import { messagingApi, chatAccessApi, courseChatApi, programmeChatApi, coursesApi, degreeProgrammesApi } from "../services/api";
+import { Send, Search, MoreHorizontal, Paperclip, Smile, X, Download, MessageSquare, Trash2, Pin, Check, CheckCheck, BookOpen, GraduationCap, Users, ArrowLeft } from "lucide-react";
+import { messagingApi, chatAccessApi, courseChatApi, programmeChatApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
@@ -169,21 +169,15 @@ export function Chat() {
     });
   }, [activeTab]);
 
-  // Load available courses and programmes
+  // Load available courses and programmes (role-aware: students get enrolled courses + own programme)
   useEffect(() => {
-    coursesApi.myCourses().then((res) => {
+    chatAccessApi.availableCourses().then((res) => {
       setCourses(res.data?.data ?? []);
-    });
-    degreeProgrammesApi.list().then((res) => {
-      // For students, filter to their enrolled programme
-      const allProgrammes = res.data?.data ?? [];
-      const userProgrammeId = user?.degree_programme_id;
-      const myProgramme = userProgrammeId 
-        ? allProgrammes.filter((p: Programme) => p.id === userProgrammeId)
-        : allProgrammes;
-      setProgrammes(myProgramme);
-    });
-  }, [user?.degree_programme_id]);
+    }).catch(() => {});
+    chatAccessApi.availableProgrammes().then((res) => {
+      setProgrammes(res.data?.data ?? []);
+    }).catch(() => {});
+  }, []);
 
   // Load eligible recipients for direct chat
   useEffect(() => {
@@ -224,9 +218,9 @@ export function Chat() {
     const ch = echoInst.private(`conversation.${selectedConvId}`);
 
     ch.listen(".message.sent", (data: ApiMessage) => {
-      setMessages((prev) => [...prev, data]);
-      // Mark delivered immediately
+      // Skip own messages — handleSend already added them optimistically
       if (data.sender_id !== user?.id) {
+        setMessages((prev) => [...prev, data]);
         messagingApi.markDelivered(data.id);
       }
     });
@@ -1135,12 +1129,12 @@ export function Chat() {
             {/* Input */}
             <div className="p-2 sm:p-4 border-t relative" style={{ borderColor: "#f1f5f9" }}>
               {showInputEmojiPicker && (
-                <div ref={inputEmojiPickerRef} className="absolute z-50 bottom-full mb-2 right-4" onClick={(e) => e.stopPropagation()}>
+                <div ref={inputEmojiPickerRef} className="absolute z-50 bottom-full mb-2 left-0 right-0 sm:left-auto sm:right-0 flex justify-center sm:block" onClick={(e) => e.stopPropagation()}>
                   <EmojiPicker
                     onEmojiClick={handleInputEmojiClick}
                     theme={Theme.LIGHT}
-                    width={280}
-                    height={350}
+                    width={Math.min(300, typeof window !== 'undefined' ? window.innerWidth - 16 : 300)}
+                    height={320}
                     searchPlaceholder="Search emoji..."
                     skinTonesDisabled
                   />
@@ -1160,7 +1154,7 @@ export function Chat() {
                   className="flex-1 focus:outline-none text-slate-700 bg-transparent min-w-0"
                   style={{ fontSize: "13px" }} />
                 <button onClick={() => setShowInputEmojiPicker((prev) => !prev)}
-                  className="text-slate-400 hover:text-yellow-500 transition-colors flex-shrink-0 hidden sm:block"
+                  className="text-slate-400 hover:text-yellow-500 transition-colors flex-shrink-0"
                   title="Add emoji to message">
                   <Smile size={17} />
                 </button>

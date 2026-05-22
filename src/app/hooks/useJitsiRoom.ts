@@ -204,6 +204,9 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
           setIsScreenSharing(on);
         },
         readyToClose: () => {
+          if (sessionId) {
+            sessionsApi.participantLeft(sessionId).catch(() => {/* silent */});
+          }
           callbacksRef.current.onReadyToClose?.();
         },
         incomingMessage: (data: unknown) => {

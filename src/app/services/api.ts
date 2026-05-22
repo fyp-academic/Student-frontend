@@ -236,7 +236,10 @@ export const sessionsApi = {
   // Recording download
   getRecordingUrl: (id: string) => api.get(`/recordings/${id}/url`),
 
-  // Transcription consent
+  // Transcription
+  transcribe: (formData: FormData) => api.post('/transcribe', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
   grantTranscriptionConsent: (id: string) => api.post(`/sessions/${id}/transcription-consent`),
 
   // Polls

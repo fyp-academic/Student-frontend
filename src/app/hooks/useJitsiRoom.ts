@@ -1,32 +1,62 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 import type { JitsiMeetExternalAPIInstance } from './useJitsiScript';
 import type { Participant } from '../components/sessions/types';
+import { sessionsApi } from '../services/api';
+
+let _echoInstance: Echo<'reverb'> | null = null;
+function getRoomEcho(): Echo<'reverb'> | null {
+  const appKey = import.meta.env.VITE_REVERB_APP_KEY;
+  if (!appKey) return null;
+  if (!_echoInstance) {
+    (window as unknown as Record<string, unknown>).Pusher = Pusher;
+    _echoInstance = new Echo({
+      broadcaster: 'reverb',
+      key: appKey,
+      wsHost: import.meta.env.VITE_REVERB_HOST,
+      wsPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+      wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+      forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+      enabledTransports: ['ws', 'wss'],
+      authEndpoint: 'https://api.codagenz.com/broadcasting/auth',
+      auth: { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') ?? ''}` } },
+    } as ConstructorParameters<typeof Echo>[0]);
+  }
+  return _echoInstance;
+}
 
 interface UseJitsiRoomOptions {
+  sessionId?: string;
   domain?: string;
   roomName: string;
   jwt?: string;
   displayName: string;
   email?: string;
+  aiTranscription?: boolean;
   onParticipantJoined?: (participant: Participant) => void;
   onParticipantLeft?: (participantId: string) => void;
   onRecordingStatusChanged?: (isRecording: boolean) => void;
   onReadyToClose?: () => void;
   onChatMessage?: (message: { id: string; sender: { id: string; name: string }; text: string; timestamp: number; isAI?: boolean }) => void;
+  onTranscriptLine?: (line: { id: string; speaker: string; text: string; timestamp: string }) => void;
 }
 
 export function useJitsiRoom(options: UseJitsiRoomOptions) {
   const {
+    sessionId,
     domain = 'meet.codagenz.com',
     roomName,
     jwt,
     displayName,
     email,
+    aiTranscription = false,
     onParticipantJoined,
     onParticipantLeft,
     onRecordingStatusChanged,
     onReadyToClose,
     onChatMessage,
+    onTranscriptLine,
   } = options;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -214,6 +244,75 @@ export function useJitsiRoom(options: UseJitsiRoomOptions) {
       }
     };
   }, []);
+
+  // ── Audio capture for AI transcription ──────────────────────────────────────
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioStreamRef   = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    if (!aiTranscription || !sessionId || isLoading) return;
+    let active = true;
+
+    const startCapture = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
+        audioStreamRef.current = stream;
+
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm';
+        const recorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorderRef.current = recorder;
+
+        recorder.ondataavailable = async (e: BlobEvent) => {
+          if (!active || e.data.size < 500) return;
+          const form = new FormData();
+          form.append('audio', e.data, 'chunk.webm');
+          form.append('session_id', sessionId!);
+          try {
+            const res = await sessionsApi.transcribe(form);
+            const { text, speaker, timestamp } = res.data as { text: string; speaker: string; timestamp: string };
+            if (text) {
+              onTranscriptLine?.({ id: `tr_${Date.now()}`, speaker: speaker || displayName, text, timestamp: timestamp || new Date().toISOString() });
+            }
+          } catch { /* silent */ }
+        };
+
+        recorder.start(15000);
+      } catch {
+        // Microphone access denied
+      }
+    };
+
+    startCapture();
+
+    return () => {
+      active = false;
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try { mediaRecorderRef.current.stop(); } catch { /* ignore */ }
+      }
+      audioStreamRef.current?.getTracks().forEach(t => t.stop());
+      mediaRecorderRef.current = null;
+      audioStreamRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiTranscription, sessionId, isLoading]);
+
+  // ── Echo subscription for other participants' transcripts ───────────────────
+  useEffect(() => {
+    if (!aiTranscription || !sessionId) return;
+    const echo = getRoomEcho();
+    if (!echo) return;
+
+    const channel = echo.private(`session.${sessionId}`);
+    channel.listen('.transcript.created', (data: { id: string; speaker: string; text: string; timestamp: string }) => {
+      onTranscriptLine?.(data);
+    });
+
+    return () => { echo.leave(`session.${sessionId}`); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiTranscription, sessionId]);
 
   // Commands
   const toggleAudio = useCallback(async () => {

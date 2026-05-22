@@ -262,6 +262,7 @@ export function StudentSessions() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [jwtToken, setJwtToken] = useState<string>('');
+  const [aiTranscription, setAiTranscription] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const { toast } = useToast();
 
@@ -311,6 +312,7 @@ export function StudentSessions() {
       // Fetch JWT token for the session
       const tokenRes = await sessionsApi.getToken(session.id);
       setJwtToken(tokenRes.data.token);
+      setAiTranscription(tokenRes.data.ai_transcription ?? session.aiTranscription ?? false);
       setActiveSession(session);
     } catch (error) {
       console.error('Failed to get session token:', error);
@@ -350,6 +352,7 @@ export function StudentSessions() {
         sessionId={activeSession.id}
         roomName={activeSession.roomName || activeSession.room_id || activeSession.id}
         jwtToken={jwtToken}
+        aiTranscription={aiTranscription}
         displayName={userName}
         email={userEmail}
         role="student"

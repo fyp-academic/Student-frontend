@@ -12,6 +12,7 @@ export interface JitsiRoomProps {
   onParticipantLeft?: (participantId: string) => void;
   onRecordingStatusChanged?: (isRecording: boolean) => void;
   initialConfig?: JitsiConfig;
+  aiTranscription?: boolean;
 }
 
 export interface JitsiConfig {

@@ -29,6 +29,7 @@ export function JitsiRoom({
   role,
   onLeave,
   initialConfig,
+  aiTranscription = false,
 }: JitsiRoomProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -65,10 +66,12 @@ export function JitsiRoom({
     leave,
     sendChatMessage,
   } = useJitsiRoom({
+    sessionId,
     roomName,
     jwt: jwtToken,
     displayName,
     email,
+    aiTranscription,
     onParticipantJoined: (p) => {
       setParticipants(prev => [...prev, p]);
     },

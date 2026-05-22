@@ -17,7 +17,7 @@ function validate(email: string, password: string) {
 
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const navigate   = useNavigate();
 
   const [email,    setEmail]    = useState('');
@@ -50,6 +50,7 @@ export default function Login() {
       const user   = stored ? JSON.parse(stored) : null;
       const role   = String(user?.role ?? '');
       if (role === 'instructor' || role === 'admin') {
+        await logout();
         setWrongRole(true);
       } else {
         navigate('/');

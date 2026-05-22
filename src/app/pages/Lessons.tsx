@@ -48,7 +48,7 @@ export function Lessons() {
   const [openModules, setOpenModules] = useState<string[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [sectionsLoading, setSectionsLoading] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
 
   // Active activity in content panel
   const [activeActivityId, setActiveActivityId] = useState<string>('');

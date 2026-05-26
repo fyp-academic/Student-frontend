@@ -19,43 +19,43 @@ import {
 const features = [
   {
     icon: BookOpen,
-    title: "Course Catalog",
-    description: "Browse a wide range of courses offered at the University of Dodoma across all faculties and departments.",
+    title: "Personalised Course Catalog",
+    description: "AI analyses your learning history and recommends the most relevant courses tailored to your pace and goals.",
   },
   {
     icon: Video,
-    title: "Live Sessions",
-    description: "Join real-time video lectures and interactive sessions hosted by your instructors from anywhere.",
+    title: "Live Interactive Sessions",
+    description: "Join real-time video lectures, polls, and Q&A sessions with instructors from anywhere on any device.",
   },
   {
     icon: FileText,
-    title: "Assignments & Assessments",
-    description: "Submit assignments, take quizzes, and receive feedback — all tracked in one organised space.",
+    title: "Smart Assignments & Quizzes",
+    description: "Submit assignments, take adaptive quizzes, and receive instant AI-generated feedback on your performance.",
   },
   {
     icon: MessageCircle,
-    title: "Course Forums & Chat",
-    description: "Collaborate with classmates and instructors through course forums and direct messaging.",
+    title: "Collaborative Learning",
+    description: "Engage in course forums and direct chat with peers and instructors to deepen understanding together.",
   },
   {
     icon: TrendingUp,
-    title: "Engagement Analytics",
-    description: "Track your learning progress, activity streaks, and get AI-powered study tips.",
+    title: "AI Engagement Insights",
+    description: "Visualise your learning streaks, progress heatmaps, and receive personalised AI study tips to stay on track.",
   },
   {
     icon: Users,
     title: "Instructor Connect",
-    description: "Access profiles and materials from your UDOM instructors in a single streamlined portal.",
+    description: "Access instructor profiles, course materials, and office hours — all organised in one clean dashboard.",
   },
 ];
 
 const highlights = [
-  "Official LMS for University of Dodoma (UDOM)",
-  "Access courses, lessons, and resources online",
-  "Attend live sessions with Jitsi-powered video",
-  "Submit assignments and track grades",
-  "Practice quizzes and interactive activities",
-  "Mobile-friendly — learn from any device",
+  "AI-powered personalised learning recommendations",
+  "Adaptive quizzes that adjust to your skill level",
+  "Live video sessions with Jitsi-powered conferencing",
+  "Smart progress tracking and engagement analytics",
+  "Course forums, chat, and peer collaboration tools",
+  "Mobile-friendly — learn from any device, anywhere",
 ];
 
 export default function LandingPage() {
@@ -79,8 +79,8 @@ export default function LandingPage() {
   return (
     <>
       <SEOHead
-        title="APES UDOM – University of Dodoma Student Learning Portal"
-        description="APES UDOM is the official LMS for University of Dodoma students. Browse courses, join live sessions, submit assignments, and connect with instructors — all in one place."
+        title="APES – AI Personalization eLearning System"
+        description="APES is an AI-powered eLearning platform that personalises your learning journey through smart recommendations, adaptive quizzes, live sessions, and real-time engagement insights."
         canonical="/"
       />
 
@@ -133,17 +133,18 @@ export default function LandingPage() {
               className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-6"
               style={{ backgroundColor: "rgba(34,197,94,0.2)", color: "#86efac", border: "1px solid rgba(34,197,94,0.3)" }}
             >
-              Official UDOM Student Portal
+              AI-Powered Personalized eLearning
             </span>
             <h1
               className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-5"
             >
-              Learn Smarter at{" "}
-              <span style={{ color: "#22c55e" }}>University of Dodoma</span>
+              Learning That{" "}
+              <span style={{ color: "#22c55e" }}>Adapts to You</span>
             </h1>
             <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: "#bfdbfe" }}>
-              APES UDOM connects UDOM students with courses, live lectures, assignments, and
-              collaborative tools — designed for the modern learner.
+              APES uses artificial intelligence to personalise your learning journey —
+              smart course recommendations, adaptive quizzes, live sessions, and real-time
+              engagement insights all in one platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -181,10 +182,11 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-14">
               <h2 className="text-3xl font-bold mb-3" style={{ color: "#0f172a" }}>
-                Everything You Need to Succeed
+                Everything You Need to Learn Smarter
               </h2>
               <p className="text-base max-w-xl mx-auto" style={{ color: "#64748b" }}>
-                A complete learning ecosystem built specifically for UDOM students and instructors.
+                A complete AI-driven eLearning ecosystem built for students who want personalised,
+                effective, and engaging online education.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -212,7 +214,7 @@ export default function LandingPage() {
         <section className="py-16 px-6" style={{ backgroundColor: "#0c1e4a" }}>
           <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { value: "UDOM", label: "University" },
+              { value: "AI", label: "Powered Recommendations" },
               { value: "20+", label: "Courses Available" },
               { value: "Live", label: "Video Sessions" },
               { value: "24/7", label: "Online Access" },
@@ -234,11 +236,11 @@ export default function LandingPage() {
               ))}
             </div>
             <h2 className="text-3xl font-bold mb-4" style={{ color: "#0f172a" }}>
-              Ready to Start Learning?
+              Ready for Smarter Learning?
             </h2>
             <p className="text-base mb-8" style={{ color: "#64748b" }}>
-              Join UDOM students already using APES to manage their courses, attend live sessions, and
-              achieve their academic goals.
+              Join students already using APES to get AI-personalised course recommendations,
+              attend live sessions, and track their academic progress intelligently.
             </p>
             <Link
               to="/register"
@@ -260,10 +262,10 @@ export default function LandingPage() {
         <footer className="py-8 px-6 text-center" style={{ backgroundColor: "#0c1e4a", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           <div className="flex items-center justify-center gap-2 mb-2">
             <GraduationCap size={18} color="#22c55e" />
-            <span className="text-white font-semibold text-sm">APES UDOM</span>
+            <span className="text-white font-semibold text-sm">APES eLearning</span>
           </div>
           <p className="text-xs" style={{ color: "#60a5fa" }}>
-            Academic Platform for Enhanced Students — University of Dodoma, Tanzania
+            AI Personalization eLearning System — Built by Kalira
           </p>
           <div className="flex justify-center gap-6 mt-4">
             <Link to="/login" className="text-xs hover:text-white transition-colors" style={{ color: "#93c5fd" }}>Login</Link>

@@ -231,7 +231,7 @@ export default function Register() {
     <>
       <SEOHead
         title="Create Your Student Account"
-        description="Register for APES UDOM to access University of Dodoma courses, live sessions, assignments, and your student academic portal."
+        description="Create your free APES account and get access to AI-personalised courses, adaptive quizzes, live sessions, and smart study insights."
         canonical="/register"
       />
       {registered ? (

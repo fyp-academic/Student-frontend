@@ -93,7 +93,7 @@ export default function Login() {
     <>
       <SEOHead
         title="Student Login"
-        description="Sign in to your APES UDOM student account to access your courses, assignments, live sessions, and academic resources at University of Dodoma."
+        description="Sign in to your APES account to access your AI-personalised courses, assignments, live sessions, and smart learning dashboard."
         canonical="/login"
         noIndex
       />

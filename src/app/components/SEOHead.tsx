@@ -7,13 +7,13 @@ interface SEOHeadProps {
   noIndex?: boolean;
 }
 
-const SITE_NAME = "APES UDOM";
+const SITE_NAME = "APES eLearning";
 const BASE_URL = "https://apesudom.codagenz.com";
 const DEFAULT_DESCRIPTION =
-  "APES UDOM is the official Learning Management System for University of Dodoma students. Browse courses, attend live sessions, submit assignments, and track your academic progress.";
+  "APES is an AI-powered personalized eLearning system. Smart course recommendations, live sessions, AI study tips, and adaptive learning tools — all in one platform.";
 
 export function SEOHead({ title, description, canonical, noIndex = false }: SEOHeadProps) {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} – University of Dodoma Student Portal`;
+  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} – AI Personalization eLearning System`;
   const metaDescription = description ?? DEFAULT_DESCRIPTION;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
 

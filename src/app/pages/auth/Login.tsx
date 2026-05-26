@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff, Loader2, Mail, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../services/api';
+import { SEOHead } from '../../components/SEOHead';
 
 function validate(email: string, password: string) {
   const e: Record<string, string> = {};
@@ -53,7 +54,7 @@ export default function Login() {
         await logout();
         setWrongRole(true);
       } else {
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string; requires_verification?: boolean; email?: string } } })?.response?.data;
@@ -90,6 +91,12 @@ export default function Login() {
 
   return (
     <>
+      <SEOHead
+        title="Student Login"
+        description="Sign in to your APES UDOM student account to access your courses, assignments, live sessions, and academic resources at University of Dodoma."
+        canonical="/login"
+        noIndex
+      />
       <h1 className="text-4xl font-extrabold text-gray-900 mb-10 leading-tight">
         Welcome<br />Back
       </h1>

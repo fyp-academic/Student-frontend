@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Loader2, Mail, ArrowLeft, CheckCircle, Eye, EyeOff, Lock } from 'lucide-react';
 import { authApi } from '../../services/api';
+import { SEOHead } from '../../components/SEOHead';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -94,6 +95,12 @@ export default function ForgotPassword() {
 
   return (
     <>
+      <SEOHead
+        title="Forgot Password"
+        description="Reset your APES UDOM student account password to regain access to your University of Dodoma courses and academic resources."
+        canonical="/forgot-password"
+        noIndex
+      />
       <Link
           to="/login"
           className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 mb-6 transition-colors"

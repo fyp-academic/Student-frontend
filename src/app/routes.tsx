@@ -1,6 +1,7 @@
-import { createBrowserRouter, Outlet, Navigate, useRouteError } from "react-router";
+import { createBrowserRouter, useRouteError } from "react-router";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import LandingPage from "./pages/LandingPage";
 import { Dashboard } from "./pages/Dashboard";
 import { LearningCatalog } from "./pages/LearningCatalog";
 import { MyCourses } from "./pages/MyCourses";
@@ -54,7 +55,7 @@ const ErrorFallback = () => {
             {error.message}
           </p>
         )}
-        <a href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-white" style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#2563eb" }}>
+        <a href="/dashboard" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-white" style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#2563eb" }}>
           Go to Dashboard
         </a>
       </div>
@@ -63,6 +64,7 @@ const ErrorFallback = () => {
 };
 
 export const router = createBrowserRouter([
+  { path: "/", element: <LandingPage /> },
   {
     element: <AuthLayout />,
     children: [
@@ -74,29 +76,29 @@ export const router = createBrowserRouter([
   { path: "/reset-password",   element: <ResetPassword />    },
   { path: "/verify-email", element: <VerifyEmail /> },
   {
-    path: "/",
+    // Pathless layout — wraps all app routes without adding a path prefix,
+    // so /catalog, /my-courses, /lessons, etc. all keep their current URLs.
     element: <PageWrapper />,
     errorElement: <ErrorFallback />,
     children: [
-      { index: true, Component: Dashboard },
-      { path: "instructors", Component: Instructors },
-      { path: "courses/:id", Component: CourseDetail },
-      { path: "catalog", Component: LearningCatalog },
-      { path: "my-courses", Component: MyCourses },
-      { path: "course-feed", Component: CourseFeed },
-      { path: "course-forum", Component: CourseForum },
-      { path: "lessons", Component: Lessons },
-      { path: "activities", Component: Activities },
-      { path: "assessments", Component: Assessments },
-      { path: "assignments", Component: Assignments },
-      { path: "practice", Component: Practice },
-      { path: "interactive", Component: InteractiveActivities },
-      { path: "notifications", Component: Notifications },
-      { path: "chat", Component: Chat },
-      { path: "sessions", Component: StudentSessions },
-      { path: "profile", Component: LearnerProfile },
-      { path: "engagement", Component: LearnerEngagement },
-      { path: "*", element: <Navigate to="/" replace /> },
+      { path: "/dashboard",    Component: Dashboard           },
+      { path: "/instructors",  Component: Instructors         },
+      { path: "/courses/:id",  Component: CourseDetail        },
+      { path: "/catalog",      Component: LearningCatalog     },
+      { path: "/my-courses",   Component: MyCourses           },
+      { path: "/course-feed",  Component: CourseFeed          },
+      { path: "/course-forum", Component: CourseForum         },
+      { path: "/lessons",      Component: Lessons             },
+      { path: "/activities",   Component: Activities          },
+      { path: "/assessments",  Component: Assessments         },
+      { path: "/assignments",  Component: Assignments         },
+      { path: "/practice",     Component: Practice            },
+      { path: "/interactive",  Component: InteractiveActivities },
+      { path: "/notifications", Component: Notifications      },
+      { path: "/chat",         Component: Chat                },
+      { path: "/sessions",     Component: StudentSessions     },
+      { path: "/profile",      Component: LearnerProfile      },
+      { path: "/engagement",   Component: LearnerEngagement   },
     ],
   },
 ]);

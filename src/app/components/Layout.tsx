@@ -99,7 +99,7 @@ export function Layout() {
             )}
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5">
-              <NavLink to="/" className="text-blue-600 hover:text-blue-700 transition-colors" style={{ fontSize: "13px" }}>
+              <NavLink to="/dashboard" className="text-blue-600 hover:text-blue-700 transition-colors" style={{ fontSize: "13px" }}>
                 <LayoutDashboard size={14} className="inline mr-1" />
                 Home
               </NavLink>

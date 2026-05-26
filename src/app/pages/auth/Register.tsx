@@ -4,6 +4,7 @@ import { Eye, EyeOff, Loader2, CheckCircle2, Mail, RefreshCw, ArrowRight, Gradua
 
 import { useAuth } from '../../context/AuthContext';
 import { authApi, collegesApi, degreeProgrammesApi } from '../../services/api';
+import { SEOHead } from '../../components/SEOHead';
 
 interface FormData {
   name: string;
@@ -228,6 +229,11 @@ export default function Register() {
 
   return (
     <>
+      <SEOHead
+        title="Create Your Student Account"
+        description="Register for APES UDOM to access University of Dodoma courses, live sessions, assignments, and your student academic portal."
+        canonical="/register"
+      />
       {registered ? (
             <div className="text-center">
               <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">

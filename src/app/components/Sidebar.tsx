@@ -249,7 +249,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
   };
 
   const isActive = (path: string) => {
-    if (path === "/") return location.pathname === "/";
+    if (path === "/dashboard") return location.pathname === "/dashboard";
     return location.pathname.startsWith(path);
   };
 
@@ -320,7 +320,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
       {/* Dashboard Home Link */}
       <div className="px-3 pt-3 pb-1">
           <NavLink
-            to="/"
+            to="/dashboard"
             end
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
             style={({ isActive }) => ({

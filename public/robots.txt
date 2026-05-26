@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+
+# Keep authenticated app pages out of index
+Disallow: /dashboard
+Disallow: /catalog
+Disallow: /my-courses
+Disallow: /course-feed
+Disallow: /course-forum
+Disallow: /lessons
+Disallow: /activities
+Disallow: /assessments
+Disallow: /assignments
+Disallow: /practice
+Disallow: /interactive
+Disallow: /notifications
+Disallow: /chat
+Disallow: /sessions
+Disallow: /profile
+Disallow: /engagement
+Disallow: /courses/
+Disallow: /instructors
+Disallow: /reset-password
+Disallow: /verify-email
+
+Sitemap: https://apesudom.codagenz.com/sitemap.xml

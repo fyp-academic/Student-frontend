@@ -179,3 +179,39 @@
     line-height: 1.5;
   }
 }
+
+/* ── Lesson content embedded media ─────────────────────────────── */
+@layer base {
+  .prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+  }
+
+  .prose video {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+  }
+
+  /* Ensure YouTube wrapper + iframe are fully responsive */
+  .prose iframe {
+    max-width: 100%;
+    border-radius: 8px;
+    display: block;
+  }
+
+  /* Open external links in new tab are visually distinct */
+  .prose a[target="_blank"] {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+
+  .prose a[target="_blank"]::after {
+    content: ' ↗';
+    font-size: 0.8em;
+    opacity: 0.6;
+  }
+}

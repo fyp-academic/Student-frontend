@@ -214,4 +214,28 @@
     font-size: 0.8em;
     opacity: 0.6;
   }
+
+  /* Float containment so .prose height expands around floated images */
+  .prose {
+    display: flow-root;
+  }
+
+  /* Image wrappers inserted by the RichTextEditor */
+  .lesson-img-wrap {
+    max-width: 100%;
+  }
+
+  .lesson-img-wrap img {
+    margin: 0;
+  }
+
+  /* On very small screens, stop floating so images stack */
+  @media (max-width: 480px) {
+    .lesson-img-left,
+    .lesson-img-right {
+      float: none !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+  }
 }

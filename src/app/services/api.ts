@@ -269,6 +269,17 @@ export const engagementApi = {
   markNotifClicked:(id: number)                               => api.patch(`/notifications/${id}/click`, { channel: 'in_app' }),
 };
 
+// ─── Adaptive Content ────────────────────────────────────────────────────────
+export const adaptiveContentApi = {
+  myProfile: () => api.get('/student/my-profile'),
+  get: (chunkId: string, modalityOverride?: string) =>
+    api.get(`/student/content/${chunkId}`, { params: modalityOverride ? { modality_override: modalityOverride } : {} }),
+  feedback: (adaptationId: string, data: { rating?: string; complexity?: string }) =>
+    api.post(`/student/adaptation/${adaptationId}/feedback`, data),
+  recalculateProfile: (studentId: string, data?: { manual_modality?: string }) =>
+    api.post(`/student/${studentId}/recalculate-profile`, data ?? {}),
+};
+
 // ─── Notifications ───────────────────────────────────────────────────────────
 export const notificationApi = {
   getPreferences:    () => api.get('/notifications/preferences'),

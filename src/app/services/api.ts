@@ -272,6 +272,7 @@ export const engagementApi = {
 // ─── Adaptive Content ────────────────────────────────────────────────────────
 export const adaptiveContentApi = {
   myProfile: () => api.get('/student/my-profile'),
+  chunks: (contentId: string) => api.get(`/student/content-chunks/${contentId}`),
   get: (chunkId: string, modalityOverride?: string) =>
     api.get(`/student/content/${chunkId}`, { params: modalityOverride ? { modality_override: modalityOverride } : {} }),
   feedback: (adaptationId: string, data: { rating?: string; complexity?: string }) =>

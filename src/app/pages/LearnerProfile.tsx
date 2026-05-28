@@ -4,6 +4,7 @@ import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import { useAuth } from "../context/AuthContext";
 import { profileApi, coursesApi } from "../services/api";
 import { NotificationPreferences } from "../components/NotificationPreferences";
+import { AdaptiveLearningWidget } from "../components/student/AdaptiveLearningWidget";
 
 const COURSE_COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#22c55e", "#f59e0b"];
 
@@ -272,8 +273,11 @@ export function LearnerProfile() {
         </div>
       )}
 
-      {activeTab === "learning style" && (() => {
-        const varkOptions = [
+      {activeTab === "learning style" && (
+        <div className="space-y-5">
+          <AdaptiveLearningWidget />
+          {(() => {
+            const varkOptions = [
           { id: "visual",      label: "Visual",           icon: "👁️",  desc: "Charts, diagrams, mind maps, videos" },
           { id: "auditory",    label: "Auditory",         icon: "🎧",  desc: "Lectures, podcasts, verbal explanations" },
           { id: "reading",     label: "Reading / Writing", icon: "📖",  desc: "Notes, PDFs, written summaries" },
@@ -430,6 +434,8 @@ export function LearnerProfile() {
           </div>
         );
       })()}
+        </div>
+      )}
 
       {activeTab === "courses" && (
         <div className="bg-white rounded-2xl p-5 space-y-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>

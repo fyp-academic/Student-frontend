@@ -659,19 +659,22 @@ export function Quizzes() {
                                 <p className="text-xs font-medium text-gray-500 mb-1">Your answer</p>
                                 <p className="text-sm text-gray-800 whitespace-pre-wrap">{String(studentText ?? '(No answer provided)')}</p>
                               </div>
-                              {(q.correct_answer ?? q.correctAnswer) && (
-                                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-                                  <p className="text-xs font-medium text-emerald-600 mb-1">Correct answer</p>
-                                  <p className="text-sm text-emerald-800 font-medium whitespace-pre-wrap">{String(q.correct_answer ?? q.correctAnswer)}</p>
-                                </div>
-                              )}
+                              {(() => {
+                                const correct = String((q as Record<string, unknown>).correct_answer ?? (q as Record<string, unknown>).correctAnswer ?? '');
+                                return correct ? (
+                                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                                    <p className="text-xs font-medium text-emerald-600 mb-1">Correct answer</p>
+                                    <p className="text-sm text-emerald-800 font-medium whitespace-pre-wrap">{correct}</p>
+                                  </div>
+                                ) : null;
+                              })()}
                             </div>
                           )}
 
                           {/* Matching / drag-drop review */}
                           {isMatchQ(q) && (
                             <div className="space-y-2">
-                              {(q.matching_pairs ?? q.matchingPairs ?? [] as any[]).map((pair: any, pi: number) => (
+                              {((q.matching_pairs ?? q.matchingPairs ?? []) as any[]).map((pair: any, pi: number) => (
                                 <div key={pi} className="flex items-center gap-2 bg-white border border-emerald-100 rounded-xl p-3">
                                   <span className="text-xs font-bold text-gray-400 w-5">{pi + 1}</span>
                                   <span className="flex-1 text-sm text-gray-700">{String(pair.question ?? pair.q ?? '')}</span>
@@ -775,7 +778,7 @@ export function Quizzes() {
                     {isMatchQ(q) && (
                       <div className="space-y-3">
                         <p className="text-sm text-gray-500">Match each item with its correct pair.</p>
-                        {(q.matching_pairs ?? q.matchingPairs ?? [] as any[]).map((pair: any, pi: number) => (
+                        {((q.matching_pairs ?? q.matchingPairs ?? []) as any[]).map((pair: any, pi: number) => (
                           <div key={pi} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
                             <span className="text-xs font-bold text-gray-400 w-6">{pi + 1}</span>
                             <span className="flex-1 text-sm text-gray-700">{String(pair.question ?? pair.q ?? '')}</span>
@@ -789,7 +792,7 @@ export function Quizzes() {
                               className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"
                             >
                               <option value="">Select answer...</option>
-                              {(q.matching_pairs ?? q.matchingPairs ?? [] as any[]).map((p2: any, pi2: number) => (
+                              {((q.matching_pairs ?? q.matchingPairs ?? []) as any[]).map((p2: any, pi2: number) => (
                                 <option key={pi2} value={String(p2.answer ?? p2.a ?? p2.correct ?? '')}>
                                   {String(p2.answer ?? p2.a ?? p2.correct ?? '')}
                                 </option>

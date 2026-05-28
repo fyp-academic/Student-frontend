@@ -132,20 +132,50 @@ export function Quizzes() {
       }).catch(() => []),
     ]).then(([attempts, available]) => {
       if (cancelled) return;
+
+      // Build attempt lookup by activity_id
       const attemptMap = new Map<string, Quiz>();
       for (const a of attempts as Quiz[]) {
-        const aid = String(a.activity_id ?? a.id ?? '');
+        const aid = String(a.activity_id ?? (a.activity as Record<string, unknown>)?.id ?? a.id ?? '');
         if (aid) attemptMap.set(aid, a);
       }
-      const merged = (available as Quiz[]).map(q => {
+
+      // Merge: keep all display fields from available quiz, overlay attempt completion data
+      const merged: Quiz[] = (available as Quiz[]).map(q => {
         const qid = String(q.activity_id ?? q.id ?? '');
-        return attemptMap.has(qid) ? attemptMap.get(qid)! : q;
+        const att = attemptMap.get(qid);
+        if (!att) return q;
+        return {
+          ...q,
+          status: att.status,
+          score: att.score,
+          max_score: att.max_score,
+          attempt_id: att.id,
+          attempt_number: att.attempt_number,
+          submitted_at: att.submitted_at,
+          attempts: Number(att.attempt_number ?? 1),
+        };
       });
+
+      // Add attempts that have no matching available quiz (e.g. deleted activity)
       for (const [aid, att] of attemptMap) {
         if (!merged.some(m => String(m.activity_id ?? m.id ?? '') === aid)) {
-          merged.push(att);
+          const activity = (att.activity as Record<string, unknown>) ?? {};
+          merged.push({
+            ...att,
+            id: aid,
+            activity_id: aid,
+            title: String(activity.name ?? activity.title ?? att.title ?? 'Quiz'),
+            status: att.status,
+            score: att.score,
+            questions_count: 0,
+            time_limit: Number(activity.time_limit ?? activity.grade_max ?? 0),
+            max_attempts: 2,
+            attempts: Number(att.attempt_number ?? 1),
+          });
         }
       }
+
       setQuizzes(merged);
       // Auto-start quiz if navigated from Lessons with a specific quiz ID
       if (startQuizId) {
@@ -222,9 +252,10 @@ export function Quizzes() {
   };
 
   const handleReviewQuiz = async (quiz: Quiz) => {
-    const attemptId = String(quiz.id ?? '');
-    const actId = String(quiz.activity_id ?? '');
-    if (!attemptId || !actId) return;
+    // After merge fix: quiz.id = activity_id, quiz.attempt_id = attempt UUID
+    const reviewAttemptId = String(quiz.attempt_id ?? quiz.id ?? '');
+    const actId = String(quiz.activity_id ?? quiz.id ?? '');
+    if (!reviewAttemptId || !actId) return;
 
     setActiveQuiz(quiz);
     setQuizLoading(true);
@@ -236,7 +267,7 @@ export function Quizzes() {
       // Fetch questions and attempt in parallel
       const [qRes, attemptRes] = await Promise.all([
         quizApi.questions(actId),
-        quizApi.get(attemptId),
+        quizApi.get(reviewAttemptId),
       ]);
 
       const qs: QItem[] = qRes.data.data ?? qRes.data ?? [];

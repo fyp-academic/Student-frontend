@@ -4,7 +4,10 @@ import { SafeMarkdown } from './SafeMarkdown';
 import { Button } from '@/app/components/ui/button';
 import { Skeleton } from '@/app/components/ui/skeleton';
 import { cn } from '@/app/components/ui/utils';
-import { FileText, BarChart3, Lightbulb, ThumbsUp, ThumbsDown, Info } from 'lucide-react';
+import {
+  FileText, BarChart3, Lightbulb, ThumbsUp, ThumbsDown, Info,
+  ChevronDown, ChevronUp, User, Gauge, Turtle, Zap, BrainCircuit, AlertCircle
+} from 'lucide-react';
 
 interface AdaptiveContentBlockProps {
   chunkId: string;
@@ -26,6 +29,9 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({ chun
   const [feedbackReady, setFeedbackReady] = useState(false);
   const [isPersonalized, setIsPersonalized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<Record<string, any> | null>(null);
+  const [settingsApplied, setSettingsApplied] = useState<Record<string, any> | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -40,6 +46,8 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({ chun
       setOriginalContent(data.original_text ?? null);
       setAdaptationId(data.adaptation_id ?? null);
       setIsPersonalized(data.is_personalized === true);
+      setProfile(data.profile ?? null);
+      setSettingsApplied(data.settings_applied ?? null);
       if (modality) setCurrentModality(modality);
     } catch (err: any) {
       setError('Could not load content. Please try again.');
@@ -91,18 +99,114 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({ chun
 
   const showFeedbackStrip = feedbackReady && !feedbackGiven && !isLoading && adaptedContent;
 
+  const getAdaptationBadges = () => {
+    const badges: { label: string; color: string }[] = [];
+    if (!profile) return badges;
+    if (profile.quiz_average !== undefined && profile.quiz_average < 60) {
+      badges.push({ label: 'Simplified (Low Quiz Score)', color: 'bg-amber-100 text-amber-700' });
+    }
+    if (profile.preferred_modality === 'visual') {
+      badges.push({ label: 'Visual Layout', color: 'bg-blue-100 text-blue-700' });
+    } else if (profile.preferred_modality === 'example-based') {
+      badges.push({ label: 'Example-Based', color: 'bg-emerald-100 text-emerald-700' });
+    }
+    if (profile.pace === 'slow') {
+      badges.push({ label: 'Step-by-Step (Slow Pace)', color: 'bg-purple-100 text-purple-700' });
+    } else if (profile.pace === 'fast') {
+      badges.push({ label: 'Compressed (Fast Pace)', color: 'bg-rose-100 text-rose-700' });
+    }
+    if (profile.weak_topics && profile.weak_topics.length > 0) {
+      badges.push({ label: `Weak Topic Support: ${profile.weak_topics[0]}`, color: 'bg-orange-100 text-orange-700' });
+    }
+    return badges;
+  };
+
   return (
     <div ref={containerRef} className="w-full">
       {/* Top bar */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-base font-semibold text-foreground">{topicTitle}</h3>
         {isPersonalized && (
           <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            <Info className="h-3 w-3" />
-            Personalized for your learning style
+            <BrainCircuit className="h-3 w-3" />
+            AI Adapted
           </span>
         )}
       </div>
+
+      {/* Adaptation reason badges */}
+      {isPersonalized && getAdaptationBadges().length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {getAdaptationBadges().map((b, i) => (
+            <span key={i} className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${b.color}`}>
+              {b.label}
+            </span>
+          ))}
+          <button
+            onClick={() => setShowDetails((v) => !v)}
+            className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2"
+          >
+            {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            {showDetails ? 'Hide details' : 'Why this content?'}
+          </button>
+        </div>
+      )}
+
+      {/* Adaptation Details panel */}
+      {showDetails && profile && (
+        <div className="mb-3 rounded-lg border bg-muted/30 p-3 text-xs space-y-2">
+          <p className="font-semibold text-foreground">Adaptation Factors</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-1.5">
+              <Gauge className="h-3 w-3 text-muted-foreground" />
+              <span className="text-muted-foreground">Pace:</span>
+              <span className="font-medium capitalize">{profile.pace ?? 'medium'}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <User className="h-3 w-3 text-muted-foreground" />
+              <span className="text-muted-foreground">Quiz Avg:</span>
+              <span className="font-medium">{profile.quiz_average ?? 0}%</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Turtle className="h-3 w-3 text-muted-foreground" />
+              <span className="text-muted-foreground">Modality:</span>
+              <span className="font-medium capitalize">{profile.preferred_modality ?? 'text'}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Zap className="h-3 w-3 text-muted-foreground" />
+              <span className="text-muted-foreground">Completion:</span>
+              <span className="font-medium">{profile.completion_rate ?? 0}%</span>
+            </div>
+          </div>
+          {profile.weak_topics && profile.weak_topics.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <AlertCircle className="h-3 w-3 text-orange-500" />
+              <span className="text-muted-foreground">Weak Topics:</span>
+              <span className="font-medium">{profile.weak_topics.join(', ')}</span>
+            </div>
+          )}
+          {settingsApplied && (
+            <div className="border-t pt-2 mt-1">
+              <p className="font-semibold text-foreground mb-1">Instructor Settings Applied</p>
+              <div className="flex flex-wrap gap-1.5">
+                {settingsApplied.allow_simplification !== false && (
+                  <span className="rounded bg-background px-1.5 py-0.5 text-[10px] border">Simplification ON</span>
+                )}
+                {settingsApplied.allow_analogies !== false && (
+                  <span className="rounded bg-background px-1.5 py-0.5 text-[10px] border">Analogies ON</span>
+                )}
+                {settingsApplied.allow_example_substitution !== false && (
+                  <span className="rounded bg-background px-1.5 py-0.5 text-[10px] border">Examples ON</span>
+                )}
+                {settingsApplied.lock_technical_definitions !== false && (
+                  <span className="rounded bg-background px-1.5 py-0.5 text-[10px] border">Definitions Locked</span>
+                )}
+                <span className="rounded bg-background px-1.5 py-0.5 text-[10px] border">Max Depth: {settingsApplied.max_difficulty ?? 5}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modality switcher */}
       {!isLoading && (

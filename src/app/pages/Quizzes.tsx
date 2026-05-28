@@ -13,6 +13,13 @@ type AItem   = Record<string, unknown>;
 
 const COLORS = ["#2563eb","#7c3aed","#0891b2","#059669","#dc2626","#f59e0b"];
 
+// Categorize question types for rendering
+const getQType = (q: QItem): string => String(q.type ?? '').toLowerCase();
+const isChoiceQ = (q: QItem) => ['multiple_choice', 'true_false', 'calculated_multichoice'].includes(getQType(q));
+const isTextQ   = (q: QItem) => ['short_answer', 'numerical', 'calculated', 'calculated_simple'].includes(getQType(q));
+const isEssayQ  = (q: QItem) => getQType(q) === 'essay';
+const isMatchQ  = (q: QItem) => ['matching', 'drag_drop', 'drag_drop_text', 'drag_drop_markers'].includes(getQType(q));
+
 // Convert index to lowercase Roman numeral (i, ii, iii, iv, v...)
 const toLowerRoman = (n: number): string => {
   const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
@@ -67,7 +74,7 @@ export function Quizzes() {
   const [activeQuiz, setActiveQuiz]         = useState<Quiz | null>(null);
   const [questions, setQuestions]           = useState<QItem[]>([]);
   const [answers, setAnswers]               = useState<Record<string, unknown[]>>({});
-  const [selected, setSelected]             = useState<Record<string, string>>({});
+  const [selected, setSelected]             = useState<Record<string, unknown>>({});
   const [currentQ, setCurrentQ]             = useState(0);
   const [attemptId, setAttemptId]           = useState<string | null>(null);
   const [quizLoading, setQuizLoading]       = useState(false);
@@ -226,8 +233,15 @@ export function Quizzes() {
       const attemptData = startRes.data.data ?? startRes.data ?? {};
       const newAttemptId = String((attemptData as Record<string,unknown>).id ?? '');
       setAttemptId(newAttemptId);
+
+      // Debug logging to trace empty questions
+      console.log('[Quiz] activity_id:', actId);
+      console.log('[Quiz] questions response:', qRes.data);
+
       const qs: QItem[] = qRes.data.data ?? qRes.data ?? [];
+      console.log('[Quiz] parsed questions:', qs.length, qs);
       setQuestions(qs);
+
       // Load answer options — backend already eager-loads answers with questions
       const ansMap: Record<string, unknown[]> = {};
       await Promise.all(qs.map(async (q) => {
@@ -270,6 +284,10 @@ export function Quizzes() {
         quizApi.get(reviewAttemptId),
       ]);
 
+      console.log('[Review] activity_id:', actId, 'attempt_id:', reviewAttemptId);
+      console.log('[Review] questions response:', qRes.data);
+      console.log('[Review] attempt response:', attemptRes.data);
+
       const qs: QItem[] = qRes.data.data ?? qRes.data ?? [];
       setReviewQuestions(qs);
 
@@ -287,14 +305,19 @@ export function Quizzes() {
 
       // Build student response map from attempt data
       const responseMap: Record<string, string> = {};
+      const textResponseMap: Record<string, string> = {};
       const attemptData = attemptRes.data.data ?? attemptRes.data ?? {};
       const responses = (attemptData.responses ?? []) as Record<string, unknown>[];
       for (const r of responses) {
         const qid = String(r.question_id ?? (r as any).question?.id ?? '');
         const aid = String(r.answer_id ?? (r as any).answer?.id ?? '');
+        const rt = String(r.response_text ?? '');
         if (qid && aid) responseMap[qid] = aid;
+        if (qid && rt) textResponseMap[qid] = rt;
       }
       setReviewResponses(responseMap);
+      // Also store text responses in the same selected map for review display
+      setSelected(prev => ({ ...prev, ...textResponseMap }));
     } catch (err: any) {
       console.error('Failed to load review:', err);
       alert('Failed to load review: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
@@ -323,10 +346,14 @@ export function Quizzes() {
 
     setQuizLoading(true);
     try {
-      const responses = Object.entries(selected).map(([question_id, answer_id]) => ({
-        question_id,
-        answer_id,
-      }));
+      const responses = questions.map((q) => {
+        const qid = String(q.id ?? '');
+        const studentAnswer = selected[qid];
+        if (isTextQ(q) || isEssayQ(q)) {
+          return { question_id: qid, response_text: String(studentAnswer ?? '') };
+        }
+        return { question_id: qid, answer_id: String(studentAnswer ?? '') };
+      }).filter(r => r.question_id);
       const r = await quizApi.submit(attemptId, { responses });
       setResult(r.data.data ?? r.data ?? {});
       setSubmitted(true);
@@ -570,51 +597,90 @@ export function Quizzes() {
                       const qid = String(q.id ?? qi);
                       const qAnswers = (reviewAnswers[qid] ?? []) as AItem[];
                       const studentAnswerId = reviewResponses[qid];
+                      const studentText = selected[qid];
+                      const qType = getQType(q);
                       return (
                         <div key={qid} className="space-y-3">
                           <div className="bg-gray-50 rounded-2xl p-4">
-                            <p className="text-xs text-gray-400 font-medium mb-1">Question {qi + 1}</p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-200 px-2 py-0.5 rounded">{qType.replace(/_/g, ' ')}</span>
+                              <span className="text-xs text-gray-400 font-medium">Question {qi + 1}</span>
+                            </div>
                             <p className="font-semibold text-gray-900" style={{ fontSize: "14px", lineHeight: "1.5" }}>
                               {String(q.question_text ?? q.text ?? q.question ?? '')}
                             </p>
                           </div>
-                          <div className="space-y-2">
-                            {qAnswers.map((ans, ai) => {
-                              const aid = String((ans as Record<string,unknown>).id ?? ai);
-                              const text = String((ans as Record<string,unknown>).answer_text ?? (ans as Record<string,unknown>).text ?? `Option ${ai + 1}`);
-                              const isCorrect = Number((ans as Record<string,unknown>).grade_fraction ?? 0) > 0;
-                              const isStudentPick = studentAnswerId === aid;
-                              const label = getChoiceLabel(String(q.choice_numbering ?? q.choiceNumbering ?? ''), ai);
-                              return (
-                                <div
-                                  key={aid}
-                                  className="w-full text-left px-4 py-3 rounded-xl border flex items-center gap-2"
-                                  style={{
-                                    borderColor: isCorrect ? "#86efac" : isStudentPick ? "#bfdbfe" : "#e2e8f0",
-                                    backgroundColor: isCorrect ? "#f0fdf4" : isStudentPick ? "#eff6ff" : "white",
-                                    color: isCorrect ? "#166534" : isStudentPick ? "#1d4ed8" : "#374151",
-                                    fontWeight: isCorrect ? 700 : isStudentPick ? 600 : 400,
-                                    fontSize: "13px",
-                                  }}
-                                >
-                                  <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0 text-[10px]"
+
+                          {/* Choice question review */}
+                          {isChoiceQ(q) && (
+                            <div className="space-y-2">
+                              {qAnswers.map((ans, ai) => {
+                                const aid = String((ans as Record<string,unknown>).id ?? ai);
+                                const text = String((ans as Record<string,unknown>).answer_text ?? (ans as Record<string,unknown>).text ?? `Option ${ai + 1}`);
+                                const isCorrect = Number((ans as Record<string,unknown>).grade_fraction ?? 0) > 0;
+                                const isStudentPick = studentAnswerId === aid;
+                                const label = getChoiceLabel(String(q.choice_numbering ?? q.choiceNumbering ?? ''), ai);
+                                return (
+                                  <div
+                                    key={aid}
+                                    className="w-full text-left px-4 py-3 rounded-xl border flex items-center gap-2"
                                     style={{
-                                      borderColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "#d1d5db",
-                                      backgroundColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "transparent",
-                                      color: isCorrect || isStudentPick ? "white" : "#6b7280",
-                                    }}>
-                                    {isCorrect ? '✓' : isStudentPick ? '●' : ''}
-                                  </span>
-                                  {label && (
-                                    <span className="font-semibold flex-shrink-0 min-w-[1.5rem] text-right" style={{ color: isCorrect ? '#166534' : isStudentPick ? '#1d4ed8' : '#6b7280' }}>{label}</span>
-                                  )}
-                                  <span>{text}</span>
-                                  {isCorrect && <span className="ml-auto text-[10px] font-bold text-emerald-600">Correct</span>}
-                                  {isStudentPick && !isCorrect && <span className="ml-auto text-[10px] font-bold text-blue-500">Your answer</span>}
+                                      borderColor: isCorrect ? "#86efac" : isStudentPick ? "#bfdbfe" : "#e2e8f0",
+                                      backgroundColor: isCorrect ? "#f0fdf4" : isStudentPick ? "#eff6ff" : "white",
+                                      color: isCorrect ? "#166534" : isStudentPick ? "#1d4ed8" : "#374151",
+                                      fontWeight: isCorrect ? 700 : isStudentPick ? 600 : 400,
+                                      fontSize: "13px",
+                                    }}
+                                  >
+                                    <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0 text-[10px]"
+                                      style={{
+                                        borderColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "#d1d5db",
+                                        backgroundColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "transparent",
+                                        color: isCorrect || isStudentPick ? "white" : "#6b7280",
+                                      }}>
+                                      {isCorrect ? '✓' : isStudentPick ? '●' : ''}
+                                    </span>
+                                    {label && (
+                                      <span className="font-semibold flex-shrink-0 min-w-[1.5rem] text-right" style={{ color: isCorrect ? '#166534' : isStudentPick ? '#1d4ed8' : '#6b7280' }}>{label}</span>
+                                    )}
+                                    <span>{text}</span>
+                                    {isCorrect && <span className="ml-auto text-[10px] font-bold text-emerald-600">Correct</span>}
+                                    {isStudentPick && !isCorrect && <span className="ml-auto text-[10px] font-bold text-blue-500">Your answer</span>}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Text / Essay review */}
+                          {(isTextQ(q) || isEssayQ(q)) && (
+                            <div className="space-y-2">
+                              <div className="bg-white border border-gray-200 rounded-xl p-3">
+                                <p className="text-xs font-medium text-gray-500 mb-1">Your answer</p>
+                                <p className="text-sm text-gray-800 whitespace-pre-wrap">{String(studentText ?? '(No answer provided)')}</p>
+                              </div>
+                              {(q.correct_answer ?? q.correctAnswer) && (
+                                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                                  <p className="text-xs font-medium text-emerald-600 mb-1">Correct answer</p>
+                                  <p className="text-sm text-emerald-800 font-medium whitespace-pre-wrap">{String(q.correct_answer ?? q.correctAnswer)}</p>
                                 </div>
-                              );
-                            })}
-                          </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Matching / drag-drop review */}
+                          {isMatchQ(q) && (
+                            <div className="space-y-2">
+                              {(q.matching_pairs ?? q.matchingPairs ?? [] as any[]).map((pair: any, pi: number) => (
+                                <div key={pi} className="flex items-center gap-2 bg-white border border-emerald-100 rounded-xl p-3">
+                                  <span className="text-xs font-bold text-gray-400 w-5">{pi + 1}</span>
+                                  <span className="flex-1 text-sm text-gray-700">{String(pair.question ?? pair.q ?? '')}</span>
+                                  <span className="text-gray-300">→</span>
+                                  <span className="flex-1 text-sm font-semibold text-emerald-700">{String(pair.answer ?? pair.a ?? pair.correct ?? '')}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       );
                     })
@@ -626,6 +692,7 @@ export function Quizzes() {
                 const q = questions[currentQ] as Record<string, unknown>;
                 const qid = String(q.id ?? currentQ);
                 const qAnswers = (answers[qid] ?? []) as AItem[];
+                const qType = getQType(q);
                 return (
                   <div className="space-y-5">
                     {/* Progress bar */}
@@ -634,44 +701,104 @@ export function Quizzes() {
                     </div>
 
                     <div className="bg-blue-50 rounded-2xl p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-100 px-2 py-0.5 rounded">{qType.replace(/_/g, ' ')}</span>
+                        <span className="text-xs text-gray-500">{String(q.default_mark ?? q.defaultMark ?? 1)} pt{Number(q.default_mark ?? q.defaultMark ?? 1) !== 1 ? 's' : ''}</span>
+                      </div>
                       <p className="font-semibold text-gray-900" style={{ fontSize: "15px", lineHeight: "1.5" }}>
                         {String(q.question_text ?? q.text ?? q.question ?? '')}
                       </p>
                     </div>
 
-                    <div className="space-y-2.5" role="radiogroup" aria-label="Answer options">
-                      {qAnswers.map((ans, ai) => {
-                        const aid  = String((ans as Record<string,unknown>).id ?? ai);
-                        const text = String((ans as Record<string,unknown>).answer_text ?? (ans as Record<string,unknown>).text ?? `Option ${ai + 1}`);
-                        const isSel = selected[qid] === aid;
-                        const label = getChoiceLabel(String(q.choice_numbering ?? q.choiceNumbering ?? ''), ai);
-                        return (
-                          <button
-                            key={aid}
-                            role="radio"
-                            aria-checked={isSel}
-                            onClick={() => setSelected(prev => ({ ...prev, [qid]: aid }))}
-                            className="w-full text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-2"
-                            style={{
-                              borderColor: isSel ? "#2563eb" : "#e2e8f0",
-                              backgroundColor: isSel ? "#eff6ff" : "white",
-                              color: isSel ? "#1d4ed8" : "#374151",
-                              fontWeight: isSel ? 600 : 400,
-                              fontSize: "13px",
-                            }}
-                          >
-                            <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0"
-                              style={{ borderColor: isSel ? "#2563eb" : "#d1d5db", backgroundColor: isSel ? "#2563eb" : "transparent" }}>
-                              {isSel && <span className="w-2 h-2 rounded-full bg-white" />}
-                            </span>
-                            {label && (
-                              <span className="font-semibold text-gray-500 flex-shrink-0 min-w-[1.5rem] text-right">{label}</span>
-                            )}
-                            <span>{text}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    {/* Choice questions: multiple_choice, true_false, calculated_multichoice */}
+                    {isChoiceQ(q) && (
+                      <div className="space-y-2.5" role="radiogroup" aria-label="Answer options">
+                        {qAnswers.map((ans, ai) => {
+                          const aid  = String((ans as Record<string,unknown>).id ?? ai);
+                          const text = String((ans as Record<string,unknown>).answer_text ?? (ans as Record<string,unknown>).text ?? `Option ${ai + 1}`);
+                          const isSel = selected[qid] === aid;
+                          const label = getChoiceLabel(String(q.choice_numbering ?? q.choiceNumbering ?? ''), ai);
+                          return (
+                            <button
+                              key={aid}
+                              role="radio"
+                              aria-checked={isSel}
+                              onClick={() => setSelected(prev => ({ ...prev, [qid]: aid }))}
+                              className="w-full text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-2"
+                              style={{
+                                borderColor: isSel ? "#2563eb" : "#e2e8f0",
+                                backgroundColor: isSel ? "#eff6ff" : "white",
+                                color: isSel ? "#1d4ed8" : "#374151",
+                                fontWeight: isSel ? 600 : 400,
+                                fontSize: "13px",
+                              }}
+                            >
+                              <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0"
+                                style={{ borderColor: isSel ? "#2563eb" : "#d1d5db", backgroundColor: isSel ? "#2563eb" : "transparent" }}>
+                                {isSel && <span className="w-2 h-2 rounded-full bg-white" />}
+                              </span>
+                              {label && (
+                                <span className="font-semibold text-gray-500 flex-shrink-0 min-w-[1.5rem] text-right">{label}</span>
+                              )}
+                              <span>{text}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Text questions: short_answer, numerical, calculated, calculated_simple */}
+                    {(isTextQ(q) || isEssayQ(q)) && (
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-gray-600">Your answer</label>
+                        {isEssayQ(q) ? (
+                          <textarea
+                            value={String(selected[qid] ?? '')}
+                            onChange={(e) => setSelected(prev => ({ ...prev, [qid]: e.target.value }))}
+                            placeholder="Type your answer here..."
+                            rows={6}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                          />
+                        ) : (
+                          <input
+                            type={qType === 'numerical' ? 'number' : 'text'}
+                            value={String(selected[qid] ?? '')}
+                            onChange={(e) => setSelected(prev => ({ ...prev, [qid]: e.target.value }))}
+                            placeholder={qType === 'numerical' ? 'Enter a number...' : 'Type your answer here...'}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    {/* Matching / drag-drop questions */}
+                    {isMatchQ(q) && (
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-500">Match each item with its correct pair.</p>
+                        {(q.matching_pairs ?? q.matchingPairs ?? [] as any[]).map((pair: any, pi: number) => (
+                          <div key={pi} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                            <span className="text-xs font-bold text-gray-400 w-6">{pi + 1}</span>
+                            <span className="flex-1 text-sm text-gray-700">{String(pair.question ?? pair.q ?? '')}</span>
+                            <span className="text-gray-300">→</span>
+                            <select
+                              value={String((selected[qid] as any)?.[pi] ?? '')}
+                              onChange={(e) => {
+                                const current = (selected[qid] as Record<string, string> | undefined) ?? {};
+                                setSelected(prev => ({ ...prev, [qid]: { ...current, [pi]: e.target.value } }));
+                              }}
+                              className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"
+                            >
+                              <option value="">Select answer...</option>
+                              {(q.matching_pairs ?? q.matchingPairs ?? [] as any[]).map((p2: any, pi2: number) => (
+                                <option key={pi2} value={String(p2.answer ?? p2.a ?? p2.correct ?? '')}>
+                                  {String(p2.answer ?? p2.a ?? p2.correct ?? '')}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })()}

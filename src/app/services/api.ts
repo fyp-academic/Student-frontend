@@ -98,6 +98,7 @@ export const quizApi = {
   start:      (activityId: string)               => api.post(`/activities/${activityId}/quiz-attempt`),
   submit:     (attemptId: string, data: Record<string, unknown>) =>
     api.post(`/quiz-attempts/${attemptId}/submit`, data),
+  get:        (attemptId: string)                => api.get(`/quiz-attempts/${attemptId}`),
 };
 
 // ─── Proctoring ───────────────────────────────────────────────────────────────

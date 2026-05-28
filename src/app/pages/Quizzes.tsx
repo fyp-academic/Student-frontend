@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router";
-import { HelpCircle, Clock, CheckCircle, PlayCircle, Lock, Trophy, X, ChevronRight, Loader2 } from "lucide-react";
+import { HelpCircle, Clock, CheckCircle, PlayCircle, Lock, Trophy, X, ChevronRight, Loader2, Eye } from "lucide-react";
 import { quizApi, dashboardApi } from "../services/api";
 import { useProctoringMonitor } from '../hooks/useProctoringMonitor';
 import ViolationWarningModal from '../components/ViolationWarningModal';
@@ -73,6 +73,12 @@ export function Quizzes() {
   const [quizLoading, setQuizLoading]       = useState(false);
   const [submitted, setSubmitted]           = useState(false);
   const [result, setResult]                 = useState<Record<string, unknown> | null>(null);
+
+  // Review mode state
+  const [reviewMode, setReviewMode]         = useState(false);
+  const [reviewQuestions, setReviewQuestions] = useState<QItem[]>([]);
+  const [reviewAnswers, setReviewAnswers]     = useState<Record<string, unknown[]>>({});
+  const [reviewResponses, setReviewResponses] = useState<Record<string, string>>({});
 
   // Proctoring: active when attemptId is set and quiz not yet submitted
   const procSessionKey = activeQuiz && attemptId && !submitted ? attemptId : null;
@@ -159,6 +165,8 @@ export function Quizzes() {
 
   const filtered = activeFilter === "All"
     ? quizzes
+    : activeFilter === "Completed"
+    ? quizzes.filter(q => ['submitted', 'graded', 'completed'].includes(String(q.status ?? '').toLowerCase()))
     : quizzes.filter(q => String(q.status ?? '').toLowerCase() === activeFilter.toLowerCase());
 
   const handleStartQuiz = async (quiz: Quiz) => {
@@ -170,6 +178,7 @@ export function Quizzes() {
     setSelected({});
     setCurrentQ(0);
     setAttemptId(null);
+    setReviewMode(false);
     // Push restricted mode to AI widget
     setContext({
       currentPage:   '/quizzes',
@@ -207,6 +216,59 @@ export function Quizzes() {
     } catch (err: any) {
       console.error('Failed to start quiz:', err);
       alert('Failed to start quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  const handleReviewQuiz = async (quiz: Quiz) => {
+    const attemptId = String(quiz.id ?? '');
+    const actId = String(quiz.activity_id ?? '');
+    if (!attemptId || !actId) return;
+
+    setActiveQuiz(quiz);
+    setQuizLoading(true);
+    setReviewMode(true);
+    setSubmitted(false);
+    setResult(null);
+
+    try {
+      // Fetch questions and attempt in parallel
+      const [qRes, attemptRes] = await Promise.all([
+        quizApi.questions(actId),
+        quizApi.get(attemptId),
+      ]);
+
+      const qs: QItem[] = qRes.data.data ?? qRes.data ?? [];
+      setReviewQuestions(qs);
+
+      // Build answer map from questions (includes correct answers with grade_fraction)
+      const ansMap: Record<string, unknown[]> = {};
+      await Promise.all(qs.map(async (q) => {
+        const qid = String(q.id ?? '');
+        if (!qid) return;
+        const existing = (q.answers ?? q.answers_list ?? []) as unknown[];
+        if (existing.length > 0) { ansMap[qid] = existing; return; }
+        const ar = await quizApi.answers(qid);
+        ansMap[qid] = ar.data.data ?? ar.data ?? [];
+      }));
+      setReviewAnswers(ansMap);
+
+      // Build student response map from attempt data
+      const responseMap: Record<string, string> = {};
+      const attemptData = attemptRes.data.data ?? attemptRes.data ?? {};
+      const responses = (attemptData.responses ?? []) as Record<string, unknown>[];
+      for (const r of responses) {
+        const qid = String(r.question_id ?? (r as any).question?.id ?? '');
+        const aid = String(r.answer_id ?? (r as any).answer?.id ?? '');
+        if (qid && aid) responseMap[qid] = aid;
+      }
+      setReviewResponses(responseMap);
+    } catch (err: any) {
+      console.error('Failed to load review:', err);
+      alert('Failed to load review: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+      setActiveQuiz(null);
+      setReviewMode(false);
     } finally {
       setQuizLoading(false);
     }
@@ -250,8 +312,8 @@ export function Quizzes() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Available", value: quizzes.filter(q => String(q.status ?? '').toLowerCase() === "available").length, color: "#2563eb", bg: "#eff6ff", icon: HelpCircle },
-          { label: "Completed", value: quizzes.filter(q => String(q.status ?? '').toLowerCase() === "completed").length, color: "#22c55e", bg: "#f0fdf4", icon: CheckCircle },
+          { label: "Available", value: quizzes.filter(q => !['submitted', 'graded', 'completed'].includes(String(q.status ?? '').toLowerCase())).length, color: "#2563eb", bg: "#eff6ff", icon: HelpCircle },
+          { label: "Completed", value: quizzes.filter(q => ['submitted', 'graded', 'completed'].includes(String(q.status ?? '').toLowerCase())).length, color: "#22c55e", bg: "#f0fdf4", icon: CheckCircle },
           { label: "Avg. Score", value: scored.length ? `${avgScore}%` : "—", color: "#7c3aed", bg: "#fdf4ff", icon: Trophy },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
@@ -299,7 +361,9 @@ export function Quizzes() {
             const code       = String(quiz.course_code ?? quiz.code ?? '');
             const topic      = String(quiz.topic ?? quiz.module ?? '');
             const title      = String(quiz.title ?? quiz.name ?? '');
-            const status     = String(quiz.status ?? 'available').toLowerCase();
+            const rawStatus  = String(quiz.status ?? 'available').toLowerCase();
+            // Treat submitted/graded as completed
+            const status     = ['submitted', 'graded'].includes(rawStatus) ? 'completed' : rawStatus;
             const score      = quiz.score !== null && quiz.score !== undefined ? Number(quiz.score ?? quiz.grade ?? 0) : null;
             const questions  = Number(quiz.questions_count ?? quiz.questions ?? 0);
             const timeLimit  = Number(quiz.time_limit ?? quiz.timeLimit ?? 0);
@@ -308,7 +372,7 @@ export function Quizzes() {
             const dueDate    = String(quiz.due_date ?? quiz.dueDate ?? '');
             const color      = COLORS[idx % COLORS.length];
             const isLocked   = status === 'locked';
-            const canRetake  = status === 'completed' && attempts < maxAttempts;
+            const isCompleted = status === 'completed';
 
             return (
               <div
@@ -349,10 +413,10 @@ export function Quizzes() {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <span style={{ fontSize: "11px", color: status === "available" ? "#f59e0b" : "#94a3b8", fontWeight: status === "available" ? 600 : 400 }}>
-                    {status === "available" ? `⚡ Due: ${dueDate}` : isLocked ? "🔒 Complete prev. module" : `✓ Completed · ${dueDate}`}
+                  <span style={{ fontSize: "11px", color: isCompleted ? "#16a34a" : status === "available" ? "#f59e0b" : "#94a3b8", fontWeight: isCompleted || status === "available" ? 600 : 400 }}>
+                    {isCompleted ? `✓ Complete` : status === "available" ? `⚡ Due: ${dueDate}` : isLocked ? "🔒 Complete prev. module" : `Due: ${dueDate}`}
                   </span>
-                  {status === "available" && (
+                  {!isCompleted && !isLocked && (
                     <button
                       onClick={() => handleStartQuiz(quiz)}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white transition-all"
@@ -361,13 +425,13 @@ export function Quizzes() {
                       <PlayCircle size={13} /> Start Quiz
                     </button>
                   )}
-                  {canRetake && (
+                  {isCompleted && (
                     <button
-                      onClick={() => handleStartQuiz(quiz)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all hover:bg-blue-50"
-                      style={{ fontSize: "12px", color: "#2563eb", borderColor: "#bfdbfe" }}
+                      onClick={() => handleReviewQuiz(quiz)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all hover:bg-emerald-50"
+                      style={{ fontSize: "12px", color: "#16a34a", borderColor: "#bbf7d0" }}
                     >
-                      Retake
+                      <Eye size={13} /> Review Quiz
                     </button>
                   )}
                 </div>
@@ -380,14 +444,16 @@ export function Quizzes() {
       {/* Quiz Runner Modal */}
       {activeQuiz && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8" role="dialog" aria-modal="true" aria-label="Quiz">
-          <div className="absolute inset-0 bg-slate-900/60" onClick={() => !quizLoading && setActiveQuiz(null)} />
+          <div className="absolute inset-0 bg-slate-900/60" onClick={() => { if (!quizLoading) { setActiveQuiz(null); setReviewMode(false); } }} />
           <div className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden flex flex-col" style={{ maxHeight: "90vh", boxShadow: "0 30px 70px rgba(15,23,42,0.3)" }}>
             {/* Header */}
             <div className="border-b border-gray-100">
               <div className="flex items-center justify-between px-6 py-4">
                 <div>
                   <p className="font-bold text-gray-900" style={{ fontSize: "15px" }}>{String(activeQuiz.title ?? activeQuiz.name ?? 'Quiz')}</p>
-                  {!submitted && questions.length > 0 && (
+                  {reviewMode ? (
+                    <p style={{ fontSize: "12px", color: "#16a34a" }} className="font-semibold">Review Mode</p>
+                  ) : !submitted && questions.length > 0 && (
                     <p style={{ fontSize: "12px", color: "#94a3b8" }}>Question {currentQ + 1} of {questions.length}</p>
                   )}
                 </div>
@@ -432,6 +498,69 @@ export function Quizzes() {
                     </>
                   )}
                   <button onClick={() => setActiveQuiz(null)} className="mt-6 px-6 py-2.5 rounded-xl text-white font-semibold" style={{ backgroundColor: "#2563eb" }}>Close</button>
+                </div>
+              ) : reviewMode ? (
+                <div className="space-y-6">
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex items-center gap-2">
+                    <CheckCircle size={16} color="#16a34a" />
+                    <span className="text-sm font-medium text-emerald-700">Showing correct answers in green</span>
+                  </div>
+                  {reviewQuestions.length === 0 ? (
+                    <p className="text-center text-gray-400 py-12">No questions to review.</p>
+                  ) : (
+                    reviewQuestions.map((q, qi) => {
+                      const qid = String(q.id ?? qi);
+                      const qAnswers = (reviewAnswers[qid] ?? []) as AItem[];
+                      const studentAnswerId = reviewResponses[qid];
+                      return (
+                        <div key={qid} className="space-y-3">
+                          <div className="bg-gray-50 rounded-2xl p-4">
+                            <p className="text-xs text-gray-400 font-medium mb-1">Question {qi + 1}</p>
+                            <p className="font-semibold text-gray-900" style={{ fontSize: "14px", lineHeight: "1.5" }}>
+                              {String(q.question_text ?? q.text ?? q.question ?? '')}
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            {qAnswers.map((ans, ai) => {
+                              const aid = String((ans as Record<string,unknown>).id ?? ai);
+                              const text = String((ans as Record<string,unknown>).answer_text ?? (ans as Record<string,unknown>).text ?? `Option ${ai + 1}`);
+                              const isCorrect = Number((ans as Record<string,unknown>).grade_fraction ?? 0) > 0;
+                              const isStudentPick = studentAnswerId === aid;
+                              const label = getChoiceLabel(String(q.choice_numbering ?? q.choiceNumbering ?? ''), ai);
+                              return (
+                                <div
+                                  key={aid}
+                                  className="w-full text-left px-4 py-3 rounded-xl border flex items-center gap-2"
+                                  style={{
+                                    borderColor: isCorrect ? "#86efac" : isStudentPick ? "#bfdbfe" : "#e2e8f0",
+                                    backgroundColor: isCorrect ? "#f0fdf4" : isStudentPick ? "#eff6ff" : "white",
+                                    color: isCorrect ? "#166534" : isStudentPick ? "#1d4ed8" : "#374151",
+                                    fontWeight: isCorrect ? 700 : isStudentPick ? 600 : 400,
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0 text-[10px]"
+                                    style={{
+                                      borderColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "#d1d5db",
+                                      backgroundColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "transparent",
+                                      color: isCorrect || isStudentPick ? "white" : "#6b7280",
+                                    }}>
+                                    {isCorrect ? '✓' : isStudentPick ? '●' : ''}
+                                  </span>
+                                  {label && (
+                                    <span className="font-semibold flex-shrink-0 min-w-[1.5rem] text-right" style={{ color: isCorrect ? '#166534' : isStudentPick ? '#1d4ed8' : '#6b7280' }}>{label}</span>
+                                  )}
+                                  <span>{text}</span>
+                                  {isCorrect && <span className="ml-auto text-[10px] font-bold text-emerald-600">Correct</span>}
+                                  {isStudentPick && !isCorrect && <span className="ml-auto text-[10px] font-bold text-blue-500">Your answer</span>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               ) : questions.length === 0 ? (
                 <p className="text-center text-gray-400 py-12">No questions available for this quiz.</p>
@@ -491,7 +620,7 @@ export function Quizzes() {
             </div>
 
             {/* Footer nav */}
-            {!submitted && !quizLoading && questions.length > 0 && (
+            {!submitted && !quizLoading && !reviewMode && questions.length > 0 && (
               <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
                 <button
                   disabled={currentQ === 0}

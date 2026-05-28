@@ -470,6 +470,20 @@ export function Lessons() {
   // ─── Inline Quiz: submit ────────────────────────────────────────────────
   const handleSubmitQuiz = async () => {
     if (!quizAttemptId) return;
+
+    // Guard: require at least one answer
+    const answeredCount = Object.keys(quizSelected).length;
+    if (answeredCount === 0) {
+      alert('Please select at least one answer before submitting.');
+      return;
+    }
+
+    // Guard: confirm if not all questions answered
+    if (answeredCount < quizQuestions.length) {
+      const ok = window.confirm(`You have answered ${answeredCount} of ${quizQuestions.length} questions. Submit anyway?`);
+      if (!ok) return;
+    }
+
     setQuizLoading(true);
     try {
       const responses = Object.entries(quizSelected).map(([question_id, answer_id]) => ({ question_id, answer_id }));
@@ -486,7 +500,21 @@ export function Lessons() {
         } catch { /* silent */ }
       }
     } catch (err: any) {
-      alert('Failed to submit quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+      const data = err?.response?.data ?? {};
+      const errors = data.errors ?? {};
+      const errorMessages = Object.values(errors).flat().filter(Boolean);
+      const mainMessage = data.message || err?.message || 'Unknown error';
+      const displayMsg = errorMessages.length > 0
+        ? `${mainMessage}\n\n${errorMessages.join('\n')}`
+        : mainMessage;
+      alert('Failed to submit quiz: ' + displayMsg);
+
+      // If already submitted, show result and close
+      if (data.data?.status === 'submitted') {
+        setQuizResult(data.data);
+        setQuizMode('submitted');
+        setProcKey(null);
+      }
     } finally { setQuizLoading(false); }
   };
 

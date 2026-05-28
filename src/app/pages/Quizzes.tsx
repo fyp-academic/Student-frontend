@@ -276,6 +276,20 @@ export function Quizzes() {
 
   const handleSubmitQuiz = async () => {
     if (!attemptId) return;
+
+    // Guard: require at least one answer
+    const answeredCount = Object.keys(selected).length;
+    if (answeredCount === 0) {
+      alert('Please select at least one answer before submitting.');
+      return;
+    }
+
+    // Guard: confirm if not all questions answered
+    if (answeredCount < questions.length) {
+      const ok = window.confirm(`You have answered ${answeredCount} of ${questions.length} questions. Submit anyway?`);
+      if (!ok) return;
+    }
+
     setQuizLoading(true);
     try {
       const responses = Object.entries(selected).map(([question_id, answer_id]) => ({
@@ -288,7 +302,20 @@ export function Quizzes() {
       setContext({ mode: 'remediation', quizAttemptId: attemptId ?? undefined });
     } catch (err: any) {
       console.error('Failed to submit quiz:', err);
-      alert('Failed to submit quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+      const data = err?.response?.data ?? {};
+      const errors = data.errors ?? {};
+      const errorMessages = Object.values(errors).flat().filter(Boolean);
+      const mainMessage = data.message || err?.message || 'Unknown error';
+      const displayMsg = errorMessages.length > 0
+        ? `${mainMessage}\n\n${errorMessages.join('\n')}`
+        : mainMessage;
+      alert('Failed to submit quiz: ' + displayMsg);
+
+      // If already submitted, show the result and close
+      if (data.data?.status === 'submitted') {
+        setResult(data.data);
+        setSubmitted(true);
+      }
     } finally {
       setQuizLoading(false);
     }

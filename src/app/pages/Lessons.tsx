@@ -3,6 +3,7 @@ import { useLocation } from "react-router";
 import { PlayCircle, Lock, CheckCircle, Clock, BookMarked, ChevronDown, ChevronRight, Loader2, X, FileText, ExternalLink, Menu, LayoutList, ArrowRight, Upload, Paperclip, MessageSquare, ThumbsUp, Eye, Plus, Search, Pin, Send, File, Download } from "lucide-react";
 import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, adaptiveContentApi } from "../services/api";
 import { AdaptiveContentBlock } from "../components/student/AdaptiveContentBlock";
+import { AdaptiveActivityPanel } from "../components/student/AdaptiveActivityPanel";
 import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCourseSidebar";
 import { usePersonalization } from "../hooks/usePersonalization";
 import { presentationStyles } from "../types/personalization";
@@ -713,8 +714,18 @@ export function Lessons() {
                 </div>
               ) : (
                 <>
-                  {/* Video player */}
-                  {videoUrl && <div className="mb-6 rounded-xl overflow-hidden" style={{ backgroundColor: "#000" }}>{renderVideo()}</div>}
+                  {/* Video player + personalized guide from YouTube description / transcript when available */}
+                  {videoUrl && activeActivityId && (
+                    <div className="mb-6 rounded-xl overflow-hidden bg-white" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                      <AdaptiveActivityPanel
+                        activityId={activeActivityId}
+                        courseId={selectedCourseId}
+                        title={contentTitle}
+                        presentationOverride={presentationConfig}
+                      />
+                      <div style={{ backgroundColor: "#000" }}>{renderVideo()}</div>
+                    </div>
+                  )}
 
                   {/* ── INLINE QUIZ RUNNER ── */}
                   {currentRawType === 'quiz' && quizMode === 'idle' && contentHtml && (
@@ -1057,6 +1068,12 @@ export function Lessons() {
                     const docViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(resourceUrl)}&embedded=true`;
                     return (
                       <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                        <AdaptiveActivityPanel
+                          activityId={activeActivityId}
+                          courseId={selectedCourseId}
+                          title={contentTitle}
+                          presentationOverride={presentationConfig}
+                        />
                         {isVideo && (
                           <video controls className="w-full rounded-xl" style={{ maxHeight: "calc(100vh - 260px)", minHeight: "200px", display: "block" }}>
                             <source src={resourceUrl} type={fileMimeType || undefined} />

@@ -273,7 +273,10 @@ export const engagementApi = {
 // ─── Adaptive Content ────────────────────────────────────────────────────────
 export const adaptiveContentApi = {
   myProfile: () => api.get('/student/my-profile'),
-  chunks: (contentId: string) => api.get(`/student/content-chunks/${contentId}`),
+  chunks: (contentId: string, source = 'lesson_page') =>
+    api.get(`/student/content-chunks/${contentId}`, { params: { source } }),
+  activityChunks: (activityId: string) => api.get(`/student/activities/${activityId}/adaptive-chunks`),
+  prepareActivity: (activityId: string) => api.post(`/student/activities/${activityId}/prepare-adaptation`),
   get: (chunkId: string, modalityOverride?: string) =>
     api.get(`/student/content/${chunkId}`, { params: modalityOverride ? { modality_override: modalityOverride } : {} }),
   feedback: (adaptationId: string, data: { rating?: string; complexity?: string }) =>

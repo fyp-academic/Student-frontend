@@ -1154,15 +1154,35 @@ export function Lessons() {
                               {lessonPages[currentPageIndex]?.title ?? 'Page'}
                             </h2>
                             <div className="space-y-4">
-                              {pageChunks.map(chunk => (
-                                <AdaptiveContentBlock
-                                  key={chunk.id}
-                                  courseId={selectedCourseId}
-                                  chunkId={chunk.id}
-                                  topicTitle={lessonPages[currentPageIndex]?.title ?? 'Content'}
-                                  presentationOverride={presentationConfig}
+                              <div
+                                className="rounded-xl border bg-slate-50/80 p-4"
+                                style={{ borderColor: "#e2e8f0" }}
+                              >
+                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4">
+                                  Personalized reading guide
+                                </p>
+                                <div className="space-y-4">
+                                  {pageChunks.map(chunk => (
+                                    <AdaptiveContentBlock
+                                      key={chunk.id}
+                                      courseId={selectedCourseId}
+                                      chunkId={chunk.id}
+                                      topicTitle={lessonPages[currentPageIndex]?.title ?? 'Content'}
+                                      presentationOverride={presentationConfig}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">
+                                  Original lesson page
+                                </p>
+                                <div
+                                  className="prose prose-slate max-w-none"
+                                  dangerouslySetInnerHTML={{ __html: lessonPages[currentPageIndex]?.content ?? '' }}
                                 />
-                              ))}
+                              </div>
                             </div>
                           </>
                         ) : (

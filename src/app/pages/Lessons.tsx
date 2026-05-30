@@ -3,6 +3,9 @@ import { useLocation } from "react-router";
 import { PlayCircle, Lock, CheckCircle, Clock, BookMarked, ChevronDown, ChevronRight, Loader2, X, FileText, ExternalLink, Menu, LayoutList, ArrowRight, Upload, Paperclip, MessageSquare, ThumbsUp, Eye, Plus, Search, Pin, Send, File, Download } from "lucide-react";
 import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, adaptiveContentApi } from "../services/api";
 import { AdaptiveContentBlock } from "../components/student/AdaptiveContentBlock";
+import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCourseSidebar";
+import { usePersonalization } from "../hooks/usePersonalization";
+import { presentationStyles } from "../types/personalization";
 import { useProctoringMonitor } from '../hooks/useProctoringMonitor';
 import ViolationWarningModal from '../components/ViolationWarningModal';
 import { useAiWidgetContext } from "../context/AiWidgetContext";
@@ -121,6 +124,9 @@ export function Lessons() {
 
   const location = useLocation();
   const { setContext } = useAiWidgetContext();
+  const { context: personalization } = usePersonalization(selectedCourseId);
+  const navigationConfig = personalization?.navigation ?? null;
+  const presentationConfig = personalization?.presentation ?? null;
 
   // Helpers
   const rawTypeOf = (act: Activity) => String(act.type ?? act.activity_type ?? 'resource').toLowerCase();
@@ -405,6 +411,8 @@ export function Lessons() {
 
   const goToLessonPage = async (index: number) => {
     if (index < 0 || index >= lessonPages.length) return;
+    const allowSkip = navigationConfig?.lesson_page_navigation?.allow_page_skip ?? true;
+    if (!allowSkip && index > currentPageIndex + 1) return;
     setCurrentPageIndex(index);
     const page = lessonPages[index];
     if (page?.id) {
@@ -644,90 +652,22 @@ export function Lessons() {
 
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ═══ LEFT SIDEBAR — Course Navigation ═══ */}
-        <aside
-          className="flex-shrink-0 flex flex-col bg-white border-r overflow-hidden transition-all duration-300"
-          style={{ width: sidebarOpen ? "300px" : "0px", minWidth: sidebarOpen ? "300px" : "0px", borderColor: "#e2e8f0" }}
-        >
-          {/* Sidebar Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#e2e8f0", backgroundColor: "#1e293b" }}>
-            <div className="flex items-center gap-2 min-w-0">
-              <LayoutList size={16} color="#94a3b8" />
-              <span className="truncate" style={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}>Course Modules</span>
-            </div>
-            <button onClick={() => setSidebarOpen(false)} className="p-1 rounded hover:bg-white/10 transition-colors">
-              <X size={14} color="#94a3b8" />
-            </button>
-          </div>
-
-          {/* Module / Section list */}
-          <div className="flex-1 overflow-y-auto">
-            {sectionsLoading ? (
-              <div className="flex items-center justify-center py-12"><Loader2 size={20} className="animate-spin" style={{ color: "#2563eb" }} /></div>
-            ) : sections.length === 0 ? (
-              <div className="px-4 py-8 text-center"><p style={{ fontSize: "14px", color: "#94a3b8" }}>No sections found.</p></div>
-            ) : sections.map((sec, si) => {
-              const secId = String(sec.id ?? '');
-              const secTitle = String(sec.title ?? sec.name ?? `Section ${si + 1}`);
-              const acts = (sec.activities ?? []) as Activity[];
-              const done = acts.filter(a => statKeyOf(a) === 'completed').length;
-              const isOpen = openModules.includes(secId);
-              return (
-                <div key={secId}>
-                  <button onClick={() => toggleModule(secId)}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-slate-50 transition-colors border-b"
-                    style={{ borderColor: "#f1f5f9" }}>
-                    <div className="flex-shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: done === acts.length && acts.length > 0 ? "#22c55e" : "#2563eb" }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate" style={{ fontSize: "15px", fontWeight: 600, color: "#1e293b" }}>{secTitle}</p>
-                      <span style={{ fontSize: "13px", color: "#94a3b8" }}>{done}/{acts.length} completed</span>
-                    </div>
-                    {isOpen ? <ChevronDown size={14} color="#94a3b8" /> : <ChevronRight size={14} color="#94a3b8" />}
-                  </button>
-                  {isOpen && acts.map((act, ai) => {
-                    const aid = String(act.id ?? ai);
-                    const aTitle = String(act.name ?? act.title ?? `Activity ${ai + 1}`);
-                    const rType = rawTypeOf(act);
-                    const tCfg = typeConfig[rType] ?? typeConfig.resource;
-                    const sKey = statKeyOf(act);
-                    const isSel = activeActivityId === aid;
-                    const isLck = sKey === 'locked';
-                    const dur = String(act.duration ?? (act.time_limit ? `${act.time_limit} min` : ''));
-                    return (
-                      <button key={aid} disabled={isLck} onClick={() => openActivity(act)}
-                        className={`w-full flex items-start gap-2.5 px-4 py-2 text-left transition-all ${isLck ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-50/60 cursor-pointer'}`}
-                        style={{ backgroundColor: isSel ? "#eff6ff" : "transparent", borderLeft: isSel ? "3px solid #2563eb" : "3px solid transparent" }}>
-                        <div className="flex-shrink-0 mt-0.5">
-                          {sKey === 'completed' ? <CheckCircle size={14} color="#22c55e" />
-                            : isSel ? <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center" style={{ borderColor: "#2563eb", backgroundColor: "#2563eb" }}><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
-                            : isLck ? <Lock size={14} color="#94a3b8" />
-                            : <div className="w-3.5 h-3.5 rounded-full border-2" style={{ borderColor: "#cbd5e1" }} />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="truncate" style={{ fontSize: "14px", fontWeight: isSel ? 600 : 400, color: isSel ? "#1e40af" : "#1e293b" }}>{ai + 1}. {aTitle}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {dur && <span className="flex items-center gap-0.5" style={{ fontSize: "12px", color: "#94a3b8" }}><Clock size={11} /> {dur}</span>}
-                            <span className="px-1.5 rounded" style={{ fontSize: "11px", fontWeight: 600, backgroundColor: `${tCfg.color}15`, color: tCfg.color }}>{tCfg.label}</span>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Course Assessment link (bottom of sidebar) */}
-          {sections.length > 0 && (
-            <div className="border-t px-4 py-2" style={{ borderColor: "#e2e8f0" }}>
-              <div className="flex items-center gap-2" style={{ fontSize: "14px", color: "#64748b" }}>
-                <FileText size={15} color="#64748b" />
-                <span>Course Assessment</span>
-              </div>
-            </div>
-          )}
-        </aside>
+        {/* ═══ LEFT SIDEBAR — Personalized Course Navigation ═══ */}
+        {sidebarOpen && (
+          <PersonalizedCourseSidebar
+            sections={sections}
+            sectionsLoading={sectionsLoading}
+            openModules={openModules}
+            activeActivityId={activeActivityId}
+            navigation={navigationConfig}
+            typeConfig={typeConfig}
+            onToggleModule={toggleModule}
+            onClose={() => setSidebarOpen(false)}
+            onOpenActivity={openActivity}
+            statKeyOf={statKeyOf}
+            rawTypeOf={rawTypeOf}
+          />
+        )}
 
         {/* ═══ MAIN CONTENT PANEL ═══ */}
         <div className="flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: "#f8fafc" }}>
@@ -762,7 +702,7 @@ export function Lessons() {
 
           {/* Scrollable content area */}
           <div className="flex-1 overflow-y-auto">
-            <div className="max-w-4xl mx-auto px-6 py-6">
+            <div className="max-w-4xl mx-auto px-6 py-6" style={presentationStyles(presentationConfig)}>
               {contentLoading ? (
                 <div className="flex items-center justify-center py-24"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
               ) : !activeActivityId ? (
@@ -1203,6 +1143,7 @@ export function Lessons() {
                                   courseId={selectedCourseId}
                                   chunkId={chunk.id}
                                   topicTitle={lessonPages[currentPageIndex]?.title ?? 'Content'}
+                                  presentationOverride={presentationConfig}
                                 />
                               ))}
                             </div>
@@ -1231,11 +1172,16 @@ export function Lessons() {
                           ← Previous
                         </button>
                         <div className="flex gap-1">
-                          {lessonPages.map((p, i) => (
+                          {lessonPages.map((p, i) => {
+                            const allowSkip = navigationConfig?.lesson_page_navigation?.allow_page_skip ?? true;
+                            const isFuture = i > currentPageIndex + 1;
+                            const pageDisabled = !allowSkip && isFuture;
+                            return (
                             <button
                               key={p.id ?? i}
+                              disabled={pageDisabled}
                               onClick={() => goToLessonPage(i)}
-                              className="w-7 h-7 rounded-lg text-xs font-medium transition-colors flex items-center justify-center"
+                              className="w-7 h-7 rounded-lg text-xs font-medium transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
                               style={{
                                 backgroundColor: i === currentPageIndex ? "#eff6ff" : "transparent",
                                 color: i === currentPageIndex ? "#2563eb" : p.is_viewed ? "#22c55e" : "#94a3b8",
@@ -1244,7 +1190,8 @@ export function Lessons() {
                             >
                               {p.is_viewed && i !== currentPageIndex ? <CheckCircle size={14} /> : i + 1}
                             </button>
-                          ))}
+                            );
+                          })}
                         </div>
                         {currentPageIndex < lessonPages.length - 1 ? (
                           <button

@@ -1,0 +1,61 @@
+/* Presentation-level adaptation (does not alter instructor source text) */
+
+.personalization-spacious {
+  letter-spacing: 0.01em;
+}
+
+.personalization-compact {
+  letter-spacing: -0.01em;
+}
+
+.personalization-calm {
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.personalization-visual {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+}
+
+.personalization-visual table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+}
+
+.personalization-visual th,
+.personalization-visual td {
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.personalization-focus {
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.personalization-example .prose p:first-child {
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.personalization-card-elevated-visual {
+  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.08);
+}
+
+.personalization-card-narrow-focus {
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+}
+
+.personalization-nav-guidance {
+  animation: personalization-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes personalization-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.15); }
+  50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+}

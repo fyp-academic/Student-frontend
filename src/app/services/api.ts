@@ -282,6 +282,10 @@ export const adaptiveContentApi = {
     api.post(`/student/${studentId}/recalculate-profile`, data ?? {}),
 };
 
+export const personalizationApi = {
+  forCourse: (courseId: string) => api.get(`/student/courses/${courseId}/personalization`),
+};
+
 // ─── Notifications ───────────────────────────────────────────────────────────
 export const notificationApi = {
   getPreferences:    () => api.get('/notifications/preferences'),

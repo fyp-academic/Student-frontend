@@ -20,6 +20,7 @@ export const AdaptiveActivityPanel: React.FC<AdaptiveActivityPanelProps> = ({
   const [chunks, setChunks] = useState<Array<{ id: string; chunk_index: number }>>([]);
   const [status, setStatus] = useState<string>('loading');
   const [message, setMessage] = useState<string | null>(null);
+  const [processingError, setProcessingError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,11 +35,13 @@ export const AdaptiveActivityPanel: React.FC<AdaptiveActivityPanelProps> = ({
         const data = res.data;
         setChunks(data.chunks ?? []);
         setStatus(data.status ?? 'none');
+        setProcessingError(data.material?.processing_error ?? null);
         setMessage(data.material?.processing_status === 'processing' ? 'Processing document for personalization…' : null);
       } catch {
         if (!cancelled) {
           setChunks([]);
           setStatus('error');
+          setProcessingError(null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -66,11 +69,25 @@ export const AdaptiveActivityPanel: React.FC<AdaptiveActivityPanelProps> = ({
         </div>
       );
     }
-    if (status === 'no_extractable_text') {
+    if (status === 'transcript_unavailable' || status === 'no_extractable_text') {
+      const detail = stripReasonPrefix(processingError)
+        ?? 'Original video remains available. We could not generate a reliable transcript for safe personalization.';
+
       return (
         <div className="flex items-start gap-2 px-4 py-3 text-xs text-slate-600 border-b bg-slate-50">
           <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-          <span>Original file/video shown below. Not enough extractable text to personalize (transcript required for video).</span>
+          <span>{detail}</span>
+        </div>
+      );
+    }
+    if (status === 'content_mismatch') {
+      const detail = stripReasonPrefix(processingError)
+        ?? 'Original video remains available. Personalization is paused because the extracted content does not appear aligned with this course activity.';
+
+      return (
+        <div className="flex items-start gap-2 px-4 py-3 text-xs text-amber-800 border-b bg-amber-50">
+          <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+          <span>{detail}</span>
         </div>
       );
     }
@@ -94,4 +111,9 @@ export const AdaptiveActivityPanel: React.FC<AdaptiveActivityPanelProps> = ({
       ))}
     </div>
   );
+};
+
+const stripReasonPrefix = (value: string | null): string | null => {
+  if (!value) return null;
+  return value.replace(/^[a-z_]+:\s*/i, '').trim();
 };

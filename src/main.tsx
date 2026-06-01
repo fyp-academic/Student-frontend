@@ -6,6 +6,8 @@ import "./styles/index.css";
 
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>
-    <App />
+    <div suppressHydrationWarning>
+      <App />
+    </div>
   </HelmetProvider>
 );

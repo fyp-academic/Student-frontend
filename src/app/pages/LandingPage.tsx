@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { SEOHead } from "../components/SEOHead";
@@ -16,47 +16,102 @@ import {
   Star,
   Moon,
   Sun,
-  Sparkles,
+  Menu,
+  X,
 } from "lucide-react";
+import heroVideo from "../../assets/hero.mp4";
 
 const features = [
-  { icon: BookOpen, title: "Personalised Course Catalog", description: "AI analyses your learning history and recommends the most relevant courses tailored to your pace and goals." },
-  { icon: Video, title: "Live Interactive Sessions", description: "Join real-time video lectures, polls, and Q&A sessions with instructors from anywhere on any device." },
-  { icon: FileText, title: "Smart Assignments & Quizzes", description: "Submit assignments, take adaptive quizzes, and receive instant AI-generated feedback on your performance." },
-  { icon: MessageCircle, title: "Collaborative Learning", description: "Engage in course forums and direct chat with peers and instructors to deepen understanding together." },
-  { icon: TrendingUp, title: "AI Engagement Insights", description: "Visualise your learning streaks, progress heatmaps, and receive personalised AI study tips to stay on track." },
-  { icon: Users, title: "Instructor Connect", description: "Access instructor profiles, course materials, and office hours — all organised in one clean dashboard." },
+  {
+    icon: BookOpen,
+    title: "Personalised Course Catalog",
+    description:
+      "AI-curated learning paths that adapt to each student's pace, level, and goals.",
+  },
+  {
+    icon: Video,
+    title: "Live & Recorded Classes",
+    description:
+      "Join interactive live sessions or learn on your schedule with on-demand recordings.",
+  },
+  {
+    icon: FileText,
+    title: "Smart Assignments",
+    description:
+      "Auto-graded quizzes, rich-text assignments, and instant feedback that actually helps.",
+  },
+  {
+    icon: MessageCircle,
+    title: "Built-in AI Tutor",
+    description:
+      "24/7 conversational tutor that explains concepts, debugs answers, and quizzes you.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Progress Analytics",
+    description:
+      "Visualise strengths, weaknesses, and momentum with beautiful dashboards.",
+  },
+  {
+    icon: Users,
+    title: "Community & Mentors",
+    description:
+      "Study groups, discussion forums, and 1:1 mentorship from verified educators.",
+  },
 ];
 
-const highlights = [
-  "AI-powered personalised learning recommendations",
-  "Adaptive quizzes that adjust to your skill level",
-  "Live video sessions with Jitsi-powered conferencing",
-  "Smart progress tracking and engagement analytics",
-  "Course forums, chat, and peer collaboration tools",
-  "Mobile-friendly — learn from any device, anywhere",
+const stats = [
+  { value: "50K+", label: "Active Learners" },
+  { value: "1.2K+", label: "Expert Instructors" },
+  { value: "8K+", label: "Courses & Tracks" },
+  { value: "98%", label: "Satisfaction" },
 ];
+
+const testimonials = [
+  {
+    quote:
+      "The AI tutor turned my hardest module into my favourite. I finally felt seen as a learner.",
+    name: "Amina K.",
+    role: "Computer Science, Year 2",
+  },
+  {
+    quote:
+      "Live classes, recordings, assignments — everything is in one place. Game changer.",
+    name: "David O.",
+    role: "Data Science Bootcamp",
+  },
+  {
+    quote:
+      "As an instructor, the analytics help me catch struggling students before they fall behind.",
+    name: "Dr. Salma R.",
+    role: "Instructor, Mathematics",
+  },
+];
+
 
 export default function LandingPage() {
+  const [dark, setDark] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // theme toggle (persisted)
+  // Theme
   useEffect(() => {
-    const saved = localStorage.getItem("apes-theme");
-    const prefers = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = saved ? saved === "dark" : prefers;
-    setDark(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
+    const stored = localStorage.getItem("theme");
+    const prefersDark =
+      stored === "dark" ||
+      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setDark(prefersDark);
+    document.documentElement.classList.toggle("dark", prefersDark);
   }, []);
 
   const toggleTheme = () => {
     const next = !dark;
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("apes-theme", next ? "dark" : "light");
+    localStorage.setItem("theme", next ? "dark" : "light");
   };
 
   // sticky header shadow on scroll
@@ -66,21 +121,28 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // scroll reveal
+
+  // Scroll reveal
   useEffect(() => {
-    const els = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      document.querySelectorAll("[data-reveal]").forEach((el) => {
+        (el as HTMLElement).classList.add("is-visible");
+      });
+      return;
+    }
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            e.target.classList.add("reveal-in");
+            e.target.classList.add("is-visible");
             io.unobserve(e.target);
           }
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.12 },
     );
-    els.forEach((el) => io.observe(el));
+    document.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
 
@@ -96,282 +158,336 @@ export default function LandingPage() {
     );
   }
 
-  return (
-    <>
-      <SEOHead
+  // Ensure video autoplay on mount (some browsers need explicit play after mount)
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    const p = v.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  }, []);
+
+   return (
+    <div className="min-h-screen bg-background text-foreground antialiased">
+
+       <SEOHead
         title="APES – AI Personalization eLearning System"
         description="APES is an AI-powered eLearning platform that personalises your learning journey through smart recommendations, adaptive quizzes, live sessions, and real-time engagement insights."
         canonical="/"
       />
 
-      {/* Inline styles for animations + reveal (scoped via class names) */}
       <style>{`
-        @keyframes apes-float { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-20px) translateX(10px)} }
-        @keyframes apes-float-slow { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
-        @keyframes apes-blob { 0%,100%{border-radius:42% 58% 60% 40%/45% 55% 45% 55%; transform:translate(0,0) rotate(0deg)} 50%{border-radius:58% 42% 40% 60%/55% 45% 55% 45%; transform:translate(20px,-15px) rotate(20deg)} }
-        @keyframes apes-grid-pan { 0%{background-position:0 0} 100%{background-position:60px 60px} }
-        @keyframes apes-pulse-ring { 0%{transform:scale(.8);opacity:.7} 100%{transform:scale(2);opacity:0} }
-        @keyframes apes-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-        @keyframes apes-fade-up { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-        .reveal { opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease; }
-        .reveal-in { opacity:1; transform:translateY(0); }
-        .apes-grid {
-          background-image:
-            linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
-          background-size: 60px 60px;
-          animation: apes-grid-pan 20s linear infinite;
-        }
-        .apes-blob { animation: apes-blob 14s ease-in-out infinite; filter: blur(40px); }
-        .apes-float { animation: apes-float 8s ease-in-out infinite; }
-        .apes-float-slow { animation: apes-float-slow 12s ease-in-out infinite; }
-        .apes-pulse-ring::after {
-          content:''; position:absolute; inset:0; border-radius:9999px;
-          border:2px solid rgba(34,197,94,.5);
-          animation: apes-pulse-ring 2.4s ease-out infinite;
-        }
-        .apes-shimmer {
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
-          background-size: 200% 100%;
-          animation: apes-shimmer 2.5s linear infinite;
-        }
-        .apes-hero-title span.gradient {
-          background: linear-gradient(90deg,#22c55e,#34d399,#60a5fa,#22c55e);
-          background-size: 200% auto;
-          -webkit-background-clip:text; background-clip:text; color:transparent;
-          animation: apes-shimmer 4s linear infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .apes-grid,.apes-blob,.apes-float,.apes-float-slow,.apes-pulse-ring::after,.apes-shimmer,.apes-hero-title span.gradient { animation: none !important; }
+        [data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+        [data-reveal].is-visible{opacity:1;transform:none}
+        [data-reveal-delay="1"]{transition-delay:.08s}
+        [data-reveal-delay="2"]{transition-delay:.16s}
+        [data-reveal-delay="3"]{transition-delay:.24s}
+        [data-reveal-delay="4"]{transition-delay:.32s}
+        [data-reveal-delay="5"]{transition-delay:.4s}
+        [data-reveal-delay="6"]{transition-delay:.48s}
+        @keyframes lh-shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+        .lh-title{background:linear-gradient(90deg,oklch(0.7 0.18 250),oklch(0.75 0.18 180),oklch(0.7 0.2 320),oklch(0.7 0.18 250));background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:lh-shine 8s linear infinite}
+        @keyframes lh-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        .lh-float{animation:lh-float 4s ease-in-out infinite}
+        .lh-card{transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease}
+        .lh-card:hover{transform:translateY(-4px)}
+        @media (prefers-reduced-motion: reduce){
+          [data-reveal]{opacity:1;transform:none;transition:none}
+          .lh-title{animation:none}
+          .lh-float{animation:none}
         }
       `}</style>
 
-      <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors">
-        {/* ── Header ── */}
-        <header
-          className={`sticky top-0 z-50 backdrop-blur-md transition-all ${
-            scrolled
-              ? "bg-[#0c1e4a]/90 dark:bg-slate-950/80 shadow-lg shadow-black/20"
-              : "bg-[#0c1e4a] dark:bg-slate-950"
-          }`}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
-            <Link to="/" className="flex items-center gap-3 group" aria-label="APES LMS home">
-              <div className="relative flex items-center justify-center rounded-xl w-10 h-10 bg-emerald-500 shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
-                <GraduationCap size={22} className="text-white" />
-              </div>
-              <div className="hidden xs:block sm:block">
-                <p className="text-white font-bold text-base leading-none">APES LMS</p>
-                <p className="text-[11px] text-blue-300">University of Dodoma</p>
-              </div>
-            </Link>
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link to="/" className="flex items-center gap-2 font-semibold">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 text-white shadow-md">
+              <GraduationCap className="h-5 w-5" />
+            </span>
+            <span className="text-lg tracking-tight">APES LMS</span>
+          </Link>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                onClick={toggleTheme}
-                aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-                className="p-2 rounded-lg text-blue-200 hover:text-white hover:bg-white/10 transition-colors"
+          <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
+            <a href="#features" className="hover:text-primary transition-colors">Features</a>
+            <a href="#stats" className="hover:text-primary transition-colors">Impact</a>
+            <a href="#testimonials" className="hover:text-primary transition-colors">Stories</a>
+            <a href="#cta" className="hover:text-primary transition-colors">Get Started</a>
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle color theme"
+              className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            >
+              {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+            <Link
+              to="/login"
+              className="hidden rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/register"
+              className="hidden rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 transition sm:inline-flex"
+            >
+              Get Started
+            </Link>
+            <button
+              className="md:hidden rounded-md p-2 text-muted-foreground hover:bg-muted"
+              onClick={() => setMenuOpen((s) => !s)}
+              aria-label="Open menu"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+        {menuOpen && (
+          <div className="md:hidden border-t border-border bg-background/95 px-4 py-3 space-y-2 text-sm font-medium">
+            <a href="#features" onClick={() => setMenuOpen(false)} className="block py-1">Features</a>
+            <a href="#stats" onClick={() => setMenuOpen(false)} className="block py-1">Impact</a>
+            <a href="#testimonials" onClick={() => setMenuOpen(false)} className="block py-1">Stories</a>
+            <Link to="/login" className="block py-1">Sign In</Link>
+            <Link to="/register" className="block py-1 text-primary">Get Started</Link>
+          </div>
+        )}
+      </header>
+
+      {/* Hero — full-bleed muted background video */}
+      <section className="relative isolate overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover"
+            src={heroVideo}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+          {/* Readability overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/90 dark:from-black/70 dark:via-black/50 dark:to-black/90" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.35)_100%)]" />
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
+          <div className="mx-auto max-w-3xl text-center">
+            <span
+              data-reveal
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-xs font-medium text-foreground/80 backdrop-blur"
+            >
+              <Star className="h-3.5 w-3.5 text-amber-400" />
+              Rated 4.9 by 12,000+ learners
+            </span>
+            <h1
+              data-reveal
+              data-reveal-delay="1"
+              className="mt-6 text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl"
+            >
+              Learning, <span className="lh-title">reimagined</span> for every student.
+            </h1>
+            <p
+              data-reveal
+              data-reveal-delay="2"
+              className="mt-6 text-base text-foreground/80 sm:text-lg lg:text-xl"
+            >
+              An AI-powered LMS that blends live classes, on-demand courses, and a personal
+              tutor — so every learner can move at their own pace, without falling behind.
+            </p>
+            <div
+              data-reveal
+              data-reveal-delay="3"
+              className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
+            >
+              <Link
+                to="/register"
+                className="group inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition"
               >
-                {dark ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
+                Start Learning Free
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
               <Link
                 to="/login"
-                className="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium text-blue-200 hover:text-white hover:bg-white/10 transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background/70 px-6 py-3 text-sm font-semibold text-foreground backdrop-blur hover:bg-background transition"
               >
                 Sign In
               </Link>
-              <Link
-                to="/register"
-                className="relative px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-400 shadow-md shadow-emerald-500/30 transition-all hover:-translate-y-0.5"
-              >
-                Get Started
-              </Link>
+            </div>
+            <div
+              data-reveal
+              data-reveal-delay="4"
+              className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-foreground/70"
+            >
+              <span className="inline-flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-400" /> Free forever plan</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-400" /> No credit card</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-400" /> Cancel anytime</span>
             </div>
           </div>
-        </header>
+        </div>
+      </section>
 
-        {/* ── Hero with motion background ── */}
-        <section className="relative overflow-hidden text-center px-4 sm:px-6 py-20 sm:py-28 isolate">
-          {/* gradient base */}
-          <div
-            className="absolute inset-0 -z-10"
-            style={{
-              background:
-                "linear-gradient(135deg,#0c1e4a 0%,#1e3a8a 55%,#1e40af 100%)",
-            }}
-          />
-          {/* animated grid */}
-          <div className="absolute inset-0 -z-10 apes-grid opacity-40" />
-          {/* blobs */}
-          <div className="absolute -top-24 -left-20 w-80 h-80 bg-emerald-500/30 apes-blob -z-10" />
-          <div className="absolute top-32 -right-20 w-96 h-96 bg-blue-500/30 apes-blob -z-10" style={{ animationDelay: "-4s" }} />
-          <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-indigo-500/25 apes-blob -z-10" style={{ animationDelay: "-8s" }} />
-
-          {/* floating student icons */}
-          <div className="absolute inset-0 -z-10 pointer-events-none">
-            <BookOpen className="absolute top-[15%] left-[8%] text-white/15 apes-float" size={42} />
-            <GraduationCap className="absolute top-[25%] right-[10%] text-white/15 apes-float-slow" size={48} />
-            <Video className="absolute bottom-[20%] left-[12%] text-white/15 apes-float-slow" size={38} />
-            <MessageCircle className="absolute bottom-[28%] right-[14%] text-white/15 apes-float" size={36} />
-            <FileText className="absolute top-[55%] left-[20%] text-white/10 apes-float-slow" size={32} />
-            <Users className="absolute top-[60%] right-[22%] text-white/10 apes-float" size={34} />
-            <Sparkles className="absolute top-[10%] left-[45%] text-emerald-300/40 apes-float" size={20} />
-            <Sparkles className="absolute bottom-[15%] right-[40%] text-blue-300/40 apes-float-slow" size={16} />
-          </div>
-
-          <div className="max-w-3xl mx-auto relative" style={{ animation: "apes-fade-up .8s ease both" }}>
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6 bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 backdrop-blur-sm">
-              <span className="relative w-2 h-2 rounded-full bg-emerald-400 apes-pulse-ring" />
-              AI-Powered Personalized eLearning
-            </span>
-            <h1 className="apes-hero-title text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight mb-5 tracking-tight">
-              Learning That <span className="gradient">Adapts to You</span>
-            </h1>
-            <p className="text-base sm:text-lg mb-8 max-w-xl mx-auto text-blue-200">
-              APES uses artificial intelligence to personalise your learning journey —
-              smart course recommendations, adaptive quizzes, live sessions, and real-time
-              engagement insights all in one platform.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/register"
-                className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white bg-emerald-500 hover:bg-emerald-400 shadow-xl shadow-emerald-500/30 transition-all hover:-translate-y-0.5"
-              >
-                Create Your Account
-                <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm transition-all hover:-translate-y-0.5"
-              >
-                Sign In to Portal
-              </Link>
+      {/* Stats */}
+      <section id="stats" className="border-y border-border bg-muted/40">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
+          {stats.map((s, i) => (
+            <div
+              key={s.label}
+              data-reveal
+              data-reveal-delay={String((i % 4) + 1)}
+              className="text-center"
+            >
+              <div className="text-3xl font-bold tracking-tight sm:text-4xl bg-gradient-to-br from-indigo-500 to-cyan-400 bg-clip-text text-transparent">
+                {s.value}
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">{s.label}</div>
             </div>
-          </div>
+          ))}
+        </div>
+      </section>
 
-          {/* soft fade to next section */}
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-slate-50 dark:to-slate-950" />
-        </section>
+      {/* Features */}
+      <section id="features" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 data-reveal className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Everything your classroom needs, in one place
+          </h2>
+          <p data-reveal data-reveal-delay="1" className="mt-4 text-muted-foreground">
+            Tools designed with educators, loved by learners.
+          </p>
+        </div>
 
-        {/* ── Highlights strip ── */}
-        <section className="py-10 px-4 sm:px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-          <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {highlights.map((item, i) => (
-              <div
-                key={item}
+        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((f, i) => {
+            const Icon = f.icon;
+            return (
+              <article
+                key={f.title}
                 data-reveal
-                className="reveal flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                style={{ transitionDelay: `${i * 60}ms` }}
+                data-reveal-delay={String((i % 6) + 1)}
+                className="lh-card group rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-xl hover:border-primary/40"
               >
-                <CheckCircle size={18} className="flex-shrink-0 mt-0.5 text-emerald-500" />
-                <span className="text-sm text-slate-700 dark:text-slate-300">{item}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Features ── */}
-        <section className="py-20 px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-14 reveal" data-reveal>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-3 text-slate-900 dark:text-white">
-                Everything You Need to Learn Smarter
-              </h2>
-              <p className="text-base max-w-xl mx-auto text-slate-600 dark:text-slate-400">
-                A complete AI-driven eLearning ecosystem built for students who want personalised,
-                effective, and engaging online education.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map(({ icon: Icon, title, description }, i) => (
-                <div
-                  key={title}
-                  data-reveal
-                  style={{ transitionDelay: `${i * 80}ms` }}
-                  className="reveal group relative rounded-2xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-300 dark:hover:border-blue-700"
-                >
-                  <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-blue-50 dark:bg-blue-950/50 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/40 transition-colors">
-                    <Icon size={22} className="text-blue-600 dark:text-blue-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
-                  </div>
-                  <h3 className="font-semibold text-base mb-2 text-slate-900 dark:text-white">{title}</h3>
-                  <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">{description}</p>
+                <div className="lh-float mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/15 to-cyan-400/15 text-primary ring-1 ring-border">
+                  <Icon className="h-6 w-6" />
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
+                <h3 className="text-lg font-semibold">{f.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {f.description}
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
-        {/* ── Stats ── */}
-        <section className="relative py-16 px-4 sm:px-6 overflow-hidden bg-[#0c1e4a] dark:bg-slate-900">
-          <div className="absolute inset-0 apes-grid opacity-20" />
-          <div className="relative max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: "AI", label: "Powered Recommendations" },
-              { value: "20+", label: "Courses Available" },
-              { value: "Live", label: "Video Sessions" },
-              { value: "24/7", label: "Online Access" },
-            ].map(({ value, label }, i) => (
-              <div key={label} data-reveal className="reveal" style={{ transitionDelay: `${i * 100}ms` }}>
-                <p className="text-3xl sm:text-4xl font-extrabold mb-1 text-emerald-400">{value}</p>
-                <p className="text-sm text-blue-300">{label}</p>
-              </div>
+      {/* Testimonials */}
+      <section id="testimonials" className="bg-muted/40 border-y border-border">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 data-reveal className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Loved by learners and educators
+            </h2>
+          </div>
+          <div className="mt-14 grid gap-6 md:grid-cols-3">
+            {testimonials.map((t, i) => (
+              <figure
+                key={t.name}
+                data-reveal
+                data-reveal-delay={String(i + 1)}
+                className="lh-card rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-xl"
+              >
+                <div className="flex gap-1 text-amber-400">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <Star key={j} className="h-4 w-4 fill-current" />
+                  ))}
+                </div>
+                <blockquote className="mt-4 text-sm leading-relaxed text-foreground/90">
+                  "{t.quote}"
+                </blockquote>
+                <figcaption className="mt-5 text-sm">
+                  <div className="font-semibold">{t.name}</div>
+                  <div className="text-muted-foreground">{t.role}</div>
+                </figcaption>
+              </figure>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── CTA ── */}
-        <section className="py-20 px-4 sm:px-6 text-center bg-white dark:bg-slate-950">
-          <div className="max-w-2xl mx-auto reveal" data-reveal>
-            <div className="flex justify-center mb-4" aria-label="5 star rating">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={20} fill="#f59e0b" stroke="none" />
-              ))}
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-slate-900 dark:text-white">
-              Ready for Smarter Learning?
-            </h2>
-            <p className="text-base mb-8 text-slate-600 dark:text-slate-400">
-              Join students already using APES to get AI-personalised course recommendations,
-              attend live sessions, and track their academic progress intelligently.
-            </p>
+      {/* CTA */}
+      <section id="cta" className="relative overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-600 via-indigo-700 to-cyan-600" />
+        <div className="absolute inset-0 -z-10 opacity-30 bg-[radial-gradient(circle_at_30%_20%,#fff_0%,transparent_40%),radial-gradient(circle_at_70%_80%,#fff_0%,transparent_40%)]" />
+        <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 text-center text-white">
+          <Zap data-reveal className="mx-auto h-10 w-10" />
+          <h2 data-reveal data-reveal-delay="1" className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+            Ready to transform how you learn?
+          </h2>
+          <p data-reveal data-reveal-delay="2" className="mt-4 text-white/85">
+            Join thousands of students already learning smarter on LearnHub.
+          </p>
+          <div data-reveal data-reveal-delay="3" className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               to="/register"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white bg-[#0c1e4a] dark:bg-emerald-500 hover:bg-[#1e3a8a] dark:hover:bg-emerald-400 shadow-lg transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-indigo-700 shadow-lg hover:bg-white/90 transition"
             >
-              <Zap size={18} /> Get Started for Free
+              Get Started Free <ArrowRight className="h-4 w-4" />
             </Link>
-            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-              Already have an account?{" "}
-              <Link to="/login" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
-                Sign in here
-              </Link>
-            </p>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 rounded-md border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/20 transition"
+            >
+              Sign In
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── Footer ── */}
-        <footer className="py-10 px-4 sm:px-6 bg-[#0c1e4a] dark:bg-slate-950 border-t border-white/5">
-          <div className="max-w-5xl mx-auto text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <GraduationCap size={20} className="text-emerald-400" />
-              <span className="text-white font-semibold text-sm">APES eLearning</span>
+      {/* Footer */}
+      <footer className="border-t border-border bg-background">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-10 md:grid-cols-4">
+            <div className="md:col-span-2">
+              <Link to="/" className="flex items-center gap-2 font-semibold">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 text-white">
+                  <GraduationCap className="h-5 w-5" />
+                </span>
+                <span>APES LMS</span>
+              </Link>
+              <p className="mt-4 max-w-sm text-sm text-muted-foreground">
+                A modern LMS built for the way today's students actually learn.
+              </p>
             </div>
-            <p className="text-xs text-blue-300">
-              AI Personalization eLearning System — Built by Kalira
-            </p>
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4">
-              <Link to="/login" className="text-xs text-blue-300 hover:text-white transition-colors">Login</Link>
-              <Link to="/register" className="text-xs text-blue-300 hover:text-white transition-colors">Register</Link>
-              <Link to="/forgot-password" className="text-xs text-blue-300 hover:text-white transition-colors">Forgot Password</Link>
+            <div>
+              <div className="text-sm font-semibold">Product</div>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-foreground">Features</a></li>
+                <li><a href="#stats" className="hover:text-foreground">Impact</a></li>
+                <li><a href="#testimonials" className="hover:text-foreground">Stories</a></li>
+              </ul>
             </div>
-            <p className="text-[11px] text-blue-400/60 mt-6">
-              © {new Date().getFullYear()} APES LMS. All rights reserved.
-            </p>
+            <div>
+              <div className="text-sm font-semibold">Account</div>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                <li><Link to="/login" className="hover:text-foreground">Login</Link></li>
+                <li><Link to="/register" className="hover:text-foreground">Register</Link></li>
+                <li><Link to="/forgot-password" className="hover:text-foreground">Forgot Password</Link></li>
+              </ul>
+            </div>
           </div>
-        </footer>
-      </div>
-    </>
+          <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
+            <div>© {new Date().getFullYear()} LearnHub. All rights reserved.</div>
+            <div className="flex gap-4">
+              <a href="#" className="hover:text-foreground">Privacy</a>
+              <a href="#" className="hover:text-foreground">Terms</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

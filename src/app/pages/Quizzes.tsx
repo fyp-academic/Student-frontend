@@ -203,7 +203,7 @@ export function Quizzes() {
   const filtered = activeFilter === "All"
     ? quizzes
     : activeFilter === "Completed"
-    ? quizzes.filter(q => ['submitted', 'graded', 'completed'].includes(String(q.status ?? '').toLowerCase()))
+    ? quizzes.filter(q => ['submitted', 'graded', 'completed', 'pending_review'].includes(String(q.status ?? '').toLowerCase()))
     : quizzes.filter(q => String(q.status ?? '').toLowerCase() === activeFilter.toLowerCase());
 
   const handleStartQuiz = async (quiz: Quiz) => {
@@ -259,6 +259,18 @@ export function Quizzes() {
       setAnswers(ansMap);
     } catch (err: any) {
       console.error('Failed to start quiz:', err);
+       
+      // If quiz is already submitted, redirect to review mode
+      const errorCode = err?.response?.data?.error ?? '';
+      const attemptId = err?.response?.data?.attempt_id;
+      if (errorCode === 'quiz_already_submitted' && attemptId) {
+        console.log('[Quiz] Quiz already submitted, redirecting to review mode');
+        const reviewQuiz = { ...quiz, attempt_id: attemptId };
+        setQuizLoading(false);
+        setTimeout(() => handleReviewQuiz(reviewQuiz), 0);
+        return;
+      }
+       
       alert('Failed to start quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
     } finally {
       setQuizLoading(false);
@@ -457,7 +469,7 @@ export function Quizzes() {
             const dueDate    = String(quiz.due_date ?? quiz.dueDate ?? '');
             const color      = COLORS[idx % COLORS.length];
             const isLocked   = status === 'locked';
-            const isCompleted = status === 'completed';
+            const isCompleted = ['completed', 'submitted', 'graded', 'pending_review'].includes(status);
 
             return (
               <div

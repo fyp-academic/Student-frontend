@@ -225,7 +225,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 -z-10">
           <video
             ref={videoRef}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain sm:object-cover object-center"
             src={heroVideo}
             autoPlay
             muted

@@ -77,20 +77,21 @@ const testimonials = [
   {
     quote:
       "Live classes, recordings, assignments — everything is in one place. Game changer.",
-    name: "David O.",
-    role: "Data Science Bootcamp",
+    name: "Dr Kalira.",
+    role: "Web Development Master",
   },
   {
     quote:
       "As an instructor, the analytics help me catch struggling students before they fall behind.",
-    name: "Dr. Salma R.",
-    role: "Instructor, Mathematics",
+    name: "Dr Mfringe.",
+    role: "Instructor, Instructional Design",
   },
 ];
 
 
 export default function LandingPage() {
   const [dark, setDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { isAuthenticated, isLoading } = useAuth();
@@ -99,6 +100,7 @@ export default function LandingPage() {
 
   // Theme
   useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem("theme");
     const prefersDark =
       stored === "dark" ||
@@ -216,13 +218,15 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              aria-label="Toggle color theme"
-              className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            >
-              {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
+            {mounted && (
+              <button
+                onClick={toggleTheme}
+                aria-label="Toggle color theme"
+                className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+            )}
             <Link
               to="/login"
               className="hidden rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground sm:inline-flex"

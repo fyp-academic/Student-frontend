@@ -242,28 +242,6 @@ export default function LandingPage() {
 
         <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
           <div className="mx-auto max-w-3xl text-center">
-            <span
-              data-reveal
-              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-xs font-medium text-foreground/80 backdrop-blur"
-            >
-              <Star className="h-3.5 w-3.5 text-amber-400" />
-              Rated 4.9 by 12,000+ learners
-            </span>
-            <h1
-              data-reveal
-              data-reveal-delay="1"
-              className="mt-6 text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl"
-            >
-              Learning, <span className="lh-title">reimagined</span> for every student.
-            </h1>
-            <p
-              data-reveal
-              data-reveal-delay="2"
-              className="mt-6 text-base text-foreground/80 sm:text-lg lg:text-xl"
-            >
-              An AI-powered LMS that blends live classes, on-demand courses, and a personal
-              tutor — so every learner can move at their own pace, without falling behind.
-            </p>
             <div
               data-reveal
               data-reveal-delay="3"

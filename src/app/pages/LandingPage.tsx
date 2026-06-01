@@ -364,14 +364,13 @@ export default function LandingPage() {
       {/* CTA */}
       <section id="cta" className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-600 via-indigo-700 to-cyan-600" />
-        <div className="absolute inset-0 -z-10 opacity-30 bg-[radial-gradient(circle_at_30%_20%,#fff_0%,transparent_40%),radial-gradient(circle_at_70%_80%,#fff_0%,transparent_40%)]" />
         <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 text-center text-white">
           <Zap data-reveal className="mx-auto h-10 w-10" />
           <h2 data-reveal data-reveal-delay="1" className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
             Ready to transform how you learn?
           </h2>
           <p data-reveal data-reveal-delay="2" className="mt-4 text-white/85">
-            Join thousands of students already learning smarter on LearnHub.
+            Join thousands of students already learning smarter on ApesLms.
           </p>
           <div data-reveal data-reveal-delay="3" className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
@@ -423,7 +422,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
-            <div>© {new Date().getFullYear()} LearnHub. All rights reserved.</div>
+            <div>© {new Date().getFullYear()} APES LMS. All rights reserved.</div>
             <div className="flex gap-4">
               <a href="#" className="hover:text-foreground">Privacy</a>
               <a href="#" className="hover:text-foreground">Terms</a>

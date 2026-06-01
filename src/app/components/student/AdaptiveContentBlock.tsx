@@ -52,12 +52,16 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
   const [settingsApplied, setSettingsApplied] = useState<Record<string, unknown> | null>(null);
   const [presentation, setPresentation] = useState<PresentationConfig | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchContent = useCallback(async (modality?: Modality) => {
-    setIsLoading(true);
+  const fetchContent = useCallback(async (modality?: Modality, retryAttempt = 0) => {
+    if (retryAttempt === 0) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const res = await adaptiveContentApi.get(chunkId, modality);
@@ -76,10 +80,35 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
       setPresentation(data.presentation ?? null);
       setSettingsApplied(data.settings_applied ?? null);
       if (modality) setCurrentModality(modality);
-    } catch {
-      setError('Could not load content. Please try again.');
+      setRetryCount(0);
+      setIsRetrying(false);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const isNetworkError = !status || status >= 500 || status === 408 || status === 429;
+      const shouldRetry = retryAttempt < 2 && isNetworkError;
+
+      console.warn(`[AdaptiveContent] Load failed (attempt ${retryAttempt + 1})`, {
+        error: err?.message,
+        status,
+        shouldRetry,
+      });
+
+      if (shouldRetry) {
+        // Exponential backoff: 1s, 2s
+        const delay = (retryAttempt + 1) * 1000;
+        setIsRetrying(true);
+        setRetryCount(retryAttempt + 1);
+        setTimeout(() => {
+          fetchContent(modality, retryAttempt + 1);
+        }, delay);
+      } else {
+        setError('Could not load content. Please refresh the page or contact support.');
+        setIsRetrying(false);
+      }
     } finally {
-      setIsLoading(false);
+      if (retryAttempt === 0 || !shouldRetry) {
+        setIsLoading(false);
+      }
     }
   }, [chunkId]);
 
@@ -271,8 +300,26 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
       )}
 
       {error && (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
-          {error}
+        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 mt-0.5 text-destructive flex-shrink-0" />
+              <div className="text-sm text-destructive">{error}</div>
+            </div>
+            {!isRetrying && (
+              <button
+                onClick={() => fetchContent(currentModality)}
+                className="flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors whitespace-nowrap"
+              >
+                Retry
+              </button>
+            )}
+            {isRetrying && (
+              <div className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-destructive/60 whitespace-nowrap">
+                Retrying... ({retryCount}/2)
+              </div>
+            )}
+          </div>
         </div>
       )}
 

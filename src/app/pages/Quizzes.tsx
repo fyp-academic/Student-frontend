@@ -79,7 +79,7 @@ export function Quizzes() {
   const [attemptId, setAttemptId]           = useState<string | null>(null);
   const [quizLoading, setQuizLoading]       = useState(false);
   const [submitted, setSubmitted]           = useState(false);
-  const [result, setResult]                 = useState<Record<string, unknown> | null>(null);
+  const [quizError, setQuizError] = useState<{ quiz: Quiz; message: string } | null>(null);
 
   // Review mode state
   const [reviewMode, setReviewMode]         = useState(false);
@@ -260,18 +260,24 @@ export function Quizzes() {
     } catch (err: any) {
       console.error('Failed to start quiz:', err);
        
-      // If quiz is already submitted, redirect to review mode
+      // If quiz is already submitted, show modal that redirects to review
       const errorCode = err?.response?.data?.error ?? '';
+      const errorMessage = err?.response?.data?.message ?? err?.message ?? 'Unknown error';
       const attemptId = err?.response?.data?.attempt_id;
-      if (errorCode === 'quiz_already_submitted' && attemptId) {
-        console.log('[Quiz] Quiz already submitted, redirecting to review mode');
-        const reviewQuiz = { ...quiz, attempt_id: attemptId };
+      
+      if ((errorCode === 'quiz_already_submitted' || errorMessage.includes('already been submitted')) && attemptId) {
+        console.log('[Quiz] Quiz already submitted, showing review redirect modal');
+        setQuizError({ 
+          quiz: { ...quiz, attempt_id: attemptId }, 
+          message: errorMessage 
+        });
         setQuizLoading(false);
-        setTimeout(() => handleReviewQuiz(reviewQuiz), 0);
         return;
       }
        
-      alert('Failed to start quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+      // For other errors, show generic error alert
+      alert('Failed to start quiz: ' + errorMessage);
+      setQuizLoading(false);
     } finally {
       setQuizLoading(false);
     }
@@ -850,6 +856,41 @@ export function Quizzes() {
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Quiz Already Submitted Error Modal */}
+      {quizError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-slate-900/60" />
+          <div className="relative bg-white rounded-2xl p-6 max-w-sm shadow-xl">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <HelpCircle className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-slate-900">Quiz Already Submitted</h3>
+                <p className="text-sm text-slate-600 mt-1">{quizError.message}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setQuizError(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setQuizError(null);
+                  handleReviewQuiz(quizError.quiz);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+              >
+                <Eye size={14} /> Review Quiz
+              </button>
+            </div>
           </div>
         </div>
       )}

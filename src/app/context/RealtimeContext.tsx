@@ -106,6 +106,7 @@ interface RealtimeContextType {
 const RealtimeContext = createContext<RealtimeContextType | null>(null);
 
 export function RealtimeProvider({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<RealtimeNotification[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -114,8 +115,13 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
 
   const channelRef = useRef<ReturnType<Echo<'reverb'>['private']> | null>(null);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   /* ── Initial count fetch ───────────────────────────────────────────── */
   useEffect(() => {
+    if (!mounted) return;
     notificationsApi
       .list()
       .then((r) => {
@@ -124,10 +130,11 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
         setUnreadCount(unread);
       })
       .catch(() => {});
-  }, []);
+  }, [mounted]);
 
   /* ── WebSocket setup ───────────────────────────────────────────────── */
   useEffect(() => {
+    if (!mounted) return;
     const userId = localStorage.getItem('user_id');
     if (!userId) return;
 

@@ -130,14 +130,6 @@ export default function LandingPage() {
     if (!isLoading && isAuthenticated) navigate("/dashboard", { replace: true });
   }, [isAuthenticated, isLoading, navigate]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0c1e4a]">
-        <div className="w-10 h-10 border-4 border-white/20 border-t-emerald-400 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   // Ensure video autoplay on mount (some browsers need explicit play after mount)
   useEffect(() => {
     const v = videoRef.current;

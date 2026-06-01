@@ -14,8 +14,6 @@ import {
   CheckCircle,
   ArrowRight,
   Star,
-  Moon,
-  Sun,
   Menu,
   X,
 } from "lucide-react";
@@ -90,31 +88,11 @@ const testimonials = [
 
 
 export default function LandingPage() {
-  const [dark, setDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
-
-  // Theme
-  useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem("theme");
-    const prefersDark =
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setDark(prefersDark);
-    document.documentElement.classList.toggle("dark", prefersDark);
-  }, []);
-
-  const toggleTheme = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
 
   // sticky header shadow on scroll
   useEffect(() => {
@@ -218,15 +196,6 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {mounted && (
-              <button
-                onClick={toggleTheme}
-                aria-label="Toggle color theme"
-                className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              >
-                {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-            )}
             <Link
               to="/login"
               className="hidden rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground sm:inline-flex"

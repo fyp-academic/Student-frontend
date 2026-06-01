@@ -37,15 +37,17 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser]   = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('auth_user');
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch { /* ignore */ }
+    const storedToken = localStorage.getItem('auth_token');
+    const storedUser = localStorage.getItem('auth_user');
+    if (storedUser) {
+      try { setUser(JSON.parse(storedUser)); } catch { /* ignore */ }
     }
-    if (token) {
+    if (storedToken) {
+      setToken(storedToken);
       authApi.me()
         .then((res) => {
           const u = res.data.data ?? res.data;

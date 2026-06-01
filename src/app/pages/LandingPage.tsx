@@ -222,10 +222,10 @@ export default function LandingPage() {
 
       {/* Hero — full-bleed muted background video */}
       <section className="relative isolate overflow-hidden min-h-screen flex flex-col">
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 -z-10 bg-background">
           <video
             ref={videoRef}
-            className="h-full w-full object-contain sm:object-cover object-center"
+            className="h-full w-full object-contain object-center"
             src={heroVideo}
             autoPlay
             muted

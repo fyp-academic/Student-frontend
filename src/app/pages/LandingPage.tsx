@@ -221,7 +221,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero — full-bleed muted background video */}
-      <section className="relative isolate overflow-hidden">
+      <section className="relative isolate overflow-hidden min-h-screen flex flex-col">
         <div className="absolute inset-0 -z-10">
           <video
             ref={videoRef}
@@ -240,12 +240,12 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.35)_100%)]" />
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
+        <div className="flex-1 flex flex-col justify-end px-4 pb-8 sm:px-6 sm:pb-12 lg:px-8 lg:pb-16">
           <div className="mx-auto max-w-3xl text-center">
             <div
               data-reveal
               data-reveal-delay="3"
-              className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
+              className="flex flex-col items-center justify-center gap-3 sm:flex-row"
             >
               <Link
                 to="/register"
@@ -264,7 +264,7 @@ export default function LandingPage() {
             <div
               data-reveal
               data-reveal-delay="4"
-              className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-foreground/70"
+              className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-foreground/70"
             >
               <span className="inline-flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-400" /> Free forever plan</span>
               <span className="inline-flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-400" /> No credit card</span>

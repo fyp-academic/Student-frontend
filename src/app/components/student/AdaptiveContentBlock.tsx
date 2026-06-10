@@ -1,15 +1,36 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { adaptiveContentApi } from '@/app/services/api';
 import { SafeMarkdown } from './SafeMarkdown';
+import { GuidedStepsPlayer } from './players/GuidedStepsPlayer';
+import { VisualDiscoveryPlayer } from './players/VisualDiscoveryPlayer';
+import { DeepFocusPlayer } from './players/DeepFocusPlayer';
+import { NarrativeExamplePlayer } from './players/NarrativeExamplePlayer';
 import { Button } from '@/app/components/ui/button';
 import { Skeleton } from '@/app/components/ui/skeleton';
 import { cn } from '@/app/components/ui/utils';
-import type { DeliveryStatus, PresentationConfig } from '@/app/types/personalization';
+import type { DeliveryStatus, PresentationConfig, PresentationMode, ModeConfig } from '@/app/types/personalization';
 import { cardVariantClass, presentationStyles } from '@/app/types/personalization';
 import {
   FileText, BarChart3, Lightbulb, ThumbsUp, ThumbsDown,
-  ChevronDown, ChevronUp, User, Gauge, Turtle, Zap, ShieldCheck, Layout, Type, AlertCircle,
+  ChevronDown, ChevronUp, User, Gauge, Turtle, Zap, ShieldCheck, Layout, Type, AlertCircle, Palette,
 } from 'lucide-react';
+
+const MODE_LABELS: Record<string, string> = {
+  guided_steps: 'Guided steps',
+  visual_discovery: 'Visual discovery',
+  deep_focus: 'Deep focus',
+  narrative_example: 'Narrative example',
+};
+
+function resolvePlayer(mode?: PresentationMode) {
+  switch (mode) {
+    case 'guided_steps': return GuidedStepsPlayer;
+    case 'visual_discovery': return VisualDiscoveryPlayer;
+    case 'deep_focus': return DeepFocusPlayer;
+    case 'narrative_example': return NarrativeExamplePlayer;
+    default: return null;
+  }
+}
 
 interface AdaptiveContentBlockProps {
   chunkId: string;
@@ -197,6 +218,12 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
               Reading layout
             </span>
           )}
+          {activePresentation?.mode && activePresentation.mode !== 'standard' && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-medium text-indigo-800">
+              <Palette className="h-3 w-3" />
+              {MODE_LABELS[activePresentation.mode] ?? activePresentation.mode}
+            </span>
+          )}
         </div>
       </div>
 
@@ -323,20 +350,27 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
         </div>
       )}
 
-      {!isLoading && adaptedContent && (
-        <div className={cn('rounded-lg border bg-card p-4 shadow-sm transition-all duration-300', layoutClass)} style={contentStyle}>
-          {activePresentation?.show_step_numbers && (
-            <p className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              <Turtle className="h-3.5 w-3.5" />
-              Step-by-step reading mode
-            </p>
-          )}
-          {activePresentation?.visual_emphasis && (
-            <p className="mb-2 text-xs text-blue-700/80">Visual reading layout — tables and lists use instructor content only.</p>
-          )}
-          <SafeMarkdown content={adaptedContent} />
-        </div>
-      )}
+      {!isLoading && adaptedContent && (() => {
+        const PlayerComponent = resolvePlayer(activePresentation?.mode as PresentationMode | undefined);
+        const modeConfig = activePresentation?.mode_config as ModeConfig | undefined;
+        if (PlayerComponent) {
+          return <PlayerComponent content={adaptedContent} config={modeConfig} className="shadow-sm" />;
+        }
+        return (
+          <div className={cn('rounded-lg border bg-card p-4 shadow-sm transition-all duration-300', layoutClass)} style={contentStyle}>
+            {activePresentation?.show_step_numbers && (
+              <p className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <Turtle className="h-3.5 w-3.5" />
+                Step-by-step reading mode
+              </p>
+            )}
+            {activePresentation?.visual_emphasis && (
+              <p className="mb-2 text-xs text-blue-700/80">Visual reading layout — tables and lists use instructor content only.</p>
+            )}
+            <SafeMarkdown content={adaptedContent} />
+          </div>
+        );
+      })()}
 
       {!isLoading && originalContent && (
         <div className="mt-3">

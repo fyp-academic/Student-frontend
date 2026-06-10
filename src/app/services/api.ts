@@ -283,6 +283,8 @@ export const adaptiveContentApi = {
     api.post(`/student/adaptation/${adaptationId}/feedback`, data),
   recalculateProfile: (studentId: string, data?: { manual_modality?: string }) =>
     api.post(`/student/${studentId}/recalculate-profile`, data ?? {}),
+  videoLearningSupport: (activityId: string) =>
+    api.get(`/student/activities/${activityId}/video-learning-support`),
 };
 
 export const personalizationApi = {

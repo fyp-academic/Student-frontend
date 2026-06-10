@@ -1,5 +1,25 @@
 import type { CSSProperties } from 'react';
 
+export type PresentationMode =
+  | 'guided_steps'
+  | 'visual_discovery'
+  | 'deep_focus'
+  | 'narrative_example'
+  | 'standard';
+
+export type ModeConfig = {
+  numbered_steps?: boolean;
+  bold_key_terms?: boolean;
+  use_highlights?: boolean;
+  prefer_tables?: boolean;
+  prefer_headings?: boolean;
+  dense_prose?: boolean;
+  show_connections?: boolean;
+  example_first?: boolean;
+  structure: string;
+  density: string;
+};
+
 export type PresentationConfig = {
   is_active?: boolean;
   text_density: 'comfortable' | 'compact' | 'spacious';
@@ -14,6 +34,8 @@ export type PresentationConfig = {
   card_variant?: string;
   reading_rail?: string;
   typography_class: string;
+  mode?: PresentationMode;
+  mode_config?: ModeConfig;
 };
 
 export type DeliveryStatus =
@@ -64,6 +86,9 @@ export type NavigationConfig = {
     enabled: boolean;
     message: string | null;
     suggested_activity_id: string | null;
+    reason?: string | null;
+    time_estimate_minutes?: number | null;
+    prerequisite_warnings?: string[];
   };
   lesson_page_navigation: {
     allow_page_skip: boolean;

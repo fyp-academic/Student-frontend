@@ -5,6 +5,7 @@ import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumA
 import { AdaptiveContentBlock } from "../components/student/AdaptiveContentBlock";
 import { AdaptiveActivityPanel } from "../components/student/AdaptiveActivityPanel";
 import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCourseSidebar";
+import { VideoLearningPanel } from "../components/student/VideoLearningPanel";
 import { usePersonalization } from "../hooks/usePersonalization";
 import { presentationStyles } from "../types/personalization";
 import { useProctoringMonitor } from '../hooks/useProctoringMonitor';
@@ -724,6 +725,11 @@ export function Lessons() {
                         presentationOverride={presentationConfig}
                       />
                       <div style={{ backgroundColor: "#000" }}>{renderVideo()}</div>
+                      <VideoLearningPanel
+                        activityId={activeActivityId}
+                        courseId={selectedCourseId}
+                        presentationConfig={presentationConfig}
+                      />
                     </div>
                   )}
 

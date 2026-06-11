@@ -262,27 +262,31 @@ export function Quizzes() {
     } catch (err: any) {
       console.error('Failed to start quiz:', err);
        
-      // If quiz is already submitted, show modal that redirects to review
-      const errorCode = err?.response?.data?.error ?? '';
-      const errorMessage = err?.response?.data?.message ?? err?.message ?? 'Unknown error';
-      const attemptId = err?.response?.data?.attempt_id;
-      
-      if ((errorCode === 'quiz_already_submitted' || errorMessage.includes('already been submitted')) && attemptId) {
+      const responseData = err?.response?.data ?? {};
+      const errorCode = responseData.error ?? responseData.data?.error ?? '';
+      const errorMessage = responseData.message ?? responseData.data?.message ?? err?.message ?? 'Unknown error';
+      const attemptId = responseData.attempt_id ?? responseData.data?.attempt_id ?? null;
+
+      const isAlreadySubmitted =
+        errorCode === 'quiz_already_submitted' ||
+        errorMessage.includes('already been submitted') ||
+        errorMessage.includes('already submitted');
+
+      if (isAlreadySubmitted) {
         setActiveQuiz(null);
         setQuizzes(prev => prev.map(q =>
           String(q.activity_id ?? q.id ?? '') === actId
-            ? { ...q, status: 'submitted', attempt_id: attemptId }
+            ? { ...q, status: 'submitted', ...(attemptId ? { attempt_id: attemptId } : {}) }
             : q
         ));
         setQuizError({
-          quiz: { ...quiz, attempt_id: attemptId },
-          message: errorMessage
+          quiz: { ...quiz, ...(attemptId ? { attempt_id: attemptId } : {}) },
+          message: errorMessage,
         });
         setQuizLoading(false);
         return;
       }
-       
-      // For other errors, show generic error alert
+
       alert('Failed to start quiz: ' + errorMessage);
       setQuizLoading(false);
     } finally {

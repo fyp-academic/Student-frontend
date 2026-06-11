@@ -228,13 +228,13 @@ export function Quizzes() {
       quizAttemptId: undefined,
     });
     try {
-      const [startRes, qRes] = await Promise.all([
-        quizApi.start(actId),
-        quizApi.questions(actId),
-      ]);
+      // Start must succeed before fetching questions — keeps errors isolated
+      const startRes = await quizApi.start(actId);
       const attemptData = startRes.data.data ?? startRes.data ?? {};
       const newAttemptId = String((attemptData as Record<string,unknown>).id ?? '');
       setAttemptId(newAttemptId);
+
+      const qRes = await quizApi.questions(actId);
 
       // Debug logging to trace empty questions
       console.log('[Quiz] activity_id:', actId);
@@ -353,7 +353,8 @@ export function Quizzes() {
       setSelected(prev => ({ ...prev, ...textResponseMap }));
     } catch (err: any) {
       console.error('Failed to load review:', err);
-      alert('Failed to load review: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+      const msg = err?.response?.data?.message ?? err?.message ?? 'Failed to load review. Please try again.';
+      setQuizError({ quiz, message: msg });
       setActiveQuiz(null);
       setReviewMode(false);
     } finally {

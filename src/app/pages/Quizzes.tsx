@@ -46,11 +46,11 @@ const getChoiceLabel = (format: string | null | undefined, index: number): strin
   if (!format || format === 'none') return '';
   const i = index + 1;
   switch (format) {
-    case 'a,b,c...': return String.fromCharCode(96 + i) + '.';
-    case 'A,B,C...': return String.fromCharCode(64 + i) + '.';
-    case 'i,ii,iii...': return toLowerRoman(i) + '.';
-    case 'I,II,III...': return toUpperRoman(i) + '.';
-    case '1,2,3...': return `${i}.`;
+    case 'a': case 'a,b,c...': return String.fromCharCode(96 + i) + '.';
+    case 'A': case 'A,B,C...': return String.fromCharCode(64 + i) + '.';
+    case 'i': case 'i,ii,iii...': return toLowerRoman(i) + '.';
+    case 'I': case 'I,II,III...': return toUpperRoman(i) + '.';
+    case '1': case '1,2,3...': return `${i}.`;
     default: return '';
   }
 };
@@ -79,6 +79,7 @@ export function Quizzes() {
   const [attemptId, setAttemptId]           = useState<string | null>(null);
   const [quizLoading, setQuizLoading]       = useState(false);
   const [submitted, setSubmitted]           = useState(false);
+  const [result, setResult]                 = useState<Record<string, unknown> | null>(null);
   const [quizError, setQuizError] = useState<{ quiz: Quiz; message: string } | null>(null);
 
   // Review mode state
@@ -172,6 +173,7 @@ export function Quizzes() {
             ...att,
             id: aid,
             activity_id: aid,
+            attempt_id: att.id,
             title: String(activity.name ?? activity.title ?? att.title ?? 'Quiz'),
             status: att.status,
             score: att.score,
@@ -294,6 +296,10 @@ export function Quizzes() {
     setReviewMode(true);
     setSubmitted(false);
     setResult(null);
+    setReviewQuestions([]);
+    setReviewAnswers({});
+    setReviewResponses({});
+    setSelected({});
 
     try {
       // Fetch questions and attempt in parallel

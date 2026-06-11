@@ -1168,27 +1168,18 @@ export function Lessons() {
                                   Personalized reading guide
                                 </p>
                                 <div className="space-y-4">
-                                  {pageChunks.map(chunk => (
+                                  {pageChunks.map((chunk, idx) => (
                                     <AdaptiveContentBlock
                                       key={chunk.id}
                                       courseId={selectedCourseId}
                                       chunkId={chunk.id}
-                                      topicTitle={lessonPages[currentPageIndex]?.title ?? 'Content'}
+                                      topicTitle={idx === 0 ? (lessonPages[currentPageIndex]?.title ?? 'Content') : ''}
                                       presentationOverride={presentationConfig}
                                     />
                                   ))}
                                 </div>
                               </div>
 
-                              <div>
-                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">
-                                  Original lesson page
-                                </p>
-                                <div
-                                  className="prose prose-slate max-w-none"
-                                  dangerouslySetInnerHTML={{ __html: lessonPages[currentPageIndex]?.content ?? '' }}
-                                />
-                              </div>
                             </div>
                           </>
                         ) : (

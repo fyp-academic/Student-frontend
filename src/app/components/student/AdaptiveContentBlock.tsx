@@ -34,7 +34,7 @@ function resolvePlayer(mode?: PresentationMode) {
 
 interface AdaptiveContentBlockProps {
   chunkId: string;
-  topicTitle: string;
+  topicTitle?: string;
   courseId: string;
   presentationOverride?: PresentationConfig | null;
 }
@@ -206,7 +206,7 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
   return (
     <div ref={containerRef} className="w-full">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-        <h3 className="text-base font-semibold text-foreground">{topicTitle}</h3>
+        {topicTitle && <h3 className="text-base font-semibold text-foreground">{topicTitle}</h3>}
         <div className="flex flex-wrap items-center gap-1.5">
           <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium', statusMeta.className)}>
             <ShieldCheck className="h-3 w-3" />

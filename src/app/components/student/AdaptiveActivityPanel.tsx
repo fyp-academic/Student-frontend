@@ -96,9 +96,6 @@ export const AdaptiveActivityPanel: React.FC<AdaptiveActivityPanelProps> = ({
 
   return (
     <div className="px-4 py-4 border-b bg-gradient-to-b from-slate-50 to-white space-y-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        Personalized reading guide · original {title} unchanged below
-      </p>
       {message && <p className="text-xs text-blue-700">{message}</p>}
       {chunks.map((chunk) => (
         <AdaptiveContentBlock

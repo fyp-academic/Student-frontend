@@ -1,9 +1,8 @@
 import React from 'react';
 import {
-  CheckCircle, ChevronDown, ChevronRight, Clock, LayoutList, Loader2, Lock, Sparkles, X,
+  CheckCircle, ChevronDown, ChevronRight, Clock, LayoutList, Loader2, Lock, X,
 } from 'lucide-react';
 import type { ActivityOverlay, NavigationConfig, SectionOverlay } from '@/app/types/personalization';
-import { annotationStyles } from '@/app/types/personalization';
 
 type Activity = Record<string, unknown>;
 type Section = Record<string, unknown>;
@@ -86,55 +85,6 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
         </button>
       </div>
 
-      {navigation?.direct_guidance?.enabled && navigation.direct_guidance.message && (
-        <div className="mx-3 mt-3 rounded-xl border px-3 py-3 personalization-nav-guidance" style={{ borderColor: '#93c5fd', backgroundColor: '#eff6ff' }}>
-          <div className="flex items-start gap-2">
-            <Sparkles size={15} className="mt-0.5 flex-shrink-0" color="#2563eb" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-800">Your pathway</p>
-                {navigation.direct_guidance.time_estimate_minutes != null && (
-                  <span className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8' }}>
-                    <Clock size={9} />
-                    ~{navigation.direct_guidance.time_estimate_minutes} min
-                  </span>
-                )}
-              </div>
-              <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#1e40af' }}>{navigation.direct_guidance.message}</p>
-              {navigation.direct_guidance.reason && (
-                <p style={{ fontSize: '11px', lineHeight: 1.4, color: '#3b82f6', marginTop: '2px', fontStyle: 'italic' }}>
-                  {navigation.direct_guidance.reason}
-                </p>
-              )}
-            </div>
-          </div>
-          {Array.isArray(navigation.direct_guidance.prerequisite_warnings) && navigation.direct_guidance.prerequisite_warnings.length > 0 && (
-            <details className="mt-2">
-              <summary className="flex items-center gap-1 cursor-pointer text-[11px] font-semibold" style={{ color: '#b45309', listStyle: 'none' }}>
-                <span>⚠ Prerequisites to check ({navigation.direct_guidance.prerequisite_warnings.length})</span>
-              </summary>
-              <ul className="mt-1.5 space-y-1 pl-1">
-                {navigation.direct_guidance.prerequisite_warnings.map((w, i) => (
-                  <li key={i} style={{ fontSize: '11px', color: '#92400e' }}>• {w}</li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </div>
-      )}
-
-      <div className="mx-3 mt-2 flex flex-wrap gap-1">
-        <span className="rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-600">
-          Nav: {navigation?.mode ?? 'balanced'}
-        </span>
-        {navigation?.enforce_sequence && (
-          <span className="rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-800">Sequential</span>
-        )}
-        {navigation?.allow_non_linear_jump && (
-          <span className="rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-800">Free explore</span>
-        )}
-      </div>
-
       <div className="flex-1 overflow-y-auto">
         {sectionsLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -167,11 +117,6 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className="truncate" style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>{secTitle}</p>
-                    {secOverlay?.annotation_label && (
-                      <span className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: '#fff7ed', color: '#c2410c' }}>
-                        {secOverlay.annotation_label}
-                      </span>
-                    )}
                   </div>
                   <span style={{ fontSize: '13px', color: '#94a3b8' }}>{done}/{acts.length} completed</span>
                 </div>
@@ -189,8 +134,6 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
                 const isBlocked = overlay ? !overlay.accessible : false;
                 const isLck = sKey === 'locked' || isBlocked;
                 const dur = String(act.duration ?? (act.time_limit ? `${act.time_limit} min` : ''));
-                const annStyle = overlay?.annotation ? annotationStyles[overlay.annotation] : null;
-
                 return (
                   <button
                     key={aid}
@@ -225,11 +168,6 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
                         <span className="px-1.5 rounded" style={{ fontSize: '11px', fontWeight: 600, backgroundColor: `${tCfg.color}15`, color: tCfg.color }}>
                           {tCfg.label}
                         </span>
-                        {overlay?.annotation_label && annStyle && (
-                          <span className="px-1.5 rounded" style={{ fontSize: '10px', fontWeight: 600, backgroundColor: annStyle.bg, color: annStyle.color }}>
-                            {overlay.annotation_label}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </button>

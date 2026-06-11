@@ -19,29 +19,8 @@ export const GuidedStepsPlayer: React.FC<GuidedStepsPlayerProps> = ({ content, c
     return content.replace(/==(.+?)==/g, '<mark class="bg-yellow-200 text-yellow-900 rounded px-0.5">$1</mark>');
   }, [content]);
 
-  // Count steps (numbered list items) for progress indicator
-  const stepCount = useMemo(() => {
-    const matches = content.match(/^\d+\./gm);
-    return matches ? matches.length : 0;
-  }, [content]);
-
   return (
     <div className={cn('rounded-xl border bg-card shadow-sm', className)}>
-      {/* Header bar */}
-      <div className="flex items-center justify-between rounded-t-xl border-b bg-blue-50 px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
-            ①
-          </span>
-          <span className="text-xs font-semibold text-blue-800 uppercase tracking-wide">
-            Step-by-step mode
-          </span>
-        </div>
-        {stepCount > 0 && (
-          <span className="text-xs text-blue-600">{stepCount} steps</span>
-        )}
-      </div>
-
       {/* Content */}
       <div
         className="prose prose-sm max-w-none p-5 leading-relaxed

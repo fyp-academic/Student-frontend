@@ -2,7 +2,7 @@ import React, { useMemo, useRef } from 'react';
 import { SafeMarkdown } from '../SafeMarkdown';
 import type { ModeConfig } from '@/app/types/personalization';
 import { cn } from '@/app/components/ui/utils';
-import { Lightbulb, BookOpen, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 interface NarrativeExamplePlayerProps {
   content: string;
@@ -45,12 +45,6 @@ export const NarrativeExamplePlayer: React.FC<NarrativeExamplePlayerProps> = ({ 
     <div className={cn('rounded-xl border bg-card shadow-sm overflow-hidden', className)}>
       {/* Example card */}
       <div className="border-b bg-amber-50">
-        <div className="flex items-center gap-2 border-b border-amber-200 px-4 py-2.5">
-          <Lightbulb className="h-4 w-4 text-amber-600" />
-          <span className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
-            Example first
-          </span>
-        </div>
         <div
           className="prose prose-sm max-w-none p-4
             [&_p]:mb-2 [&_p]:leading-relaxed [&_p]:text-amber-950
@@ -76,12 +70,6 @@ export const NarrativeExamplePlayer: React.FC<NarrativeExamplePlayerProps> = ({ 
       {/* Theory section */}
       {hasTheory && (
         <div ref={theoryRef}>
-          <div className="flex items-center gap-2 border-b bg-slate-50 px-4 py-2.5">
-            <BookOpen className="h-4 w-4 text-slate-600" />
-            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-              The concept explained
-            </span>
-          </div>
           <div
             className="prose prose-sm max-w-none p-5
               [&_p]:mb-3 [&_p]:leading-relaxed

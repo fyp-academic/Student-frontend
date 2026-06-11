@@ -268,10 +268,15 @@ export function Quizzes() {
       const attemptId = err?.response?.data?.attempt_id;
       
       if ((errorCode === 'quiz_already_submitted' || errorMessage.includes('already been submitted')) && attemptId) {
-        console.log('[Quiz] Quiz already submitted, showing review redirect modal');
-        setQuizError({ 
-          quiz: { ...quiz, attempt_id: attemptId }, 
-          message: errorMessage 
+        setActiveQuiz(null);
+        setQuizzes(prev => prev.map(q =>
+          String(q.activity_id ?? q.id ?? '') === actId
+            ? { ...q, status: 'submitted', attempt_id: attemptId }
+            : q
+        ));
+        setQuizError({
+          quiz: { ...quiz, attempt_id: attemptId },
+          message: errorMessage
         });
         setQuizLoading(false);
         return;

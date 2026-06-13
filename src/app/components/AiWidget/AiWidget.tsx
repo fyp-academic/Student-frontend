@@ -373,7 +373,7 @@ function resolveContext(
     case 'study':
       // Sub-context by page type
       if (path.startsWith('/lessons')) {
-        greeting = topicName ? `� Lesson: ${topicName}` : 'Need help with this lesson?';
+        greeting = topicName ? `📘 Lesson: ${topicName}` : 'Need help with this lesson?';
         chips.push(
           { type: 'summarize', label: '📋 Summarize this lesson' },
           { type: 'tutor',     label: '🧠 Explain this concept' },
@@ -525,6 +525,12 @@ export default function AiWidget(props: AiWidgetProps) {
 
     const intent = detectIntent(text);
 
+    // Recent turns for multi-turn memory (last 6, before this new message).
+    const history = messages.slice(-6).map(m => ({
+      role:    m.role === 'user' ? 'user' : 'ai',
+      content: m.content,
+    }));
+
     // Common payload shared across endpoints
     const payload = {
       question:        text,
@@ -533,6 +539,7 @@ export default function AiWidget(props: AiWidgetProps) {
       quiz_attempt_id: ctx.quizAttemptId,
       mode,
       intent,
+      history,
     };
 
     try {
@@ -614,7 +621,7 @@ export default function AiWidget(props: AiWidgetProps) {
     } finally {
       setLoading(false);
     }
-  }, [loading, mode, ctx.topicId, ctx.courseId, ctx.quizAttemptId]);
+  }, [loading, mode, ctx.topicId, ctx.courseId, ctx.quizAttemptId, messages]);
 
   const handleChipClick = (chip: Chip) => sendMessage(chip.label);
   const handleKeyDown   = (e: React.KeyboardEvent) => {

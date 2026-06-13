@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router";
 import { HelpCircle, Clock, CheckCircle, PlayCircle, Lock, Trophy, X, ChevronRight, Loader2, Eye } from "lucide-react";
 import { quizApi, dashboardApi } from "../services/api";
@@ -77,6 +77,11 @@ export function Quizzes() {
   const [selected, setSelected]             = useState<Record<string, unknown>>({});
   const [currentQ, setCurrentQ]             = useState(0);
   const [attemptId, setAttemptId]           = useState<string | null>(null);
+  // Quiz timer: deadlineTs is a client-clock timestamp (ms) derived from the
+  // server-provided time_limit_seconds so the countdown is server-anchored.
+  const [deadlineTs, setDeadlineTs]         = useState<number | null>(null);
+  const [remainingSec, setRemainingSec]     = useState<number | null>(null);
+  const autoSubmitRef                       = useRef(false);
   const [quizLoading, setQuizLoading]       = useState(false);
   const [submitted, setSubmitted]           = useState(false);
   const [result, setResult]                 = useState<Record<string, unknown> | null>(null);
@@ -218,6 +223,9 @@ export function Quizzes() {
     setCurrentQ(0);
     setAttemptId(null);
     setReviewMode(false);
+    setDeadlineTs(null);
+    setRemainingSec(null);
+    autoSubmitRef.current = false;
     // Push restricted mode to AI widget
     setContext({
       currentPage:   '/quizzes',
@@ -233,6 +241,14 @@ export function Quizzes() {
       const attemptData = startRes.data.data ?? startRes.data ?? {};
       const newAttemptId = String((attemptData as Record<string,unknown>).id ?? '');
       setAttemptId(newAttemptId);
+
+      // Arm the countdown from the server-provided remaining seconds. The quiz
+      // auto-submits when this reaches zero (see the countdown effect below).
+      const limitSec = Number((startRes.data as Record<string, unknown>).time_limit_seconds ?? 0);
+      if (limitSec > 0) {
+        setDeadlineTs(Date.now() + limitSec * 1000);
+        setRemainingSec(limitSec);
+      }
 
       const qRes = await quizApi.questions(actId);
 
@@ -283,6 +299,14 @@ export function Quizzes() {
           quiz: { ...quiz, ...(attemptId ? { attempt_id: attemptId } : {}) },
           message: errorMessage,
         });
+        setQuizLoading(false);
+        return;
+      }
+
+      // Quiz outside its open/close window — show the backend's clear reason.
+      if (errorCode === 'time_restriction') {
+        setActiveQuiz(null);
+        setQuizError({ quiz, message: errorMessage });
         setQuizLoading(false);
         return;
       }
@@ -362,32 +386,48 @@ export function Quizzes() {
     }
   };
 
-  const handleSubmitQuiz = async () => {
+  const handleSubmitQuiz = async (auto = false) => {
     if (!attemptId) return;
 
-    // Guard: require at least one answer
     const answeredCount = Object.keys(selected).length;
-    if (answeredCount === 0) {
-      alert('Please select at least one answer before submitting.');
+
+    // Manual submit guards (skipped on auto-submit when the timer expires).
+    if (!auto) {
+      if (answeredCount === 0) {
+        alert('Please select at least one answer before submitting.');
+        return;
+      }
+      if (answeredCount < questions.length) {
+        const ok = window.confirm(`You have answered ${answeredCount} of ${questions.length} questions. Submit anyway?`);
+        if (!ok) return;
+      }
+    }
+
+    // Only send answered questions (avoids invalid empty answer_id values).
+    const responses = questions.map((q) => {
+      const qid = String(q.id ?? '');
+      if (!qid) return null;
+      const studentAnswer = selected[qid];
+      if (isTextQ(q) || isEssayQ(q)) {
+        const txt = String(studentAnswer ?? '').trim();
+        return txt ? { question_id: qid, response_text: txt } : null;
+      }
+      const aid = String(studentAnswer ?? '');
+      return aid ? { question_id: qid, answer_id: aid } : null;
+    }).filter(Boolean) as Array<Record<string, string>>;
+
+    // Time ran out with nothing answered: stop the timer and show the submitted
+    // state. The server's quizzes:expire-attempts job finalizes the attempt.
+    if (auto && responses.length === 0) {
+      setDeadlineTs(null);
+      setResult({ needs_grading: false, score_percentage: 0 });
+      setSubmitted(true);
       return;
     }
 
-    // Guard: confirm if not all questions answered
-    if (answeredCount < questions.length) {
-      const ok = window.confirm(`You have answered ${answeredCount} of ${questions.length} questions. Submit anyway?`);
-      if (!ok) return;
-    }
-
+    setDeadlineTs(null); // freeze the countdown once a submit is in flight
     setQuizLoading(true);
     try {
-      const responses = questions.map((q) => {
-        const qid = String(q.id ?? '');
-        const studentAnswer = selected[qid];
-        if (isTextQ(q) || isEssayQ(q)) {
-          return { question_id: qid, response_text: String(studentAnswer ?? '') };
-        }
-        return { question_id: qid, answer_id: String(studentAnswer ?? '') };
-      }).filter(r => r.question_id);
       const r = await quizApi.submit(attemptId, { responses });
       setResult(r.data.data ?? r.data ?? {});
       setSubmitted(true);
@@ -411,6 +451,31 @@ export function Quizzes() {
     } finally {
       setQuizLoading(false);
     }
+  };
+
+  // Countdown timer: ticks every second while a quiz is being taken and
+  // auto-submits exactly once when the deadline is reached.
+  useEffect(() => {
+    if (!activeQuiz || reviewMode || submitted || deadlineTs === null) return;
+    const tick = () => {
+      const rem = Math.max(0, Math.round((deadlineTs - Date.now()) / 1000));
+      setRemainingSec(rem);
+      if (rem <= 0 && !autoSubmitRef.current) {
+        autoSubmitRef.current = true;
+        void handleSubmitQuiz(true);
+      }
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+    // handleSubmitQuiz is intentionally omitted; it is stable for the active attempt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeQuiz, reviewMode, submitted, deadlineTs]);
+
+  const formatMMSS = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
   if (loading) {
@@ -577,6 +642,12 @@ export function Quizzes() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
+                  {!submitted && !reviewMode && remainingSec !== null && (
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${remainingSec <= 30 ? 'bg-red-100 text-red-600' : remainingSec <= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
+                      <Clock size={12} />
+                      {formatMMSS(remainingSec)}
+                    </div>
+                  )}
                   {!submitted && procSessionKey && (
                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${procWarningCount >= 3 ? 'bg-red-100 text-red-600' : procWarningCount > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-600'}`}>
                       <span className={`inline-block w-1.5 h-1.5 rounded-full ${procWarningCount >= 3 ? 'bg-red-500' : procWarningCount > 0 ? 'bg-yellow-500' : 'bg-green-500'}`} />

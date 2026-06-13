@@ -12,6 +12,7 @@ import {
   BarChart3,
   MoreVertical,
   Bot,
+  Captions,
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { Button } from '../ui/button';
@@ -40,6 +41,8 @@ interface ToolbarProps {
   onOpenParticipants: () => void;
   onOpenPolls: () => void;
   onOpenAI: () => void;
+  onOpenTranscript?: () => void;
+  showTranscript?: boolean;
   hasNewPolls?: boolean;
   sessionId: string;
 }
@@ -61,6 +64,8 @@ export function Toolbar({
   onOpenParticipants,
   onOpenPolls,
   onOpenAI,
+  onOpenTranscript,
+  showTranscript,
   hasNewPolls,
 }: ToolbarProps) {
   return (
@@ -170,6 +175,12 @@ export function Toolbar({
               <Bot className="h-4 w-4 mr-2" />
               AI Assistant
             </DropdownMenuItem>
+            {showTranscript && onOpenTranscript && (
+              <DropdownMenuItem onClick={onOpenTranscript}>
+                <Captions className="h-4 w-4 mr-2" />
+                Captions
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -228,6 +239,18 @@ export function Toolbar({
           <Bot className="h-4 w-4" />
           AI
         </Button>
+
+        {showTranscript && onOpenTranscript && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenTranscript}
+            className="gap-2"
+          >
+            <Captions className="h-4 w-4" />
+            Captions
+          </Button>
+        )}
       </div>
     </div>
   );

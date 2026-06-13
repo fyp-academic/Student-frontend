@@ -32,6 +32,13 @@ export interface ChatMessage {
   isAI?: boolean;
 }
 
+export interface TranscriptLine {
+  id: string;
+  speaker: string;
+  text: string;
+  timestamp: string;
+}
+
 export type ToolbarAction = 
   | 'toggle-mic' 
   | 'toggle-camera' 

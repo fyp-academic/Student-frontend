@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { SafeMarkdown } from '../SafeMarkdown';
+import { PlayerShell, academicProse, estimateReadingTime } from './PlayerShell';
 import type { ModeConfig } from '@/app/types/personalization';
 import { cn } from '@/app/components/ui/utils';
-import { Network, Clock } from 'lucide-react';
+import { Network } from 'lucide-react';
 
 interface DeepFocusPlayerProps {
   content: string;
@@ -10,75 +11,67 @@ interface DeepFocusPlayerProps {
   className?: string;
 }
 
-const CONNECTION_KEYWORDS = /\b(therefore|consequently|because|which means|this implies|hence|thus|as a result|in contrast|however|nevertheless)\b/gi;
+const CONNECTION_KEYWORDS = /\b(therefore|consequently|because|which means|this implies|hence|thus|as a result|in contrast|however|nevertheless)\b/i;
 
 /**
- * Deep Focus Player — for advanced, fast-paced learners.
- * Narrow reading column, dense academic prose, surfaced concept connections.
+ * Dense, distraction-free reading for advanced learners: a narrow measure,
+ * scholarly typography, and on-demand surfacing of the logical connections
+ * already present in the text.
  */
 export const DeepFocusPlayer: React.FC<DeepFocusPlayerProps> = ({ content, config, className }) => {
   const [showConnections, setShowConnections] = useState(false);
+  const readingTime = useMemo(() => estimateReadingTime(content), [content]);
 
-  // Estimate reading time (~200 wpm for advanced readers)
-  const readingMinutes = useMemo(() => {
-    const words = content.trim().split(/\s+/).length;
-    return Math.max(1, Math.ceil(words / 200));
-  }, [content]);
-
-  // Extract sentences containing connective language
   const connectionSentences = useMemo(() => {
-    const sentences = content.split(/(?<=[.!?])\s+/);
-    return sentences.filter(s => CONNECTION_KEYWORDS.test(s)).slice(0, 6);
+    const sentences = content.replace(/[#*>=_`-]/g, ' ').split(/(?<=[.!?])\s+/);
+    return sentences.filter(s => CONNECTION_KEYWORDS.test(s)).map(s => s.trim()).slice(0, 6);
   }, [content]);
+
+  const hasConnections = config?.show_connections !== false && connectionSentences.length > 0;
 
   return (
-    <div className={cn('rounded-xl border bg-card shadow-sm', className)}>
-      <div className="flex items-center justify-end gap-3 rounded-t-xl border-b bg-slate-50 px-4 py-2">
-        <span className="flex items-center gap-1 text-xs text-slate-500">
-          <Clock className="h-3 w-3" />
-          ~{readingMinutes} min
-        </span>
-        {config?.show_connections !== false && connectionSentences.length > 0 && (
+    <PlayerShell
+      accent="slate"
+      readingTime={readingTime}
+      className={className}
+      measure="58ch"
+      action={
+        hasConnections ? (
           <button
             onClick={() => setShowConnections(v => !v)}
-            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="flex items-center gap-1.5 text-[12px] font-medium text-indigo-700 transition-colors hover:text-indigo-900"
           >
             <Network className="h-3.5 w-3.5" />
-            Key connections
+            {showConnections ? 'Hide connections' : 'Key connections'}
           </button>
+        ) : undefined
+      }
+      banner={
+        showConnections && hasConnections ? (
+          <div className="mx-6 mt-4 rounded-xl border border-indigo-200/70 bg-indigo-50/50 px-5 py-4 sm:mx-8">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-700">
+              How the ideas connect
+            </p>
+            <ul className="space-y-2">
+              {connectionSentences.map((s, i) => (
+                <li key={i} className="flex gap-2 text-sm leading-snug text-stone-700">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : undefined
+      }
+    >
+      <SafeMarkdown
+        content={content}
+        className={cn(
+          academicProse,
+          // Tighter, scholarly density for advanced reading
+          '[&_p]:my-3 [&_p]:leading-[1.7] text-[0.95rem]',
         )}
-      </div>
-
-      {/* Concept connections panel */}
-      {showConnections && connectionSentences.length > 0 && (
-        <div className="border-b bg-indigo-50/50 px-4 py-3">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-indigo-700">
-            Logical connections in this section
-          </p>
-          <ul className="space-y-1.5">
-            {connectionSentences.map((s, i) => (
-              <li key={i} className="text-sm text-indigo-900 leading-snug">
-                <span className="mr-1 text-indigo-400">›</span>
-                {s.trim()}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Content — narrow reading column, compact density */}
-      <div
-        className="prose prose-sm max-w-2xl mx-auto p-6
-          [&_p]:mb-2.5 [&_p]:leading-relaxed
-          [&_strong]:font-semibold [&_strong]:text-slate-900
-          [&_h2]:text-base [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-1.5
-          [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:uppercase [&_h3]:tracking-wide [&_h3]:text-slate-600
-          [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5
-          [&_ol]:list-decimal [&_ol]:pl-5"
-        style={{ fontSize: '0.9rem', lineHeight: 1.55 }}
-      >
-        <SafeMarkdown content={content} />
-      </div>
-    </div>
+      />
+    </PlayerShell>
   );
 };

@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Bot,
   Loader2,
   Send,
+  Captions,
 } from 'lucide-react';
 import { useJitsiRoom } from '../../hooks/useJitsiRoom';
 import { useJitsiScript } from '../../hooks/useJitsiScript';
@@ -17,7 +18,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { useToast } from '../../hooks/use-toast';
 import { sessionsApi } from '../../services/api';
-import type { JitsiRoomProps, ChatMessage } from './types';
+import type { JitsiRoomProps, ChatMessage, TranscriptLine } from './types';
 import type { Participant, Poll as PollType } from '../sessions/types';
 
 export function JitsiRoom({
@@ -33,7 +34,9 @@ export function JitsiRoom({
 }: JitsiRoomProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [activePanel, setActivePanel] = useState<'none' | 'chat' | 'participants' | 'ai'>('none');
+  const [activePanel, setActivePanel] = useState<'none' | 'chat' | 'participants' | 'ai' | 'transcript'>('none');
+  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
   const [showPolls, setShowPolls] = useState(false);
   const [polls, setPolls] = useState<PollType[]>([]);
   const [activePoll, setActivePoll] = useState<PollType | null>(null);
@@ -89,7 +92,25 @@ export function JitsiRoom({
         isAI: msg.isAI,
       }]);
     },
+    onTranscriptLine: (line) => {
+      setTranscriptLines(prev => {
+        if (prev.some(l => l.id === line.id)) return prev;
+        return [...prev, line].slice(-300);
+      });
+    },
   });
+
+  // Auto-scroll the transcript panel to the latest line
+  useEffect(() => {
+    if (activePanel === 'transcript') {
+      transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [transcriptLines, activePanel]);
+
+  const formatCaptionTime = (ts: string) => {
+    const d = new Date(ts);
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   // Initialize Jitsi when script is loaded
   useEffect(() => {
@@ -204,7 +225,9 @@ export function JitsiRoom({
                   ? 'Chat'
                   : activePanel === 'participants'
                     ? 'Participants'
-                    : 'AI Assistant'}
+                    : activePanel === 'transcript'
+                      ? 'Live transcript'
+                      : 'AI Assistant'}
               </SheetTitle>
             </SheetHeader>
             <div className="h-[calc(100vh-80px)] overflow-y-auto">
@@ -281,9 +304,46 @@ export function JitsiRoom({
                   </div>
                 </div>
               )}
+              {activePanel === 'transcript' && (
+                <div className="flex flex-col h-full p-4">
+                  <div className="flex-1 overflow-y-auto space-y-3">
+                    {transcriptLines.length === 0 ? (
+                      <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
+                        <Captions className="h-8 w-8 mb-2 opacity-50" />
+                        <p className="text-sm">Captions will appear here as people speak.</p>
+                      </div>
+                    ) : (
+                      transcriptLines.map((line) => (
+                        <div key={line.id} className="text-sm">
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-medium text-foreground">{line.speaker}</span>
+                            <span className="text-[11px] text-muted-foreground">{formatCaptionTime(line.timestamp)}</span>
+                          </div>
+                          <p className="text-muted-foreground leading-snug">{line.text}</p>
+                        </div>
+                      ))
+                    )}
+                    <div ref={transcriptEndRef} />
+                  </div>
+                </div>
+              )}
             </div>
           </SheetContent>
         </Sheet>
+
+        {/* Live caption overlay — latest lines pinned to the bottom of the stage */}
+        {aiTranscription && transcriptLines.length > 0 && activePanel !== 'transcript' && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center px-4">
+            <div className="pointer-events-auto max-w-2xl rounded-xl bg-black/70 px-4 py-2.5 text-center backdrop-blur-sm">
+              {transcriptLines.slice(-2).map((line) => (
+                <p key={line.id} className="text-sm leading-snug text-white sm:text-base">
+                  <span className="font-medium text-white/70">{line.speaker}: </span>
+                  {line.text}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Toolbar */}
@@ -304,6 +364,8 @@ export function JitsiRoom({
         onOpenParticipants={() => setActivePanel('participants')}
         onOpenPolls={() => setShowPolls(true)}
         onOpenAI={() => setActivePanel('ai')}
+        onOpenTranscript={() => setActivePanel('transcript')}
+        showTranscript={aiTranscription}
         hasNewPolls={!!activePoll && !hasVoted[activePoll.id]}
         sessionId={sessionId}
       />

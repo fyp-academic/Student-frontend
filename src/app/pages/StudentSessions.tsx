@@ -12,6 +12,8 @@ import {
   FileText,
   Award,
   Sparkles,
+  Captions,
+  X,
 } from 'lucide-react';
 import { cn } from '../components/ui/utils';
 import { Button } from '../components/ui/button';
@@ -23,6 +25,7 @@ import { Skeleton } from '../components/ui/skeleton';
 import { useToast } from '../hooks/use-toast';
 import { sessionsApi } from '../services/api';
 import { JitsiRoom } from '../components/conference';
+import type { TranscriptLine } from '../components/conference/types';
 import type { Session, SessionStatus } from '../components/sessions/types';
 
 /**
@@ -264,6 +267,9 @@ export function StudentSessions() {
   const [jwtToken, setJwtToken] = useState<string>('');
   const [aiTranscription, setAiTranscription] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [transcriptSession, setTranscriptSession] = useState<Session | null>(null);
+  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
+  const [transcriptLoading, setTranscriptLoading] = useState(false);
   const { toast } = useToast();
 
   // Get user info from localStorage or context
@@ -343,6 +349,32 @@ export function StudentSessions() {
       title: 'Reminder set',
       description: 'You\'ll be notified 15 minutes before the session starts.',
     });
+  }, [toast]);
+
+  const handleViewTranscript = useCallback(async (session: Session) => {
+    setTranscriptSession(session);
+    setTranscriptLines([]);
+    setTranscriptLoading(true);
+    try {
+      const res = await sessionsApi.getTranscript(session.id);
+      const raw = (res.data.transcript ?? res.data.data ?? res.data ?? []) as Record<string, unknown>[];
+      const lines: TranscriptLine[] = (Array.isArray(raw) ? raw : []).map((r, i) => ({
+        id: String(r.id ?? `tr_${i}`),
+        speaker: String(r.speaker_name ?? r.speaker ?? 'Speaker'),
+        text: String(r.text ?? ''),
+        timestamp: String(r.timestamp ?? r.created_at ?? ''),
+      })).filter(l => l.text.trim() !== '');
+      setTranscriptLines(lines);
+    } catch (error) {
+      console.error('Failed to load transcript:', error);
+      toast({
+        title: 'Transcript unavailable',
+        description: 'Could not load the transcript for this session.',
+        variant: 'destructive',
+      });
+    } finally {
+      setTranscriptLoading(false);
+    }
   }, [toast]);
 
   // Show Jitsi Room when actively joining a session
@@ -462,16 +494,18 @@ export function StudentSessions() {
             Past Recordings
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pastSessions.filter(s => s.hasRecording).map(session => (
+            {pastSessions.filter(s => s.hasRecording || s.aiTranscription).map(session => (
               <Card
                 key={session.id}
                 className="cursor-pointer hover:shadow-md transition-all group"
-                onClick={() => handleWatchRecording(session)}
+                onClick={() => (session.hasRecording ? handleWatchRecording(session) : handleViewTranscript(session))}
               >
                 <div className="aspect-video bg-slate-900 relative overflow-hidden rounded-t-lg">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                      <Play className="h-8 w-8 text-white" />
+                      {session.hasRecording
+                        ? <Play className="h-8 w-8 text-white" />
+                        : <Captions className="h-8 w-8 text-white" />}
                     </div>
                   </div>
                   <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 rounded text-xs text-white font-medium">
@@ -488,6 +522,17 @@ export function StudentSessions() {
                     </span>
                     <span>{new Date(session.scheduledAt).toLocaleDateString()}</span>
                   </div>
+                  {session.aiTranscription && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 w-full gap-1.5"
+                      onClick={(e) => { e.stopPropagation(); handleViewTranscript(session); }}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      View transcript
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -503,6 +548,65 @@ export function StudentSessions() {
           <p className="text-muted-foreground">
             Check back later for upcoming live classes.
           </p>
+        </div>
+      )}
+
+      {/* Saved Transcript Modal */}
+      {transcriptSession && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setTranscriptSession(null)}
+        >
+          <div
+            className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-2xl bg-card shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b p-5">
+              <div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span className="text-xs font-semibold uppercase tracking-wider">Session transcript</span>
+                </div>
+                <h3 className="mt-1 font-semibold">{transcriptSession.title}</h3>
+                <p className="text-sm text-muted-foreground">{transcriptSession.courseName}</p>
+              </div>
+              <button
+                onClick={() => setTranscriptSession(null)}
+                className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                aria-label="Close transcript"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5">
+              {transcriptLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-5 w-full" />)}
+                </div>
+              ) : transcriptLines.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                  <Captions className="mb-2 h-8 w-8 opacity-50" />
+                  <p className="text-sm">No transcript was captured for this session.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {transcriptLines.map(line => (
+                    <div key={line.id}>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-sm font-medium text-foreground">{line.speaker}</span>
+                        {line.timestamp && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {(() => { const d = new Date(line.timestamp); return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); })()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm leading-relaxed text-muted-foreground">{line.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

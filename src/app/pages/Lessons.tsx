@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router";
 import { PlayCircle, Lock, CheckCircle, Clock, BookMarked, ChevronDown, ChevronRight, Loader2, X, FileText, ExternalLink, Menu, LayoutList, ArrowRight, Upload, Paperclip, MessageSquare, ThumbsUp, Eye, Plus, Search, Pin, Send, File, Download } from "lucide-react";
-import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, adaptiveContentApi } from "../services/api";
+import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, adaptiveContentApi, scormApi, h5pApi } from "../services/api";
 import { AdaptiveContentBlock } from "../components/student/AdaptiveContentBlock";
 import { AdaptiveActivityPanel } from "../components/student/AdaptiveActivityPanel";
 import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCourseSidebar";
@@ -65,6 +65,7 @@ export function Lessons() {
   const [videoError, setVideoError] = useState(false);
   const [resourceUrl, setResourceUrl] = useState<string>('');
   const [fileMimeType, setFileMimeType] = useState<string>('');
+  const [embedUrl, setEmbedUrl] = useState<string>(''); // H5P / SCORM player iframe
 
   // Lesson multi-page state
   const [lessonPages, setLessonPages] = useState<Array<{ id: string; title: string; content: string; is_viewed?: boolean; sort_order?: number }>>([]);
@@ -257,6 +258,7 @@ export function Lessons() {
     setContentHtml('');
     setVideoError(false);
     setResourceUrl('');
+    setEmbedUrl('');
     // Reset lesson state
     setLessonPages([]); setCurrentPageIndex(0);
     // Reset inline quiz/assignment/forum state
@@ -372,6 +374,26 @@ export function Lessons() {
         } catch { setForumDiscussions([]); }
         finally { setForumLoading(false); }
         setContentHtml('');
+      } else if (rType === 'h5p' || rType === 'scorm') {
+        // Launch the token-authed player wrapper served by the backend (same
+        // origin as the content) and embed it in an iframe.
+        try {
+          const res = rType === 'h5p' ? await h5pApi.launch(aid) : await scormApi.launch(aid);
+          const launchUrl = String(res.data?.launch_url ?? '');
+          if (launchUrl) {
+            setEmbedUrl(launchUrl);
+            // Mark as viewed; score/completion is finalized server-side on result.
+            try {
+              await activitiesApi.complete(aid, 'viewed');
+              setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === aid ? { ...a, completion_status: 'completed' } : a) })));
+            } catch { /* silent */ }
+          } else {
+            setContentHtml(`<div style="text-align:center;padding:48px 20px"><h3 style="font-size:16px;font-weight:600;color:#1e293b;margin-bottom:8px">${title}</h3><p style="font-size:13px;color:#64748b">This content is not available yet.</p></div>`);
+          }
+        } catch (e: any) {
+          const msg = e?.response?.data?.message || 'This content is not available yet.';
+          setContentHtml(`<div style="text-align:center;padding:48px 20px"><h3 style="font-size:16px;font-weight:600;color:#1e293b;margin-bottom:8px">${title}</h3><p style="font-size:13px;color:#94a3b8">${msg}</p></div>`);
+        }
       } else {
         setContentHtml(`<div style="text-align:center;padding:48px 20px"><div style="width:64px;height:64px;border-radius:16px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><h3 style="font-size:16px;font-weight:600;color:#1e293b;margin-bottom:8px">${title}</h3><p style="font-size:13px;color:#64748b">This activity will open soon.</p></div>`);
       }
@@ -381,7 +403,7 @@ export function Lessons() {
 
   // Auto-open first activity when sections load
   useEffect(() => {
-    if (activeActivityId && allActivities.length > 0 && !contentHtml && !videoUrl && !resourceUrl && !contentLoading && lessonPages.length === 0) {
+    if (activeActivityId && allActivities.length > 0 && !contentHtml && !videoUrl && !resourceUrl && !embedUrl && !contentLoading && lessonPages.length === 0) {
       if (lastAutoOpenedId.current === activeActivityId) return;
       const act = allActivities.find(a => String(a.id ?? '') === activeActivityId);
       if (act) openActivity(act);
@@ -729,6 +751,26 @@ export function Lessons() {
                         activityId={activeActivityId}
                         courseId={selectedCourseId}
                         presentationConfig={presentationConfig}
+                      />
+                    </div>
+                  )}
+
+                  {/* ── H5P / SCORM interactive content ── */}
+                  {embedUrl && activeActivityId && (currentRawType === 'h5p' || currentRawType === 'scorm') && (
+                    <div className="mb-6 rounded-xl overflow-hidden bg-white" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                      <AdaptiveActivityPanel
+                        activityId={activeActivityId}
+                        courseId={selectedCourseId}
+                        title={contentTitle}
+                        presentationOverride={presentationConfig}
+                      />
+                      <iframe
+                        src={embedUrl}
+                        title={contentTitle}
+                        className="w-full border-0"
+                        style={{ height: currentRawType === 'scorm' ? "calc(100vh - 220px)" : "70vh", minHeight: "480px", background: "#fff" }}
+                        allowFullScreen
+                        allow="autoplay; fullscreen; microphone; camera"
                       />
                     </div>
                   )}

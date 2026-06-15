@@ -79,6 +79,14 @@ export const activitiesApi = {
     api.post(`/activities/${id}/complete`, { completion_type: type }),
 };
 
+// ─── SCORM & H5P playback (returns a token-authed launch URL) ────────────────────
+export const scormApi = {
+  launch: (activityId: string) => api.post(`/student/activities/${activityId}/scorm/launch`),
+};
+export const h5pApi = {
+  launch: (activityId: string) => api.post(`/student/activities/${activityId}/h5p/launch`),
+};
+
 // ─── Assignments ──────────────────────────────────────────────────────────────
 export const assignmentsApi = {
   mySubmissions: (params?: Record<string, unknown>) => api.get('/my-submissions', { params }),

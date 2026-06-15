@@ -200,7 +200,7 @@ export function LearningCatalog() {
             const code       = String(course.short_name ?? course.shortName ?? course.code ?? "");
             const instructor = String(course.instructor ?? course.instructor_name ?? "");
             const level      = String(course.level ?? "");
-            const description = String(course.description ?? course.summary ?? "").replace(/<[^>]*>/g, '').trim();
+            const description = String(course.description ?? course.summary ?? "").replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
             const image      = String(course.image ?? course.image_url ?? "");
             const rating     = Number(course.rating ?? 0);
             const reviews    = Number(course.reviews_count ?? course.reviews ?? 0);

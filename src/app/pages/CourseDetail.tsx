@@ -4,6 +4,7 @@ import { BookOpen, GraduationCap, Clock, ChevronLeft, Loader2, Users, CheckCircl
 import { coursesApi } from "../services/api";
 import { useToast } from "../hooks/use-toast";
 import { useAiWidgetContext } from "../context/AiWidgetContext";
+import { SafeHtml } from "../components/SafeHtml";
 
 export default function CourseDetail() {
   const { id } = useParams<{ id: string }>();
@@ -93,7 +94,7 @@ export default function CourseDetail() {
   const title = String(course.name ?? course.title ?? "Unnamed Course");
   const code = String(course.short_name ?? course.shortName ?? course.code ?? "");
   const instructor = String(course.instructor ?? course.instructor_name ?? "");
-  const description = String(course.description ?? course.summary ?? "").replace(/<[^>]*>/g, '').trim();
+  const description = String(course.description ?? course.summary ?? "").trim();
   const image = String(course.image ?? course.image_url ?? "");
   const duration = String(course.duration ?? "");
   const students = Number(course.enrolled_students ?? course.students ?? 0);
@@ -181,7 +182,7 @@ export default function CourseDetail() {
 
           {/* Description */}
           {description && (
-            <p style={{ fontSize: "14px", color: "#475569", lineHeight: "1.6" }}>{description}</p>
+            <SafeHtml className="course-description" html={description} />
           )}
 
           {/* Enroll Button */}

@@ -148,9 +148,11 @@ export function Quizzes() {
 
       // Build attempt lookup by activity_id
       const attemptMap = new Map<string, Quiz>();
+      // myAttempts is ordered newest-first; keep the most recent attempt per
+      // activity so the card status + attempt_id point at the latest attempt.
       for (const a of attempts as Quiz[]) {
         const aid = String(a.activity_id ?? (a.activity as Record<string, unknown>)?.id ?? a.id ?? '');
-        if (aid) attemptMap.set(aid, a);
+        if (aid && !attemptMap.has(aid)) attemptMap.set(aid, a);
       }
 
       // Merge: keep all display fields from available quiz, overlay attempt completion data
@@ -335,20 +337,24 @@ export function Quizzes() {
     setSelected({});
 
     try {
-      // Fetch questions and attempt in parallel
-      const [qRes, attemptRes] = await Promise.all([
-        quizApi.questions(actId),
-        quizApi.get(reviewAttemptId),
-      ]);
+      // The review endpoint is the single source of truth: for a submitted
+      // attempt it returns `all_questions` (every question with its answers +
+      // grade_fraction, guarded server-side) and `responses` (the student's
+      // answers). Avoid the separate question-bank call so review never depends
+      // on that endpoint exposing correct answers to students.
+      const attemptRes = await quizApi.get(reviewAttemptId);
+      const attemptData = attemptRes.data.data ?? attemptRes.data ?? {};
 
-      console.log('[Review] activity_id:', actId, 'attempt_id:', reviewAttemptId);
-      console.log('[Review] questions response:', qRes.data);
-      console.log('[Review] attempt response:', attemptRes.data);
+      let qs: QItem[] = (attemptData.all_questions ?? []) as QItem[];
 
-      const qs: QItem[] = qRes.data.data ?? qRes.data ?? [];
+      // Fallback for older attempts whose review payload lacks all_questions.
+      if (qs.length === 0) {
+        const qRes = await quizApi.questions(actId);
+        qs = (qRes.data.data ?? qRes.data ?? []) as QItem[];
+      }
       setReviewQuestions(qs);
 
-      // Build answer map from questions (includes correct answers with grade_fraction)
+      // Build answer map from the questions (correct answers carry grade_fraction).
       const ansMap: Record<string, unknown[]> = {};
       await Promise.all(qs.map(async (q) => {
         const qid = String(q.id ?? '');
@@ -363,7 +369,6 @@ export function Quizzes() {
       // Build student response map from attempt data
       const responseMap: Record<string, string> = {};
       const textResponseMap: Record<string, string> = {};
-      const attemptData = attemptRes.data.data ?? attemptRes.data ?? {};
       const responses = (attemptData.responses ?? []) as Record<string, unknown>[];
       for (const r of responses) {
         const qid = String(r.question_id ?? (r as any).question?.id ?? '');

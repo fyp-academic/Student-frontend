@@ -58,6 +58,11 @@ const getChoiceLabel = (format: string | null | undefined, index: number): strin
 const getScoreColor = (score: number) => score >= 90 ? "#16a34a" : score >= 80 ? "#2563eb" : score >= 70 ? "#f59e0b" : "#dc2626";
 const getScoreLabel = (score: number) => score >= 90 ? "Excellent" : score >= 80 ? "Good" : score >= 70 ? "Fair" : "Needs Improvement";
 
+// A quiz is reviewable (never re-startable) once it has a completed attempt.
+const isQuizCompleted = (q: Quiz) =>
+  ['submitted', 'graded', 'pending_review', 'completed'].includes(String(q.status ?? '').toLowerCase()) ||
+  !!(q as Record<string, unknown>).attempt_id;
+
 export function Quizzes() {
   const location = useLocation();
   const startQuizId = (location.state as { startQuizId?: string } | null)?.startQuizId;
@@ -193,11 +198,12 @@ export function Quizzes() {
       }
 
       setQuizzes(merged);
-      // Auto-start quiz if navigated from Lessons with a specific quiz ID
+      // Auto-open quiz if navigated from Lessons with a specific quiz ID.
+      // A completed quiz opens straight into review rather than trying to start.
       if (startQuizId) {
         const target = merged.find(m => String(m.id ?? m.activity_id ?? '') === startQuizId);
         if (target) {
-          setTimeout(() => handleStartQuiz(target), 0);
+          setTimeout(() => (isQuizCompleted(target) ? handleReviewQuiz(target) : handleStartQuiz(target)), 0);
         }
       }
     }).finally(() => setLoading(false));
@@ -216,6 +222,12 @@ export function Quizzes() {
     : quizzes.filter(q => String(q.status ?? '').toLowerCase() === activeFilter.toLowerCase());
 
   const handleStartQuiz = async (quiz: Quiz) => {
+    // Already-completed quizzes can never be re-started — open them for review
+    // instead (avoids the "submission window closed" dead-end for past quizzes).
+    if (isQuizCompleted(quiz)) {
+      handleReviewQuiz(quiz);
+      return;
+    }
     const actId = String(quiz.activity_id ?? quiz.id ?? '');
     setActiveQuiz(quiz);
     setQuizLoading(true);

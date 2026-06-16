@@ -756,14 +756,11 @@ export function Lessons() {
                   )}
 
                   {/* ── H5P / SCORM interactive content ── */}
+                  {/* Self-contained interactive packages render only in the player iframe.
+                      They are intentionally NOT run through the adaptive/AI pipeline — the
+                      package is the content and its internals are not meaningful prose. */}
                   {embedUrl && activeActivityId && (currentRawType === 'h5p' || currentRawType === 'scorm') && (
                     <div className="mb-6 rounded-xl overflow-hidden bg-white" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                      <AdaptiveActivityPanel
-                        activityId={activeActivityId}
-                        courseId={selectedCourseId}
-                        title={contentTitle}
-                        presentationOverride={presentationConfig}
-                      />
                       <iframe
                         src={embedUrl}
                         title={contentTitle}

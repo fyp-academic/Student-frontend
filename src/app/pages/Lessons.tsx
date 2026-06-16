@@ -46,6 +46,13 @@ const typeConfig: Record<string, { color: string; label: string }> = {
   ims_content_package: { color: "#ca8a04", label: "IMS CP" },
 };
 
+// Categorize quiz question types for review rendering (mirrors Quizzes.tsx)
+const getQType = (q: Record<string, unknown>): string => String(q.type ?? '').toLowerCase();
+const isChoiceQ = (q: Record<string, unknown>) => ['multiple_choice', 'true_false', 'calculated_multichoice'].includes(getQType(q));
+const isTextQ   = (q: Record<string, unknown>) => ['short_answer', 'numerical', 'calculated', 'calculated_simple'].includes(getQType(q));
+const isEssayQ  = (q: Record<string, unknown>) => getQType(q) === 'essay';
+const isMatchQ  = (q: Record<string, unknown>) => ['matching', 'drag_drop', 'drag_drop_text', 'drag_drop_markers'].includes(getQType(q));
+
 export function Lessons() {
   const { refreshTrigger } = useRealtime();
   const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
@@ -75,7 +82,7 @@ export function Lessons() {
   const [pageChunksLoading, setPageChunksLoading] = useState(false);
 
   // Inline quiz runner state
-  const [quizMode, setQuizMode] = useState<'idle' | 'running' | 'submitted'>('idle');
+  const [quizMode, setQuizMode] = useState<'idle' | 'running' | 'submitted' | 'review'>('idle');
   const [quizQuestions, setQuizQuestions] = useState<Record<string, unknown>[]>([]);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, unknown[]>>({});
   const [quizSelected, setQuizSelected] = useState<Record<string, string>>({});
@@ -83,6 +90,10 @@ export function Lessons() {
   const [quizAttemptId, setQuizAttemptId] = useState<string>('');
   const [quizLoading, setQuizLoading] = useState(false);
   const [quizResult, setQuizResult] = useState<Record<string, unknown> | null>(null);
+  // Inline quiz review state (previous-attempt review for already-submitted quizzes)
+  const [quizReviewQuestions, setQuizReviewQuestions] = useState<Record<string, unknown>[]>([]);
+  const [quizReviewAnswers, setQuizReviewAnswers] = useState<Record<string, unknown[]>>({});
+  const [quizReviewResponses, setQuizReviewResponses] = useState<Record<string, string>>({});
 
   // Inline assignment submission state
   const [assignMode, setAssignMode] = useState<'idle' | 'form' | 'submitted'>('idle');
@@ -263,6 +274,7 @@ export function Lessons() {
     setLessonPages([]); setCurrentPageIndex(0);
     // Reset inline quiz/assignment/forum state
     setQuizMode('idle'); setQuizQuestions([]); setQuizAnswers({}); setQuizSelected({}); setQuizCurrentQ(0); setQuizResult(null);
+    setQuizReviewQuestions([]); setQuizReviewAnswers({}); setQuizReviewResponses({});
     setAssignMode('idle'); setAssignText(''); setAssignFile(null);
     setForumDiscussions([]); setForumPosts([]); setSelectedDiscussionId(''); setForumComposerOpen(false); setForumSearch('');
     setContext({ topicId: aid, topicName: title, activityType: rType });
@@ -494,7 +506,84 @@ export function Lessons() {
       }));
       setQuizAnswers(ansMap);
     } catch (err: any) {
-      alert('Failed to start quiz: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
+      const responseData = err?.response?.data ?? {};
+      const errorCode = responseData.error ?? responseData.data?.error ?? '';
+      const errorMessage = responseData.message ?? responseData.data?.message ?? err?.message ?? 'Unknown error';
+      const submittedAttemptId = responseData.attempt_id ?? responseData.data?.attempt_id ?? null;
+
+      const isAlreadySubmitted =
+        errorCode === 'quiz_already_submitted' ||
+        errorMessage.includes('already been submitted') ||
+        errorMessage.includes('already submitted');
+
+      // Already-submitted quizzes can never be re-started — open the previous
+      // attempt for review inline instead of dead-ending on an alert.
+      if (isAlreadySubmitted) {
+        const _aid = activeActivityId;
+        setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === _aid ? { ...a, completion_status: 'completed' } : a) })));
+        setProcKey(null);
+        await handleReviewQuiz(String(submittedAttemptId ?? ''), activeActivityId);
+        return;
+      }
+
+      alert('Failed to start quiz: ' + errorMessage);
+      setQuizMode('idle');
+    } finally { setQuizLoading(false); }
+  };
+
+  // ─── Inline Quiz: review a previous (submitted) attempt ──────────────────
+  const handleReviewQuiz = async (attemptId: string, actId: string) => {
+    if (!attemptId) { setQuizMode('idle'); return; }
+    setQuizLoading(true);
+    setQuizMode('review');
+    setQuizSelected({});
+    setQuizReviewQuestions([]);
+    setQuizReviewAnswers({});
+    setQuizReviewResponses({});
+    setContext({ mode: 'remediation', activityType: 'quiz', quizAttemptId: attemptId });
+    try {
+      // The review endpoint is the single source of truth: for a submitted
+      // attempt it returns `all_questions` (every question with its answers +
+      // grade_fraction) and `responses` (the student's answers).
+      const attemptRes = await quizApi.get(attemptId);
+      const attemptData = attemptRes.data.data ?? attemptRes.data ?? {};
+
+      let qs: Record<string, unknown>[] = (attemptData.all_questions ?? []) as Record<string, unknown>[];
+      // Fallback for older attempts whose review payload lacks all_questions.
+      if (qs.length === 0 && actId) {
+        const qRes = await quizApi.questions(actId);
+        qs = (qRes.data.data ?? qRes.data ?? []) as Record<string, unknown>[];
+      }
+      setQuizReviewQuestions(qs);
+
+      // Build answer map (correct answers carry grade_fraction > 0).
+      const ansMap: Record<string, unknown[]> = {};
+      await Promise.all(qs.map(async (q) => {
+        const qid = String(q.id ?? '');
+        if (!qid) return;
+        const existing = (q.answers ?? q.answers_list ?? []) as unknown[];
+        if (existing.length > 0) { ansMap[qid] = existing; return; }
+        const ar = await quizApi.answers(qid);
+        ansMap[qid] = ar.data.data ?? ar.data ?? [];
+      }));
+      setQuizReviewAnswers(ansMap);
+
+      // Build the student's response maps from the attempt data.
+      const responseMap: Record<string, string> = {};
+      const textResponseMap: Record<string, string> = {};
+      const responses = (attemptData.responses ?? []) as Record<string, unknown>[];
+      for (const r of responses) {
+        const qid = String(r.question_id ?? (r as any).question?.id ?? '');
+        const aid = String(r.answer_id ?? (r as any).answer?.id ?? '');
+        const rt = String(r.response_text ?? '');
+        if (qid && aid) responseMap[qid] = aid;
+        if (qid && rt) textResponseMap[qid] = rt;
+      }
+      setQuizReviewResponses(responseMap);
+      setQuizSelected(prev => ({ ...prev, ...textResponseMap }));
+    } catch (err: any) {
+      console.error('Failed to load quiz review:', err);
+      // Non-blocking: drop back to idle so the student can retry, no alert dead-end.
       setQuizMode('idle');
     } finally { setQuizLoading(false); }
   };
@@ -773,18 +862,23 @@ export function Lessons() {
                   )}
 
                   {/* ── INLINE QUIZ RUNNER ── */}
-                  {currentRawType === 'quiz' && quizMode === 'idle' && contentHtml && (
-                    <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                      <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
-                      <div className="flex justify-center mt-6">
-                        <button onClick={handleStartQuiz} disabled={quizLoading}
-                          className="flex items-center gap-2 px-8 py-3 rounded-xl text-white transition-all"
-                          style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#7c3aed", boxShadow: "0 2px 8px rgba(124,58,237,0.3)" }}>
-                          {quizLoading ? <Loader2 size={16} className="animate-spin" /> : <PlayCircle size={16} />} Start Quiz
-                        </button>
+                  {currentRawType === 'quiz' && quizMode === 'idle' && contentHtml && (() => {
+                    // An already-completed quiz can only be reviewed, never re-started.
+                    const alreadyDone = ['submitted', 'graded', 'completed', 'pending_review'].includes(activeActivity ? rawStatusOf(activeActivity) : '');
+                    return (
+                      <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
+                        <div className="flex justify-center mt-6">
+                          <button onClick={handleStartQuiz} disabled={quizLoading}
+                            className="flex items-center gap-2 px-8 py-3 rounded-xl text-white transition-all"
+                            style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#7c3aed", boxShadow: "0 2px 8px rgba(124,58,237,0.3)" }}>
+                            {quizLoading ? <Loader2 size={16} className="animate-spin" /> : alreadyDone ? <Eye size={16} /> : <PlayCircle size={16} />}
+                            {alreadyDone ? 'Review Quiz' : 'Start Quiz'}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {currentRawType === 'quiz' && quizMode === 'running' && (
                     <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
@@ -880,6 +974,123 @@ export function Lessons() {
                         style={{ fontSize: "13px", fontWeight: 600, backgroundColor: nextActivity ? "#2563eb" : "#94a3b8" }}>
                         {nextActivity ? <>Continue <ArrowRight size={14} /></> : 'Completed'}
                       </button>
+                    </div>
+                  )}
+
+                  {/* ── INLINE QUIZ REVIEW (previous attempt) ── */}
+                  {currentRawType === 'quiz' && quizMode === 'review' && (
+                    <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                      {quizLoading ? (
+                        <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin" style={{ color: "#7c3aed" }} /></div>
+                      ) : (
+                        <div className="space-y-6">
+                          <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex items-center gap-2">
+                            <CheckCircle size={16} color="#16a34a" />
+                            <span className="text-sm font-medium text-emerald-700">You already submitted this quiz — showing correct answers in green</span>
+                          </div>
+                          {quizReviewQuestions.length === 0 ? (
+                            <p className="text-center text-gray-400 py-12">No questions to review.</p>
+                          ) : (
+                            quizReviewQuestions.map((q, qi) => {
+                              const qid = String(q.id ?? qi);
+                              const qAnswers = (quizReviewAnswers[qid] ?? []) as Record<string, unknown>[];
+                              const studentAnswerId = quizReviewResponses[qid];
+                              const studentText = quizSelected[qid];
+                              const qType = getQType(q);
+                              return (
+                                <div key={qid} className="space-y-3">
+                                  <div className="bg-gray-50 rounded-2xl p-4">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-200 px-2 py-0.5 rounded">{qType.replace(/_/g, ' ')}</span>
+                                      <span className="text-xs text-gray-400 font-medium">Question {qi + 1}</span>
+                                    </div>
+                                    <p className="font-semibold text-gray-900" style={{ fontSize: "14px", lineHeight: "1.5" }}>
+                                      {String(q.question_text ?? q.text ?? q.question ?? '')}
+                                    </p>
+                                  </div>
+
+                                  {/* Choice question review */}
+                                  {isChoiceQ(q) && (
+                                    <div className="space-y-2">
+                                      {qAnswers.map((ans, ai) => {
+                                        const aid = String((ans as Record<string, unknown>).id ?? ai);
+                                        const text = String((ans as Record<string, unknown>).answer_text ?? (ans as Record<string, unknown>).text ?? `Option ${ai + 1}`);
+                                        const isCorrect = Number((ans as Record<string, unknown>).grade_fraction ?? 0) > 0;
+                                        const isStudentPick = studentAnswerId === aid;
+                                        return (
+                                          <div
+                                            key={aid}
+                                            className="w-full text-left px-4 py-3 rounded-xl border flex items-center gap-2"
+                                            style={{
+                                              borderColor: isCorrect ? "#86efac" : isStudentPick ? "#bfdbfe" : "#e2e8f0",
+                                              backgroundColor: isCorrect ? "#f0fdf4" : isStudentPick ? "#eff6ff" : "white",
+                                              color: isCorrect ? "#166534" : isStudentPick ? "#1d4ed8" : "#374151",
+                                              fontWeight: isCorrect ? 700 : isStudentPick ? 600 : 400,
+                                              fontSize: "13px",
+                                            }}
+                                          >
+                                            <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0 text-[10px]"
+                                              style={{
+                                                borderColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "#d1d5db",
+                                                backgroundColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "transparent",
+                                                color: isCorrect || isStudentPick ? "white" : "#6b7280",
+                                              }}>
+                                              {isCorrect ? '✓' : isStudentPick ? '●' : ''}
+                                            </span>
+                                            <span>{text}</span>
+                                            {isCorrect && <span className="ml-auto text-[10px] font-bold text-emerald-600">Correct</span>}
+                                            {isStudentPick && !isCorrect && <span className="ml-auto text-[10px] font-bold text-blue-500">Your answer</span>}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+
+                                  {/* Text / Essay review */}
+                                  {(isTextQ(q) || isEssayQ(q)) && (
+                                    <div className="space-y-2">
+                                      <div className="bg-white border border-gray-200 rounded-xl p-3">
+                                        <p className="text-xs font-medium text-gray-500 mb-1">Your answer</p>
+                                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{String(studentText ?? '(No answer provided)')}</p>
+                                      </div>
+                                      {(() => {
+                                        const correct = String((q as Record<string, unknown>).correct_answer ?? (q as Record<string, unknown>).correctAnswer ?? '');
+                                        return correct ? (
+                                          <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                                            <p className="text-xs font-medium text-emerald-600 mb-1">Correct answer</p>
+                                            <p className="text-sm text-emerald-800 font-medium whitespace-pre-wrap">{correct}</p>
+                                          </div>
+                                        ) : null;
+                                      })()}
+                                    </div>
+                                  )}
+
+                                  {/* Matching / drag-drop review */}
+                                  {isMatchQ(q) && (
+                                    <div className="space-y-2">
+                                      {((q.matching_pairs ?? q.matchingPairs ?? []) as any[]).map((pair: any, pi: number) => (
+                                        <div key={pi} className="flex items-center gap-2 bg-white border border-emerald-100 rounded-xl p-3">
+                                          <span className="text-xs font-bold text-gray-400 w-5">{pi + 1}</span>
+                                          <span className="flex-1 text-sm text-gray-700">{String(pair.question ?? pair.q ?? '')}</span>
+                                          <span className="text-gray-300">→</span>
+                                          <span className="flex-1 text-sm font-semibold text-emerald-700">{String(pair.answer ?? pair.a ?? pair.correct ?? '')}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          )}
+                          <div className="flex justify-end pt-2">
+                            <button onClick={goNext} disabled={!nextActivity}
+                              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white"
+                              style={{ fontSize: "13px", fontWeight: 600, backgroundColor: nextActivity ? "#2563eb" : "#94a3b8" }}>
+                              {nextActivity ? <>Continue <ArrowRight size={14} /></> : 'Completed'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

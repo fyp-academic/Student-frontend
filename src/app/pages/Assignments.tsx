@@ -4,7 +4,7 @@ import {
   Loader2, X, Download, MessageSquare, Paperclip
 } from "lucide-react";
 import { useRealtime } from "../context/RealtimeContext";
-import { assignmentsApi, dashboardApi } from "../services/api";
+import { assignmentsApi, dashboardApi, groupsApi } from "../services/api";
 
 const tabs = ["All", "Pending", "Submitted", "Graded", "Overdue"];
 
@@ -52,6 +52,8 @@ type AssignmentItem = {
   settings?: Record<string, unknown>;
   textOnlineEnabled?: boolean;
   fileSubmissionEnabled?: boolean;
+  groupMode?: string;
+  groupTasks?: { group: string; instructions: string }[];
 };
 
 export function Assignments() {
@@ -66,6 +68,19 @@ export function Assignments() {
   const [submissionText, setSubmissionText] = useState("");
   const [submissionFile, setSubmissionFile] = useState<File | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [myGroups, setMyGroups] = useState<Record<string, string[]>>({}); // courseId -> group names
+
+  // Resolve the task instructions for a group assignment based on the student's group.
+  const resolveGroupTask = (item: AssignmentItem): { groupName: string; instructions: string } | null => {
+    if (item.groupMode !== 'same' && item.groupMode !== 'per_group') return null;
+    const myGroupNames = myGroups[item.course_id] ?? [];
+    const groupName = myGroupNames[0] ?? '';
+    if (item.groupMode === 'per_group') {
+      const match = (item.groupTasks ?? []).find(gt => gt.group && gt.group === groupName);
+      return { groupName: groupName || 'No group assigned', instructions: match?.instructions ?? '' };
+    }
+    return { groupName: groupName || 'No group assigned', instructions: '' };
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -152,8 +167,12 @@ export function Assignments() {
               submission_file: sub?.file_name ?? '',
               submission_file_url: sub?.file_url ?? '',
               settings,
-              textOnlineEnabled: (settings?.textOnlineEnabled ?? true) as boolean,
+              // Mirror the instructor's creation defaults (file on, text off) so the
+              // student form shows exactly the enabled submission types.
+              textOnlineEnabled: (settings?.textOnlineEnabled ?? false) as boolean,
               fileSubmissionEnabled: (settings?.fileSubmissionEnabled ?? true) as boolean,
+              groupMode: String(settings?.groupMode ?? 'none'),
+              groupTasks: (settings?.groupTasks ?? []) as { group: string; instructions: string }[],
             });
             colorIdx++;
           }
@@ -161,6 +180,14 @@ export function Assignments() {
       }
 
       setAssignments(items);
+
+      // Fetch the student's group membership for any course that has a group assignment.
+      const groupCourseIds = [...new Set(items.filter(i => i.groupMode === 'same' || i.groupMode === 'per_group').map(i => i.course_id))];
+      groupCourseIds.forEach(cid => {
+        groupsApi.myGroups(cid)
+          .then(r => setMyGroups(prev => ({ ...prev, [cid]: (r.data?.data ?? []) as string[] })))
+          .catch(() => {});
+      });
     }).finally(() => setLoading(false));
 
     return () => { cancelled = true; };
@@ -443,6 +470,17 @@ export function Assignments() {
                 <X size={16} />
               </button>
             </div>
+
+            {(() => {
+              const gt = resolveGroupTask(submittingTo);
+              if (!gt) return null;
+              return (
+                <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                  <p className="text-xs font-semibold" style={{ color: "#16a34a" }}>Group assignment · {gt.groupName}</p>
+                  {gt.instructions && <p className="text-xs mt-1" style={{ color: "#475569" }}>{gt.instructions}</p>}
+                </div>
+              );
+            })()}
 
             <div className="space-y-4">
               {submittingTo.textOnlineEnabled && (

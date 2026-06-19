@@ -8,7 +8,7 @@ import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCou
 import { VideoLearningPanel } from "../components/student/VideoLearningPanel";
 import { usePersonalization } from "../hooks/usePersonalization";
 import { presentationStyles } from "../types/personalization";
-import { useProctoringMonitor } from '../hooks/useProctoringMonitor';
+import { useProctoringMonitor, ProctoringConfig } from '../hooks/useProctoringMonitor';
 import ViolationWarningModal from '../components/ViolationWarningModal';
 import { useAiWidgetContext } from "../context/AiWidgetContext";
 import { useRealtime } from "../context/RealtimeContext";
@@ -126,6 +126,12 @@ export function Lessons() {
   const procForceRef = useRef<(() => void) | null>(null);
   const procForceSubmit = useCallback(() => procForceRef.current?.(), []);
 
+  // Resolve the proctored activity's instructor config from loaded sections.
+  const proctoredActivity = procActivityId.current
+    ? sections.flatMap(s => ((s.activities ?? []) as Activity[])).find(a => String(a.id ?? '') === procActivityId.current)
+    : null;
+  const proctoringConfig = ((proctoredActivity?.settings as Record<string, unknown> | undefined)?.proctoring) as ProctoringConfig | undefined;
+
   const { webcamRef: procWebcamRef, canvasRef: procCanvasRef, warningCount: procWarningCount, lastViolation, dismissViolation, sessionId: procSessionId } =
     useProctoringMonitor({
       sessionKey:    procKey,
@@ -133,6 +139,7 @@ export function Lessons() {
       courseId:      procCourseId.current,
       contextType:   procKey?.startsWith('assign:') ? 'assignment' : 'quiz',
       quizAttemptId: procKey?.startsWith('quiz:') ? procKey.replace('quiz:', '') : undefined,
+      config:        proctoringConfig,
       onForceSubmit: procForceSubmit,
     });
 

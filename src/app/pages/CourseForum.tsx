@@ -41,6 +41,13 @@ export function CourseForum() {
   const [loading, setLoading]                   = useState(true);
   const [threadsLoading, setThreadsLoading]     = useState(false);
 
+  // Thread detail (read posts + reply)
+  const [openThread, setOpenThread]   = useState<Thread | null>(null);
+  const [posts, setPosts]             = useState<Record<string, unknown>[]>([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [replyText, setReplyText]     = useState("");
+  const [replying, setReplying]       = useState(false);
+
   // Load enrolled courses on mount
   useEffect(() => {
     coursesApi.myCourses().then(r => {
@@ -86,20 +93,54 @@ export function CourseForum() {
   }, [selectedActivity, loadThreads]);
 
   const handlePublish = async () => {
-    if (!newThread.title.trim() || !selectedActivity) return;
+    if (!newThread.title.trim() || !newThread.details.trim() || !selectedActivity) {
+      alert('Please enter a thread title and message.');
+      return;
+    }
     setSubmitting(true);
     try {
-      const r = await forumApi.startDiscussion(selectedActivity, {
-        subject: newThread.title,
-        message: newThread.details,
-        type:    newThread.category,
+      // Backend expects { title, content } (see ForumController::createDiscussion)
+      await forumApi.startDiscussion(selectedActivity, {
+        title:   newThread.title,
+        content: newThread.details,
       });
-      const created = r.data.data ?? r.data;
-      setThreads(prev => [created as Thread, ...prev]);
       setShowComposer(false);
       setNewThread({ title: '', category: 'General', details: '' });
-    } catch { /* ignore */ } finally {
+      loadThreads(selectedActivity);   // refetch so the new thread + its first post appear
+    } catch {
+      alert('Failed to create thread. Please try again.');
+    } finally {
       setSubmitting(false);
+    }
+  };
+
+  const openThreadDetail = (thread: Thread) => {
+    setOpenThread(thread);
+    setPosts([]);
+    setReplyText("");
+    const id = String(thread.id ?? '');
+    if (!id) return;
+    setPostsLoading(true);
+    forumApi.posts(id)
+      .then(r => setPosts(r.data.data ?? r.data ?? []))
+      .catch(() => {})
+      .finally(() => setPostsLoading(false));
+  };
+
+  const handleReply = async () => {
+    if (!openThread || !replyText.trim()) return;
+    const id = String(openThread.id ?? '');
+    setReplying(true);
+    try {
+      await forumApi.reply(id, { content: replyText });   // backend expects { content }
+      setReplyText("");
+      const r = await forumApi.posts(id);                 // refetch posts so the reply appears
+      setPosts(r.data.data ?? r.data ?? []);
+      if (selectedActivity) loadThreads(selectedActivity); // refresh reply counts
+    } catch {
+      alert('Failed to post reply. Please try again.');
+    } finally {
+      setReplying(false);
     }
   };
 
@@ -234,6 +275,7 @@ export function CourseForum() {
             return (
               <div
                 key={tid}
+                onClick={() => openThreadDetail(thread)}
                 className="bg-white rounded-2xl p-4 cursor-pointer transition-all hover:-translate-y-0.5"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)", borderLeft: pinned ? "3px solid #2563eb" : "none" }}
               >
@@ -271,6 +313,72 @@ export function CourseForum() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {openThread && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-slate-900/50" onClick={() => setOpenThread(null)} />
+          <div className="relative w-full max-w-2xl rounded-3xl bg-white p-6 flex flex-col" style={{ boxShadow: "0 25px 60px rgba(15,23,42,0.25)", maxHeight: "85vh" }}>
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>{String(openThread.subject ?? openThread.title ?? 'Discussion')}</p>
+              <button onClick={() => setOpenThread(null)} className="p-2 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1" style={{ minHeight: "120px" }}>
+              {postsLoading ? (
+                <div className="flex items-center justify-center py-8"><Loader2 size={20} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+              ) : posts.length === 0 ? (
+                <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center", padding: "16px" }}>No posts yet.</p>
+              ) : (
+                posts.map((p, pi) => {
+                  const user    = (p.user ?? {}) as Record<string, unknown>;
+                  const author  = String(user.name ?? p.user_name ?? 'Unknown');
+                  const content = String(p.content ?? p.message ?? '');
+                  const when    = String(p.created_at ?? '');
+                  const depth   = Number(p.depth_level ?? 0);
+                  return (
+                    <div key={String(p.id ?? pi)} className="rounded-2xl p-3" style={{ backgroundColor: "#f8fafc", marginLeft: depth > 0 ? `${Math.min(depth, 4) * 16}px` : 0 }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#2563eb" }}>{author.slice(0, 2).toUpperCase()}</div>
+                        <span style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b" }}>{author}</span>
+                        {when && <span style={{ fontSize: "10px", color: "#94a3b8" }}>{timeAgo(when)}</span>}
+                      </div>
+                      <p style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>{content}</p>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="pt-3 mt-2 border-t" style={{ borderColor: "#f1f5f9" }}>
+              {openThread.locked ? (
+                <p style={{ fontSize: "12px", color: "#94a3b8", textAlign: "center" }}>This discussion is locked.</p>
+              ) : (
+                <div className="flex items-end gap-2">
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    rows={2}
+                    className="flex-1 rounded-2xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    style={{ borderColor: "#e2e8f0", fontSize: "13px", backgroundColor: "#f8fafc" }}
+                    placeholder="Write a reply…"
+                  />
+                  <button
+                    disabled={!replyText.trim() || replying}
+                    onClick={handleReply}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white disabled:opacity-60"
+                    style={{ fontSize: "12px", fontWeight: 600, background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
+                  >
+                    {replying ? <Loader2 size={13} className="animate-spin" /> : null}
+                    Reply
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

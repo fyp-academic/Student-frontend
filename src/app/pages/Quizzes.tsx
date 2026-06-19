@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router";
 import { HelpCircle, Clock, CheckCircle, PlayCircle, Lock, Trophy, X, ChevronRight, Loader2, Eye } from "lucide-react";
 import { quizApi, dashboardApi } from "../services/api";
-import { useProctoringMonitor } from '../hooks/useProctoringMonitor';
+import { useProctoringMonitor, ProctoringConfig } from '../hooks/useProctoringMonitor';
 import ViolationWarningModal from '../components/ViolationWarningModal';
 import { useRealtime } from "../context/RealtimeContext";
 import { useAiWidgetContext } from "../context/AiWidgetContext";
@@ -111,6 +111,7 @@ export function Quizzes() {
       activityId:    String(activeQuiz?.activity_id ?? activeQuiz?.id ?? ''),
       contextType:   'quiz',
       quizAttemptId: attemptId ?? undefined,
+      config:        ((activeQuiz?.settings as Record<string, unknown> | undefined)?.proctoring) as ProctoringConfig | undefined,
       onForceSubmit: procForceSubmit,
     });
 

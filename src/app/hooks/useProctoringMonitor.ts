@@ -16,6 +16,34 @@ const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 export const AUTO_SUBMIT_THRESHOLD = 5;
 
+/**
+ * Instructor-controlled proctoring configuration, read from an activity's
+ * `settings.proctoring`. Background noise and camera-motion detection default
+ * OFF because they false-positive across varied exam environments; the
+ * instructor enables them per quiz/assignment when appropriate.
+ */
+export interface ProctoringConfig {
+  enabled?:        boolean;
+  tab_blur?:       boolean;
+  fullscreen?:     boolean;
+  copy_paste?:     boolean;
+  webcam_ai?:      boolean;
+  audio_noise?:    boolean;
+  camera_motion?:  boolean;
+  auto_submit_threshold?: number;
+}
+
+const DEFAULT_CONFIG: Required<ProctoringConfig> = {
+  enabled:        true,
+  tab_blur:       true,
+  fullscreen:     true,
+  copy_paste:     true,
+  webcam_ai:      true,
+  audio_noise:    false,
+  camera_motion:  false,
+  auto_submit_threshold: AUTO_SUBMIT_THRESHOLD,
+};
+
 export type ViolationType =
   | 'tab_switch' | 'fullscreen_exit' | 'copy_attempt' | 'paste_attempt'
   | 'right_click' | 'keyboard_shortcut' | 'no_face_detected' | 'multiple_faces'
@@ -35,6 +63,7 @@ interface UseProctoringOptions {
   courseId?:        string;
   contextType?:     'quiz' | 'assignment';
   quizAttemptId?:   string;
+  config?:          ProctoringConfig;
   onForceSubmit:    () => void;
   onViolation?:     (type: ViolationType) => void;
 }
@@ -45,9 +74,20 @@ export function useProctoringMonitor({
   courseId,
   contextType = 'quiz',
   quizAttemptId,
+  config,
   onForceSubmit,
   onViolation,
 }: UseProctoringOptions) {
+  // Merge instructor config over defaults; keep in a ref so intervals/listeners
+  // set up once (on sessionKey change) always read the latest values.
+  const cfgRef = useRef<Required<ProctoringConfig>>({ ...DEFAULT_CONFIG });
+  cfgRef.current = { ...DEFAULT_CONFIG, ...(config ?? {}) };
+
+  // Timestamp until which violations from blur/visibility are ignored — set when
+  // the student performs a trusted action such as opening a file picker.
+  const trustedUntilRef = useRef(0);
+  const beginTrustedAction = useCallback((ms = 8000) => { trustedUntilRef.current = Date.now() + ms; }, []);
+  const isTrusted = () => Date.now() < trustedUntilRef.current;
   const procSessionIdRef   = useRef<string | null>(null);
   const warningCountRef    = useRef(0);
   const webcamRef          = useRef<HTMLVideoElement | null>(null);
@@ -239,10 +279,11 @@ export function useProctoringMonitor({
   const startSession = useCallback(async () => {
     try {
       const { data } = await proctoringApi.start({
-        activity_id:     activityId,
-        course_id:       courseId,
-        context_type:    contextType,
-        quiz_attempt_id: quizAttemptId,
+        activity_id:           activityId,
+        course_id:             courseId,
+        context_type:          contextType,
+        quiz_attempt_id:       quizAttemptId,
+        auto_submit_threshold: cfgRef.current.auto_submit_threshold,
       });
       procSessionIdRef.current = data.session_id as string;
     } catch { /* non-fatal */ }
@@ -330,6 +371,10 @@ export function useProctoringMonitor({
       return;
     }
 
+    const cfg = cfgRef.current;
+    // Instructor disabled proctoring entirely for this activity.
+    if (!cfg.enabled) return;
+
     activeRef.current = true;
     warningCountRef.current = 0;
     setWarningCount(0);
@@ -345,29 +390,46 @@ export function useProctoringMonitor({
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     startSession().then(() => {
-      requestFullscreen();
+      if (cfg.fullscreen) requestFullscreen();
 
-      // Webcam: start video + Gemini checks + local movement checks
-      startWebcam().then(stream => {
-        if (stream) {
-          // First Gemini check after 10 s (camera warmup), then every 60 s
-          setTimeout(performWebcamCheck, 10_000);
-          webcamIntervalRef.current   = setInterval(performWebcamCheck, WEBCAM_CHECK_INTERVAL_MS);
-          // Local movement check starts after 5 s, then every 12 s
-          setTimeout(() => {
-            checkMovement(); // capture initial frame as baseline
-            movementIntervalRef.current = setInterval(checkMovement, MOVEMENT_CHECK_INTERVAL_MS);
-          }, 5_000);
-        }
-      });
+      // Webcam is only needed for AI checks, motion detection or violation snapshots.
+      if (cfg.webcam_ai || cfg.camera_motion) {
+        startWebcam().then(stream => {
+          if (stream) {
+            if (cfg.webcam_ai) {
+              // First Gemini check after 10 s (camera warmup), then every 60 s
+              setTimeout(performWebcamCheck, 10_000);
+              webcamIntervalRef.current = setInterval(performWebcamCheck, WEBCAM_CHECK_INTERVAL_MS);
+            }
+            if (cfg.camera_motion) {
+              // Local movement check starts after 5 s, then every 12 s
+              setTimeout(() => {
+                checkMovement(); // capture initial frame as baseline
+                movementIntervalRef.current = setInterval(checkMovement, MOVEMENT_CHECK_INTERVAL_MS);
+              }, 5_000);
+            }
+          }
+        });
+      }
 
-      // Audio monitoring starts independently
-      startAudio();
+      // Audio/background-noise monitoring only when the instructor enabled it.
+      if (cfg.audio_noise) startAudio();
     });
 
     // ── DOM event listeners ───────────────────────────────────────────────────
     const onVisibility = () => {
+      if (isTrusted()) return;
       if (document.hidden) logViolation('tab_switch', { timestamp: new Date().toISOString() });
+    };
+
+    // Opening a native file picker blurs the window without the student leaving
+    // the exam. Auto-trust clicks on file inputs (and elements opting in via
+    // data-proctor-trusted) so uploads — including "pick from phone" — never flag.
+    const onTrustedPointer = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const fileInput = target.closest('input[type="file"], label, [data-proctor-trusted]');
+      if (fileInput) beginTrustedAction();
     };
 
     // fullscreen listeners — skip entirely on iOS (API not supported)
@@ -389,6 +451,7 @@ export function useProctoringMonitor({
     // browser_blur — on mobile this fires for every notification/home button;
     // rate-limit to at most once per BLUR_VIOLATION_COOLDOWN_MS
     const onBlur = () => {
+      if (isTrusted()) return;
       if (IS_MOBILE) {
         if (blurViolCoolRef.current) return;
         blurViolCoolRef.current = true;
@@ -422,17 +485,26 @@ export function useProctoringMonitor({
       prevFrameDataRef.current = null;
     };
 
-    document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('blur',               onBlur);
-    document.addEventListener('copy',             onCopy    as EventListener);
-    document.addEventListener('paste',            onPaste   as EventListener);
-    document.addEventListener('cut',              onCut     as EventListener);
-    document.addEventListener('contextmenu',      onContext  as EventListener);
-    if (onKeyDown) document.addEventListener('keydown', onKeyDown as EventListener);
+    // Always listen for trusted file-picker interactions (capture phase, so it
+    // runs before the blur fires) regardless of which checks are enabled.
+    document.addEventListener('pointerdown', onTrustedPointer, true);
+    document.addEventListener('click',       onTrustedPointer, true);
     window.addEventListener('orientationchange',  onOrientationChange);
 
+    if (cfg.tab_blur) {
+      document.addEventListener('visibilitychange', onVisibility);
+      window.addEventListener('blur',               onBlur);
+    }
+    if (cfg.copy_paste) {
+      document.addEventListener('copy',             onCopy    as EventListener);
+      document.addEventListener('paste',            onPaste   as EventListener);
+      document.addEventListener('cut',              onCut     as EventListener);
+      document.addEventListener('contextmenu',      onContext  as EventListener);
+      if (onKeyDown) document.addEventListener('keydown', onKeyDown as EventListener);
+    }
+
     // fullscreen events — only relevant on non-iOS (iOS never fires these)
-    if (!isIOS) {
+    if (cfg.fullscreen && !isIOS) {
       document.addEventListener('fullscreenchange',       onFullscreen);
       document.addEventListener('webkitfullscreenchange', onFullscreen);
     }
@@ -442,6 +514,8 @@ export function useProctoringMonitor({
         activeRef.current = false;
         endSession();
       }
+      document.removeEventListener('pointerdown', onTrustedPointer, true);
+      document.removeEventListener('click',       onTrustedPointer, true);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur',               onBlur);
       document.removeEventListener('copy',             onCopy    as EventListener);
@@ -466,6 +540,7 @@ export function useProctoringMonitor({
     isForceSubmit,
     logViolation,
     dismissViolation,
+    beginTrustedAction,
     endSession,
     get sessionId() { return procSessionIdRef.current; },
   };

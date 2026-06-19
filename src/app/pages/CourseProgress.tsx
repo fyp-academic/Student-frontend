@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
-import { TrendingUp, Award, BookOpen, Target, Loader2 } from "lucide-react";
-import { dashboardApi } from "../services/api";
+import { TrendingUp, Award, BookOpen, Target, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { dashboardApi, gradesApi } from "../services/api";
 import { useRealtime } from "../context/RealtimeContext";
 import { useAiWidgetContext } from "../context/AiWidgetContext";
 
@@ -20,8 +20,24 @@ const gradeColor = (g: string) =>
 export function CourseProgress() {
   const [enrollments, setEnrollments] = useState<EnrollRow[]>([]);
   const [loading, setLoading]         = useState(true);
+  const [expanded, setExpanded]       = useState<string | null>(null);
+  const [gradesByCourse, setGradesByCourse] = useState<Record<string, { rows: Record<string, unknown>[]; loading: boolean }>>({});
   const { setContext } = useAiWidgetContext();
   const { refreshTrigger } = useRealtime();
+
+  const toggleCourse = (courseId: string) => {
+    const next = expanded === courseId ? null : courseId;
+    setExpanded(next);
+    if (next && !gradesByCourse[courseId]) {
+      setGradesByCourse(prev => ({ ...prev, [courseId]: { rows: [], loading: true } }));
+      gradesApi.myGrades(courseId)
+        .then(r => {
+          const rows = (r.data?.data ?? r.data ?? []) as Record<string, unknown>[];
+          setGradesByCourse(prev => ({ ...prev, [courseId]: { rows, loading: false } }));
+        })
+        .catch(() => setGradesByCourse(prev => ({ ...prev, [courseId]: { rows: [], loading: false } })));
+    }
+  };
 
   useEffect(() => {
     setContext({ currentPage: '/course-progress', mode: 'reflection' });
@@ -126,10 +142,17 @@ export function CourseProgress() {
           <div className="space-y-5">
             {courseProgress.map((course) => {
               const grade = course.grade;
+              const isOpen = expanded === course.id;
+              const entry  = gradesByCourse[course.id];
               return (
                 <div key={course.id}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-between mb-2 cursor-pointer"
+                    onClick={() => toggleCourse(course.id)}
+                    title="View grades"
+                  >
+                    <div className="flex items-center gap-2">
+                      {isOpen ? <ChevronDown size={15} color="#94a3b8" /> : <ChevronRight size={15} color="#94a3b8" />}
                       {course.code && (
                         <span className="px-2 py-0.5 rounded-md text-white" style={{ fontSize: "10px", fontWeight: 700, backgroundColor: course.color }}>
                           {course.code}
@@ -145,6 +168,42 @@ export function CourseProgress() {
                   <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
                     <div className="h-full rounded-full transition-all duration-500" style={{ width: `${course.progress}%`, backgroundColor: course.color }} />
                   </div>
+
+                  {isOpen && (
+                    <div className="mt-3 rounded-xl overflow-hidden" style={{ border: "1px solid #f1f5f9" }}>
+                      {entry?.loading ? (
+                        <div className="flex items-center justify-center py-6"><Loader2 size={18} className="animate-spin" style={{ color: "#94a3b8" }} /></div>
+                      ) : !entry || entry.rows.length === 0 ? (
+                        <p style={{ fontSize: "12px", color: "#94a3b8", textAlign: "center", padding: "16px" }}>No graded items yet for this course.</p>
+                      ) : (
+                        <table style={{ width: "100%", fontSize: "12px", borderCollapse: "collapse" }}>
+                          <thead>
+                            <tr style={{ backgroundColor: "#f8fafc", color: "#64748b" }}>
+                              <th style={{ textAlign: "left",  padding: "8px 12px", fontWeight: 600 }}>Activity</th>
+                              <th style={{ textAlign: "center", padding: "8px 12px", fontWeight: 600 }}>Grade</th>
+                              <th style={{ textAlign: "center", padding: "8px 12px", fontWeight: 600 }}>%</th>
+                              <th style={{ textAlign: "left",  padding: "8px 12px", fontWeight: 600 }}>Feedback</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {entry.rows.map((g, gi) => {
+                              const gradeMax = Number(g.gradeMax ?? 0);
+                              const gradeVal = g.grade ?? null;
+                              const pct      = g.percentage != null ? `${g.percentage}%` : "—";
+                              return (
+                                <tr key={gi} style={{ borderTop: "1px solid #f1f5f9" }}>
+                                  <td style={{ padding: "8px 12px", color: "#1e293b", fontWeight: 600 }}>{String(g.activityName ?? "—")}</td>
+                                  <td style={{ padding: "8px 12px", textAlign: "center", color: "#334155" }}>{gradeVal != null ? `${gradeVal}${gradeMax ? `/${gradeMax}` : ""}` : "—"}</td>
+                                  <td style={{ padding: "8px 12px", textAlign: "center", color: "#334155" }}>{pct}</td>
+                                  <td style={{ padding: "8px 12px", color: "#64748b" }}>{g.feedback ? String(g.feedback) : <span style={{ color: "#cbd5e1" }}>—</span>}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

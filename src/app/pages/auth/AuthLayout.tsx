@@ -1,6 +1,6 @@
-import React from 'react';
-import { Outlet } from 'react-router';
+import { Link, Outlet } from 'react-router';
 import studentImage from '../../../assets/Student.jpg';
+import ThemeToggle from '../../components/editorial/ThemeToggle';
 
 function TwitterIcon({ className }: { className?: string }) {
   return (
@@ -18,56 +18,67 @@ function InstagramIcon({ className }: { className?: string }) {
   );
 }
 
+// Editorial split-screen auth shell: warm "paper" page, a softly-framed student
+// image on the left with a serif brand mark, the form on the right.
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen flex">
-      {/* Left panel — image with organic wave */}
-      <div className="hidden lg:block lg:w-[48%] relative overflow-hidden">
-        <img
-          src={studentImage}
-          alt="Students studying"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/10" />
-
-        {/* Organic wave overlay */}
-        <svg
-          className="absolute right-0 top-0 h-full w-40 xl:w-48 text-white"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M70,0 C20,25 20,75 70,100 L100,100 L100,0 Z"
-            fill="currentColor"
+    <div
+      className="min-h-screen flex bg-paper text-ink"
+      style={{ fontFamily: '"Inter Variable", Inter, system-ui, sans-serif' }}
+    >
+      {/* Left panel — framed image */}
+      <div className="hidden lg:block lg:w-[48%] p-4">
+        <div className="relative h-full overflow-hidden rounded-[18px] bg-paper-2">
+          <img
+            src={studentImage}
+            alt="Students studying"
+            className="absolute inset-0 h-full w-full object-cover"
           />
-        </svg>
+          {/* Warm ink wash for legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/20 to-transparent" />
 
-        {/* Bottom overlay bar */}
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="flex items-end">
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2 text-white/90">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          {/* Brand mark */}
+          <div className="absolute left-8 top-8">
+            <Link
+              to="/"
+              className="font-display ed-display text-step-5 leading-none text-paper"
+            >
+              APES
+            </Link>
+            <p className="eyebrow mt-3 !text-paper/80">AI Personalization eLearning</p>
+          </div>
+
+          {/* Pull-quote + socials */}
+          <div className="absolute bottom-0 left-0 right-0 p-8">
+            <p className="max-w-sm font-display ed-display text-step-3 text-paper">
+              Learning, personalised to every student.
+            </p>
+            <div className="mt-6 flex items-center gap-5 text-paper/80">
+              <span className="flex items-center gap-2">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
-                <span className="text-sm font-medium">Facebook</span>
-              </div>
-              <div className="flex items-center gap-2 text-white/90">
-                <InstagramIcon className="w-4 h-4" />
-                <span className="text-sm font-medium">Instagram</span>
-              </div>
-              <div className="flex items-center gap-2 text-white/90">
-                <TwitterIcon className="w-4 h-4" />
-                <span className="text-sm font-medium">Twitter (X)</span>
-              </div>
+                <span className="text-step-1 font-medium">Facebook</span>
+              </span>
+              <span className="flex items-center gap-2">
+                <InstagramIcon className="h-4 w-4" />
+                <span className="text-step-1 font-medium">Instagram</span>
+              </span>
+              <span className="flex items-center gap-2">
+                <TwitterIcon className="h-4 w-4" />
+                <span className="text-step-1 font-medium">Twitter (X)</span>
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Right panel — form content */}
-      <div className="w-full lg:w-[52%] flex flex-col bg-white relative">
-        <div className="flex-1 flex items-start justify-center px-8 sm:px-12 lg:px-16 xl:px-24 pt-6 lg:pt-8 overflow-y-auto">
+      <div className="relative flex w-full flex-col bg-paper lg:w-[52%]">
+        <div className="absolute right-5 top-5 z-10">
+          <ThemeToggle />
+        </div>
+        <div className="flex flex-1 items-start justify-center overflow-y-auto px-8 pt-16 sm:px-12 lg:px-16 lg:pt-20 xl:px-24">
           <div className="w-full max-w-md py-8">
             <Outlet />
           </div>

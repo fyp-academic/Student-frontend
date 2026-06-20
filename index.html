@@ -31,6 +31,18 @@
     <!-- Theme & PWA hints -->
     <meta name="theme-color" content="#0c1e4a" />
     <meta name="application-name" content="APES eLearning" />
+
+    <!-- No-flash theme: apply the persisted editorial light/dark choice before
+         first paint. Light is the default; only add `.dark` when explicitly stored. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('apes-theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
 
   <body>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Eye, EyeOff, Loader2, CheckCircle2, Mail, RefreshCw, ArrowRight, GraduationCap, Building2, Globe } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, RefreshCw, ArrowRight, GraduationCap, Building2, Globe } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import { authApi, collegesApi, degreeProgrammesApi } from '../../services/api';
@@ -101,8 +101,6 @@ export default function Register() {
   const [loadingColleges, setLoadingColleges] = useState(false);
   const [collegesError, setCollegesError] = useState('');
   const [programmesError, setProgrammesError] = useState('');
-
-  const INSTRUCTOR_URL = import.meta.env.VITE_INSTRUCTOR_URL ?? 'https://apesguide.codagenz.com';
 
   // Fetch colleges on mount
   useEffect(() => {
@@ -221,10 +219,10 @@ export default function Register() {
   };
 
   const fieldCls = (hasErr: boolean) =>
-    `w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${
+    `w-full px-4 py-3 rounded-md border text-step-2 text-ink outline-none transition-all placeholder:text-ink-2/60 ${
       hasErr
         ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-100'
-        : 'border-gray-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+        : 'border-line bg-paper focus:border-clay focus:ring-1 focus:ring-clay'
     }`;
 
   return (
@@ -239,14 +237,14 @@ export default function Register() {
               <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Mail className="w-10 h-10 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h2>
-              <p className="text-gray-500 mb-6">
-                We've sent a 6-digit verification code to <strong>{registeredEmail}</strong>.
+              <h2 className="font-display ed-display text-step-5 text-ink mb-2">Verify your email</h2>
+              <p className="text-step-2 text-ink-2 mb-6">
+                We've sent a 6-digit verification code to <strong className="text-ink">{registeredEmail}</strong>.
                 Please check your inbox and enter the code below to activate your account.
               </p>
               <Link
                 to={`/verify-email?email=${encodeURIComponent(registeredEmail)}`}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors mb-6"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-ink text-paper font-semibold text-step-2 hover:bg-clay-deep transition-colors mb-6"
               >
                 Enter Verification Code <ArrowRight className="w-4 h-4" />
               </Link>
@@ -267,7 +265,7 @@ export default function Register() {
                   <button
                     onClick={handleResend}
                     disabled={resending}
-                    className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
+                    className="text-step-1 text-clay font-semibold hover:text-clay-deep disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
                   >
                     {resending ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
@@ -280,15 +278,16 @@ export default function Register() {
 
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-line text-ink font-semibold text-step-2 hover:border-ink transition-colors"
               >
                 Go to Login <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1 text-center">Create your account</h2>
-              <p className="text-sm text-gray-500 mb-7 text-center">Join the apes udom learning community</p>
+              <p className="eyebrow mb-3 text-center">Join APES</p>
+              <h2 className="font-display ed-display text-step-5 text-ink mb-1 text-center">Create your account</h2>
+              <p className="text-step-2 text-ink-2 mb-7 text-center">Join the apes udom learning community</p>
 
               {apiError && (
                 <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2">
@@ -301,7 +300,7 @@ export default function Register() {
             {/* Full name & Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
+                <label className="block text-step-1 font-medium text-ink-2 mb-1.5">Full name</label>
                 <input
                   type="text"
                   autoComplete="name"
@@ -313,7 +312,7 @@ export default function Register() {
                 {errors.name && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.name}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                <label className="block text-step-1 font-medium text-ink-2 mb-1.5">Email address</label>
                 <input
                   type="email"
                   autoComplete="email"
@@ -328,8 +327,8 @@ export default function Register() {
 
             {/* Registration Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Registration Number <span className="text-gray-400 font-normal">(e.g., T23-03-09759)</span>
+              <label className="block text-step-1 font-medium text-ink-2 mb-1.5">
+                Registration Number <span className="text-ink-2/70 font-normal">(e.g., T23-03-09759)</span>
               </label>
               <div className="relative">
                 <input
@@ -340,34 +339,34 @@ export default function Register() {
                   className={fieldCls(!!errors.registrationNumber)}
                 />
                 {parsing && (
-                  <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
+                  <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-2 animate-spin" />
                 )}
               </div>
               {errors.registrationNumber && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.registrationNumber}</p>}
 
               {/* Parsed info display */}
               {parsed && (
-                <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
+                <div className="mt-3 p-3 bg-paper-2 border border-line rounded-xl space-y-2">
                   <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-indigo-600" />
-                    <span className="text-sm text-gray-700">
+                    <Globe className="w-4 h-4 text-clay" />
+                    <span className="text-step-1 text-ink">
                       <span className="text-xl mr-1">{parsed.flag}</span>
                       {parsed.nationality}
-                      {parsed.region && <span className="text-xs text-gray-500 ml-1">({parsed.region})</span>}
+                      {parsed.region && <span className="text-xs text-ink-2 ml-1">({parsed.region})</span>}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                    <div className="bg-white rounded-lg px-3 py-2 border border-indigo-100">
-                      <span className="block text-[10px] text-gray-400 uppercase tracking-wide">Education Level</span>
-                      <span className="font-medium text-indigo-700">{parsed.education_level}</span>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-ink-2">
+                    <div className="bg-paper rounded-lg px-3 py-2 border border-line">
+                      <span className="block text-[10px] text-ink-2 uppercase tracking-wide">Education Level</span>
+                      <span className="font-medium text-clay">{parsed.education_level}</span>
                     </div>
-                    <div className="bg-white rounded-lg px-3 py-2 border border-indigo-100">
-                      <span className="block text-[10px] text-gray-400 uppercase tracking-wide">Year of Study</span>
-                      <span className="font-medium text-indigo-700">Year {parsed.year_of_study}</span>
+                    <div className="bg-paper rounded-lg px-3 py-2 border border-line">
+                      <span className="block text-[10px] text-ink-2 uppercase tracking-wide">Year of Study</span>
+                      <span className="font-medium text-clay">Year {parsed.year_of_study}</span>
                     </div>
-                    <div className="bg-white rounded-lg px-3 py-2 border border-indigo-100">
-                      <span className="block text-[10px] text-gray-400 uppercase tracking-wide">Registered</span>
-                      <span className="font-medium text-indigo-700">{parsed.registration_year}</span>
+                    <div className="bg-paper rounded-lg px-3 py-2 border border-line">
+                      <span className="block text-[10px] text-ink-2 uppercase tracking-wide">Registered</span>
+                      <span className="font-medium text-clay">{parsed.registration_year}</span>
                     </div>
                   </div>
                 </div>
@@ -376,15 +375,15 @@ export default function Register() {
 
             {/* College */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                <Building2 className="inline w-4 h-4 mr-1 -mt-0.5 text-gray-500" />
+              <label className="block text-step-1 font-medium text-ink-2 mb-1.5">
+                <Building2 className="inline w-4 h-4 mr-1 -mt-0.5 text-ink-2" />
                 College
               </label>
               <select
                 value={form.collegeId}
                 onChange={set('collegeId')}
                 disabled={loadingColleges}
-                className={fieldCls(!!errors.collegeId) + ' appearance-none bg-white'}
+                className={fieldCls(!!errors.collegeId) + ' appearance-none'}
               >
                 <option value="">{loadingColleges ? 'Loading colleges…' : 'Select a college'}</option>
                 {colleges.map(c => (
@@ -402,15 +401,15 @@ export default function Register() {
 
             {/* Degree Programme */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                <GraduationCap className="inline w-4 h-4 mr-1 -mt-0.5 text-gray-500" />
+              <label className="block text-step-1 font-medium text-ink-2 mb-1.5">
+                <GraduationCap className="inline w-4 h-4 mr-1 -mt-0.5 text-ink-2" />
                 Degree Programme
               </label>
               <select
                 value={form.degreeProgrammeId}
                 onChange={set('degreeProgrammeId')}
                 disabled={!form.collegeId || programmes.length === 0}
-                className={fieldCls(!!errors.degreeProgrammeId) + ' appearance-none bg-white'}
+                className={fieldCls(!!errors.degreeProgrammeId) + ' appearance-none'}
               >
                 <option value="">
                   {!form.collegeId ? 'Select a college first' : programmes.length === 0 ? 'No programmes available' : 'Select a degree programme'}
@@ -431,11 +430,11 @@ export default function Register() {
             {/* Gender & Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Gender</label>
+                <label className="block text-step-1 font-medium text-ink-2 mb-1.5">Gender</label>
                 <select
                   value={form.gender}
                   onChange={set('gender')}
-                  className={fieldCls(!!errors.gender) + ' appearance-none bg-white'}
+                  className={fieldCls(!!errors.gender) + ' appearance-none'}
                 >
                   <option value="">Select gender</option>
                   <option value="male">Male</option>
@@ -445,7 +444,7 @@ export default function Register() {
                 {errors.gender && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.gender}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+                <label className="block text-step-1 font-medium text-ink-2 mb-1.5">Phone Number</label>
                 <input
                   type="tel"
                   value={form.phoneNumber}
@@ -460,7 +459,7 @@ export default function Register() {
             {/* Password & Confirm password */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <label className="block text-step-1 font-medium text-ink-2 mb-1.5">Password</label>
                 <div className="relative">
                   <input
                     type={showPass ? 'text' : 'password'}
@@ -473,7 +472,7 @@ export default function Register() {
                   <button
                     type="button"
                     onClick={() => setShowPass(p => !p)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-2 hover:text-ink transition-colors"
                     tabIndex={-1}
                   >
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -483,7 +482,7 @@ export default function Register() {
                   {PASSWORD_RULES.map(r => {
                     const ok = form.password.length > 0 && r.test(form.password);
                     return (
-                      <span key={r.label} className={`text-[11px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
+                      <span key={r.label} className={`text-[11px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-paper-2 text-ink-2'}`}>
                         {ok ? '✓' : '○'} {r.label}
                       </span>
                     );
@@ -492,7 +491,7 @@ export default function Register() {
                 {errors.password && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.password}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm password</label>
+                <label className="block text-step-1 font-medium text-ink-2 mb-1.5">Confirm password</label>
                 <div className="relative">
                   <input
                     type={showConfirm ? 'text' : 'password'}
@@ -505,7 +504,7 @@ export default function Register() {
                   <button
                     type="button"
                     onClick={() => setShowConfirm(p => !p)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-2 hover:text-ink transition-colors"
                     tabIndex={-1}
                   >
                     {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -518,18 +517,18 @@ export default function Register() {
             </div>
 
             {/* Terms */}
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-ink-2 leading-relaxed">
               By creating an account, you agree to our{' '}
-              <span className="text-indigo-600 cursor-pointer hover:underline">Terms of Service</span>{' '}
+              <span className="text-clay cursor-pointer hover:underline">Terms of Service</span>{' '}
               and{' '}
-              <span className="text-indigo-600 cursor-pointer hover:underline">Privacy Policy</span>.
+              <span className="text-clay cursor-pointer hover:underline">Privacy Policy</span>.
             </p>
 
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-lg bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-full bg-ink hover:bg-clay-deep text-paper font-semibold text-step-2 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating account…</>
@@ -538,10 +537,10 @@ export default function Register() {
             </button>
           </form>
 
-          <div className="mt-6 space-y-3 text-center text-sm text-gray-500">
+          <div className="mt-6 space-y-3 text-center text-step-1 text-ink-2">
             <p>
               Already have an account?{' '}
-              <Link to="/login" className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
+              <Link to="/login" className="text-clay font-semibold hover:text-clay-deep transition-colors">
                 Sign in
               </Link>
             </p>

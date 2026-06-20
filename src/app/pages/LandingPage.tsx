@@ -1,23 +1,30 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { SEOHead } from "../components/SEOHead";
 import {
-  GraduationCap,
   BookOpen,
   Video,
   FileText,
   MessageCircle,
   TrendingUp,
   Users,
-  Zap,
-  CheckCircle,
   ArrowRight,
   Star,
   Menu,
   X,
 } from "lucide-react";
-import heroVideo from "../../assets/hero.mp4";
+import ScrollReveal from "../components/editorial/ScrollReveal";
+import ThemeToggle from "../components/editorial/ThemeToggle";
+import CustomCursor from "../components/editorial/CustomCursor";
+import { useLenis } from "../components/editorial/useLenis";
+
+// Editorial stock imagery (Unsplash). Each <img> keeps a warm bg-paper-2
+// placeholder so the layout holds if a photo is slow / fails to load.
+const IMAGES = {
+  hero: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1100&q=80",
+  story: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1100&q=80",
+};
 
 const features = [
   {
@@ -71,361 +78,417 @@ const testimonials = [
       "The AI tutor turned my hardest module into my favourite. I finally felt seen as a learner.",
     name: "Amina K.",
     role: "Computer Science, Year 2",
+    avatar:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80",
   },
   {
     quote:
       "Live classes, recordings, assignments — everything is in one place. Game changer.",
     name: "Dr Kalira.",
     role: "Web Development Master",
+    avatar:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80",
   },
   {
     quote:
       "As an instructor, the analytics help me catch struggling students before they fall behind.",
     name: "Dr Mfringe.",
     role: "Instructor, Instructional Design",
+    avatar:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80",
   },
 ];
 
+const NAV = [
+  { href: "#features", label: "Features" },
+  { href: "#stats", label: "Impact" },
+  { href: "#testimonials", label: "Stories" },
+];
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
+
+  useLenis();
 
   // sticky header shadow on scroll
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-
-  // Scroll reveal
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      document.querySelectorAll("[data-reveal]").forEach((el) => {
-        (el as HTMLElement).classList.add("is-visible");
-      });
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("is-visible");
-            io.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.12 },
-    );
-    document.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
-    return () => io.disconnect();
   }, []);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) navigate("/dashboard", { replace: true });
   }, [isAuthenticated, isLoading, navigate]);
 
-  // Ensure video autoplay on mount (some browsers need explicit play after mount)
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = true;
-    const p = v.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
-  }, []);
-
-   return (
-    <div className="min-h-screen bg-background text-foreground antialiased">
-
-       <SEOHead
+  return (
+    <div
+      className="min-h-screen bg-paper text-ink antialiased"
+      style={{ fontFamily: '"Inter Variable", Inter, system-ui, sans-serif' }}
+    >
+      <SEOHead
         title="APES – AI Personalization eLearning System"
         description="APES is an AI-powered eLearning platform that personalises your learning journey through smart recommendations, adaptive quizzes, live sessions, and real-time engagement insights."
         canonical="/"
       />
 
-      <style>{`
-        [data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
-        [data-reveal].is-visible{opacity:1;transform:none}
-        [data-reveal-delay="1"]{transition-delay:.08s}
-        [data-reveal-delay="2"]{transition-delay:.16s}
-        [data-reveal-delay="3"]{transition-delay:.24s}
-        [data-reveal-delay="4"]{transition-delay:.32s}
-        [data-reveal-delay="5"]{transition-delay:.4s}
-        [data-reveal-delay="6"]{transition-delay:.48s}
-        @keyframes lh-shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
-        .lh-title{background:linear-gradient(90deg,oklch(0.7 0.18 250),oklch(0.75 0.18 180),oklch(0.7 0.2 320),oklch(0.7 0.18 250));background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:lh-shine 8s linear infinite}
-        @keyframes lh-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-        .lh-float{animation:lh-float 4s ease-in-out infinite}
-        .lh-card{transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease}
-        .lh-card:hover{transform:translateY(-4px)}
-        @media (prefers-reduced-motion: reduce){
-          [data-reveal]{opacity:1;transform:none;transition:none}
-          .lh-title{animation:none}
-          .lh-float{animation:none}
-        }
-      `}</style>
+      <CustomCursor />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-2 font-semibold">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 text-white shadow-md">
-              <GraduationCap className="h-5 w-5" />
-            </span>
-            <span className="text-lg tracking-tight">APES LMS</span>
+      <header
+        className={`sticky top-0 z-50 bg-paper/90 backdrop-blur-md transition-shadow duration-300 ${
+          scrolled ? "shadow-editorial-1" : ""
+        }`}
+      >
+        <div className="ed-shell flex h-16 items-center justify-between md:h-20">
+          <Link
+            to="/"
+            data-cursor
+            aria-label="APES home"
+            className="font-display ed-display text-step-4 leading-none text-ink"
+          >
+            APES
           </Link>
 
-          <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
-            <a href="#features" className="hover:text-primary transition-colors">Features</a>
-            <a href="#stats" className="hover:text-primary transition-colors">Impact</a>
-            <a href="#testimonials" className="hover:text-primary transition-colors">Stories</a>
-            <a href="#cta" className="hover:text-primary transition-colors">Get Started</a>
+          <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
+            {NAV.map((n) => (
+              <a
+                key={n.href}
+                href={n.href}
+                data-cursor
+                className="link-underline text-step-2 text-ink"
+              >
+                {n.label}
+              </a>
+            ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 md:gap-5">
             <Link
               to="/login"
-              className="hidden rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
+              data-cursor
+              className="hidden text-step-2 text-ink link-underline sm:inline-flex"
             >
               Sign In
             </Link>
             <Link
               to="/register"
-              className="hidden rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 transition sm:inline-flex"
+              data-cursor
+              className="hidden rounded-full bg-ink px-5 py-2.5 text-step-2 text-paper transition-colors duration-300 hover:bg-clay-deep sm:inline-flex"
             >
               Get Started
             </Link>
+            <ThemeToggle />
             <button
-              className="md:hidden rounded-md p-2 text-muted-foreground hover:bg-muted"
+              type="button"
+              data-cursor
+              className="md:hidden text-ink"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
               onClick={() => setMenuOpen((s) => !s)}
-              aria-label="Open menu"
             >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
+
         {menuOpen && (
-          <div className="md:hidden border-t border-border bg-background/95 px-4 py-3 space-y-2 text-sm font-medium">
-            <a href="#features" onClick={() => setMenuOpen(false)} className="block py-1">Features</a>
-            <a href="#stats" onClick={() => setMenuOpen(false)} className="block py-1">Impact</a>
-            <a href="#testimonials" onClick={() => setMenuOpen(false)} className="block py-1">Stories</a>
-            <Link to="/login" className="block py-1">Sign In</Link>
-            <Link to="/register" className="block py-1 text-primary">Get Started</Link>
+          <div className="border-t border-line bg-paper px-0 md:hidden">
+            <ul className="ed-shell flex flex-col gap-1 py-5 text-step-3">
+              {NAV.map((n) => (
+                <li key={n.href}>
+                  <a
+                    href={n.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="block py-2 font-display ed-display text-ink"
+                  >
+                    {n.label}
+                  </a>
+                </li>
+              ))}
+              <li className="border-t border-line pt-2">
+                <Link to="/login" className="block py-2 text-step-2 text-ink">
+                  Sign In
+                </Link>
+              </li>
+              <li>
+                <Link to="/register" className="block py-2 text-step-2 text-clay">
+                  Get Started
+                </Link>
+              </li>
+            </ul>
           </div>
         )}
       </header>
 
-      {/* Hero — full-bleed muted background video */}
-      <section className="relative isolate overflow-hidden min-h-screen flex flex-col">
-        <div className="absolute inset-0 -z-10">
-          <video
-            ref={videoRef}
-            className="h-full w-full object-cover"
-            src={heroVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            aria-hidden="true"
-            tabIndex={-1}
-          />
-          {/* Readability overlays */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/90 dark:from-black/70 dark:via-black/50 dark:to-black/90" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.35)_100%)]" />
-        </div>
-
-        <div className="flex-1 flex flex-col justify-end px-4 pb-8 sm:px-6 sm:pb-12 lg:px-8 lg:pb-16">
-          <div className="mx-auto max-w-3xl text-center">
-            <div
-              data-reveal
-              data-reveal-delay="3"
-              className="flex flex-col items-center justify-center gap-3 sm:flex-row"
+      {/* Hero — editorial split (replaces the background video) */}
+      <section className="ed-shell grid grid-cols-1 items-center gap-10 pb-[var(--section-y)] pt-10 md:pt-16 lg:grid-cols-12 lg:gap-12">
+        <ScrollReveal className="lg:col-span-6" y={28}>
+          <p className="eyebrow mb-5">AI Personalization eLearning System</p>
+          <h1 className="font-display ed-display text-step-8 text-ink">
+            Learning, personalised to every student
+          </h1>
+          <p className="mt-6 max-w-prose text-step-3 text-ink-2">
+            APES adapts to how you learn — smart course recommendations, adaptive
+            quizzes, live sessions, and real-time insights, all in one calm place.
+          </p>
+          <div className="mt-9 flex flex-wrap gap-4">
+            <Link
+              to="/register"
+              data-cursor
+              className="group inline-flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-step-2 text-paper transition-colors duration-300 hover:bg-clay-deep"
             >
-              <Link
-                to="/register"
-                className="group inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition"
-              >
-                Start Learning Free
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background/70 px-6 py-3 text-sm font-semibold text-foreground backdrop-blur hover:bg-background transition"
-              >
-                Sign In
-              </Link>
-            </div>
-            <div
-              data-reveal
-              data-reveal-delay="4"
-              className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-foreground/70"
+              Start Learning Free
+              <ArrowRight
+                size={18}
+                className="transition-transform duration-300 group-hover:translate-x-1"
+              />
+            </Link>
+            <Link
+              to="/login"
+              data-cursor
+              className="inline-flex items-center gap-2 rounded-full border border-line px-7 py-3.5 text-step-2 text-ink transition-colors duration-300 hover:border-ink"
             >
-              <span className="inline-flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-400" /> Free forever plan</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-400" /> No credit card</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-400" /> Cancel anytime</span>
-            </div>
+              Sign In
+            </Link>
           </div>
-        </div>
+          <div className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-1 text-step-1 text-ink-2">
+            {["Free forever plan", "No credit card", "Cancel anytime"].map(
+              (t, i) => (
+                <span
+                  key={t}
+                  className={
+                    i < 2
+                      ? "after:ml-3 after:text-line after:content-['/']"
+                      : ""
+                  }
+                >
+                  {t}
+                </span>
+              ),
+            )}
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal className="lg:col-span-6" delay={0.1} y={28}>
+          <div className="overflow-hidden rounded-[18px] bg-paper-2 shadow-editorial-2">
+            <img
+              src={IMAGES.hero}
+              alt="Students learning together"
+              loading="eager"
+              className="aspect-[4/5] w-full object-cover"
+            />
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* Stats */}
-      <section id="stats" className="border-y border-border bg-muted/40">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
+      <section id="stats" className="border-y border-line bg-paper-2">
+        <div className="ed-shell grid grid-cols-2 gap-y-10 py-14 lg:grid-cols-4">
           {stats.map((s, i) => (
-            <div
+            <ScrollReveal
               key={s.label}
-              data-reveal
-              data-reveal-delay={String((i % 4) + 1)}
+              delay={i * 0.06}
               className="text-center"
             >
-              <div className="text-3xl font-bold tracking-tight sm:text-4xl bg-gradient-to-br from-indigo-500 to-cyan-400 bg-clip-text text-transparent">
+              <div className="font-display ed-display text-step-6 text-ink">
                 {s.value}
               </div>
-              <div className="mt-1 text-sm text-muted-foreground">{s.label}</div>
-            </div>
+              <div className="eyebrow mt-2">{s.label}</div>
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 data-reveal className="text-3xl font-bold tracking-tight sm:text-4xl">
+      <section id="features" className="ed-shell ed-section">
+        <ScrollReveal className="max-w-prose">
+          <p className="eyebrow mb-4">What you get</p>
+          <h2 className="font-display ed-display text-step-6 text-ink">
             Everything your classroom needs, in one place
           </h2>
-          <p data-reveal data-reveal-delay="1" className="mt-4 text-muted-foreground">
+          <p className="mt-4 text-step-3 text-ink-2">
             Tools designed with educators, loved by learners.
           </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f, i) => {
             const Icon = f.icon;
             return (
-              <article
+              <ScrollReveal
                 key={f.title}
-                data-reveal
-                data-reveal-delay={String((i % 6) + 1)}
-                className="lh-card group rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-xl hover:border-primary/40"
+                delay={(i % 3) * 0.06}
+                className="group flex h-full flex-col rounded-[18px] border border-line bg-paper p-7 transition-shadow duration-300 hover:shadow-editorial-1"
               >
-                <div className="lh-float mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/15 to-cyan-400/15 text-primary ring-1 ring-border">
-                  <Icon className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-semibold">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {f.description}
-                </p>
-              </article>
+                <span className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full border border-line text-clay transition-colors duration-300 group-hover:border-ink">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h3 className="font-display ed-display text-step-4 text-ink">
+                  {f.title}
+                </h3>
+                <p className="mt-3 text-step-2 text-ink-2">{f.description}</p>
+              </ScrollReveal>
             );
           })}
         </div>
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="bg-muted/40 border-y border-border">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 data-reveal className="text-3xl font-bold tracking-tight sm:text-4xl">
+      <section id="testimonials" className="border-y border-line bg-paper-2">
+        <div className="ed-shell ed-section">
+          <ScrollReveal className="max-w-prose">
+            <p className="eyebrow mb-4">Stories</p>
+            <h2 className="font-display ed-display text-step-6 text-ink">
               Loved by learners and educators
             </h2>
-          </div>
+          </ScrollReveal>
+
           <div className="mt-14 grid gap-6 md:grid-cols-3">
             {testimonials.map((t, i) => (
-              <figure
+              <ScrollReveal
                 key={t.name}
-                data-reveal
-                data-reveal-delay={String(i + 1)}
-                className="lh-card rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-xl"
+                delay={i * 0.08}
+                className="flex h-full flex-col rounded-[18px] border border-line bg-paper p-7"
               >
-                <div className="flex gap-1 text-amber-400">
+                <div className="flex gap-1 text-clay">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <Star key={j} className="h-4 w-4 fill-current" />
                   ))}
                 </div>
-                <blockquote className="mt-4 text-sm leading-relaxed text-foreground/90">
-                  "{t.quote}"
+                <blockquote className="mt-5 font-display ed-display text-step-3 leading-snug text-ink">
+                  “{t.quote}”
                 </blockquote>
-                <figcaption className="mt-5 text-sm">
-                  <div className="font-semibold">{t.name}</div>
-                  <div className="text-muted-foreground">{t.role}</div>
+                <figcaption className="mt-6 flex items-center gap-3">
+                  <img
+                    src={t.avatar}
+                    alt={t.name}
+                    loading="lazy"
+                    className="h-11 w-11 rounded-full bg-paper-2 object-cover"
+                  />
+                  <span className="text-step-1">
+                    <span className="block font-medium text-ink">{t.name}</span>
+                    <span className="block text-ink-2">{t.role}</span>
+                  </span>
                 </figcaption>
-              </figure>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section id="cta" className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-600 via-indigo-700 to-cyan-600" />
-        <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 text-center text-white">
-          <Zap data-reveal className="mx-auto h-10 w-10" />
-          <h2 data-reveal data-reveal-delay="1" className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            Ready to transform how you learn?
-          </h2>
-          <p data-reveal data-reveal-delay="2" className="mt-4 text-white/85">
-            Join thousands of students already learning smarter on ApesLms.
-          </p>
-          <div data-reveal data-reveal-delay="3" className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-indigo-700 shadow-lg hover:bg-white/90 transition"
-            >
-              Get Started Free <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 rounded-md border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/20 transition"
-            >
-              Sign In
-            </Link>
+      <section id="cta" className="ed-shell ed-section">
+        <ScrollReveal className="grid grid-cols-1 items-center gap-10 overflow-hidden rounded-[18px] border border-line bg-paper-2 lg:grid-cols-2">
+          <div className="order-2 p-8 sm:p-12 lg:order-1">
+            <p className="eyebrow mb-4">Get started</p>
+            <h2 className="font-display ed-display text-step-6 text-ink">
+              Ready to transform how you learn?
+            </h2>
+            <p className="mt-4 max-w-prose text-step-3 text-ink-2">
+              Join thousands of students already learning smarter on APES.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link
+                to="/register"
+                data-cursor
+                className="group inline-flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-step-2 text-paper transition-colors duration-300 hover:bg-clay-deep"
+              >
+                Get Started Free
+                <ArrowRight
+                  size={18}
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </Link>
+              <Link
+                to="/login"
+                data-cursor
+                className="inline-flex items-center gap-2 rounded-full border border-line px-7 py-3.5 text-step-2 text-ink transition-colors duration-300 hover:border-ink"
+              >
+                Sign In
+              </Link>
+            </div>
           </div>
-        </div>
+          <div className="order-1 h-full lg:order-2">
+            <img
+              src={IMAGES.story}
+              alt="Students collaborating"
+              loading="lazy"
+              className="h-full min-h-[260px] w-full object-cover"
+            />
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-background">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <footer className="border-t border-line bg-paper">
+        <div className="ed-shell py-14">
           <div className="grid gap-10 md:grid-cols-4">
             <div className="md:col-span-2">
-              <Link to="/" className="flex items-center gap-2 font-semibold">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 text-white">
-                  <GraduationCap className="h-5 w-5" />
-                </span>
-                <span>APES LMS</span>
+              <Link
+                to="/"
+                className="font-display ed-display text-step-4 text-ink"
+              >
+                APES
               </Link>
-              <p className="mt-4 max-w-sm text-sm text-muted-foreground">
+              <p className="mt-4 max-w-sm text-step-2 text-ink-2">
                 A modern LMS built for the way today's students actually learn.
               </p>
             </div>
             <div>
-              <div className="text-sm font-semibold">Product</div>
-              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                <li><a href="#features" className="hover:text-foreground">Features</a></li>
-                <li><a href="#stats" className="hover:text-foreground">Impact</a></li>
-                <li><a href="#testimonials" className="hover:text-foreground">Stories</a></li>
+              <div className="eyebrow mb-4">Product</div>
+              <ul className="space-y-2 text-step-2 text-ink-2">
+                <li>
+                  <a href="#features" className="link-underline">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#stats" className="link-underline">
+                    Impact
+                  </a>
+                </li>
+                <li>
+                  <a href="#testimonials" className="link-underline">
+                    Stories
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
-              <div className="text-sm font-semibold">Account</div>
-              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/login" className="hover:text-foreground">Login</Link></li>
-                <li><Link to="/register" className="hover:text-foreground">Register</Link></li>
-                <li><Link to="/forgot-password" className="hover:text-foreground">Forgot Password</Link></li>
+              <div className="eyebrow mb-4">Account</div>
+              <ul className="space-y-2 text-step-2 text-ink-2">
+                <li>
+                  <Link to="/login" className="link-underline">
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/register" className="link-underline">
+                    Register
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/forgot-password" className="link-underline">
+                    Forgot Password
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
-          <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
+          <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-line pt-6 text-step-1 text-ink-2 sm:flex-row">
             <div>© {new Date().getFullYear()} APES LMS. All rights reserved.</div>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-foreground">Privacy</a>
-              <a href="#" className="hover:text-foreground">Terms</a>
+            <div className="flex gap-5">
+              <a href="#" className="link-underline">
+                Privacy
+              </a>
+              <a href="#" className="link-underline">
+                Terms
+              </a>
             </div>
           </div>
         </div>

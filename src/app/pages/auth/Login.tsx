@@ -83,10 +83,10 @@ export default function Login() {
   };
 
   const fieldCls = (hasErr: boolean) =>
-    `w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all ${
+    `w-full px-4 py-3 rounded-md border text-step-2 text-ink outline-none transition-all placeholder:text-ink-2/60 ${
       hasErr
         ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-100'
-        : 'border-gray-300 bg-white focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
+        : 'border-line bg-paper focus:border-clay focus:ring-1 focus:ring-clay'
     }`;
 
   return (
@@ -97,8 +97,9 @@ export default function Login() {
         canonical="/login"
         noIndex
       />
-      <h1 className="text-4xl font-extrabold text-gray-900 mb-10 leading-tight">
-        Welcome<br />Back
+      <p className="eyebrow mb-4">Welcome back</p>
+      <h1 className="font-display ed-display text-step-7 text-ink mb-9">
+        Sign in to<br />APES
       </h1>
 
             {/* Wrong-role banner */}
@@ -107,7 +108,7 @@ export default function Login() {
                 <p className="font-semibold text-amber-800 mb-1">Instructor account detected</p>
                 <p className="text-amber-700">
                   This portal is for students. Please use the{' '}
-                  <a href={INSTRUCTOR_URL} className="text-indigo-600 font-semibold hover:underline">
+                  <a href={INSTRUCTOR_URL} className="text-clay font-semibold hover:underline">
                     instructor portal →
                   </a>
                 </p>
@@ -136,7 +137,7 @@ export default function Login() {
                     <div className="flex items-center gap-3 mb-3">
                       <Link
                         to={`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`}
-                        className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 inline-flex items-center gap-1"
+                        className="text-sm text-clay font-semibold hover:text-clay-deep inline-flex items-center gap-1"
                       >
                         <ArrowRight className="w-3 h-3" /> Enter verification code
                       </Link>
@@ -150,7 +151,7 @@ export default function Login() {
                         type="button"
                         onClick={handleResendVerification}
                         disabled={resending}
-                        className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
+                        className="text-sm text-clay font-semibold hover:text-clay-deep disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
                       >
                         {resending ? (
                           <><Loader2 className="w-3 h-3 animate-spin" /> Sending…</>
@@ -167,7 +168,7 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-step-1 font-medium text-ink-2 mb-1.5">
                   Email
                 </label>
                 <input
@@ -187,7 +188,7 @@ export default function Login() {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-step-1 font-medium text-ink-2 mb-1.5">
                   Password
                 </label>
                 <div className="relative">
@@ -202,7 +203,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPass(p => !p)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-2 hover:text-ink transition-colors"
                     tabIndex={-1}
                   >
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -217,16 +218,16 @@ export default function Login() {
 
               {/* Remember + Forgot */}
               <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                <label className="flex items-center gap-2 text-step-1 text-ink-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300 accent-blue-900"
+                    className="w-4 h-4 rounded border-line accent-clay"
                   />
                   Remember me
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-gray-900 hover:text-blue-900 font-medium transition-colors"
+                  className="text-step-1 text-ink hover:text-clay font-medium transition-colors"
                 >
                   Forgot Password
                 </Link>
@@ -236,7 +237,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-lg bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-full bg-ink hover:bg-clay-deep text-paper font-semibold text-step-2 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
@@ -247,19 +248,17 @@ export default function Login() {
               {/* Divider */}
               <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
+                  <div className="w-full border-t border-line" />
                 </div>
-                <span className="relative bg-white px-3 text-sm text-gray-500">Or</span>
+                <span className="relative bg-paper px-3 text-step-1 text-ink-2">Or</span>
               </div>
-
-              {/* Google sign in */}
 
             </form>
 
             {/* Create account */}
-            <p className="mt-8 text-center text-sm text-gray-600">
+            <p className="mt-8 text-center text-step-1 text-ink-2">
               Don&apos;t have an account?{' '}
-              <Link to="/register" className="font-semibold text-[#1e3a5f] hover:text-[#152a45] transition-colors">
+              <Link to="/register" className="font-semibold text-clay hover:text-clay-deep transition-colors">
                 Create account
               </Link>
             </p>

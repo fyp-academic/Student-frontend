@@ -10,7 +10,7 @@ interface SEOHeadProps {
 const SITE_NAME = "APES eLearning";
 const BASE_URL = "https://apesudom.codagenz.com";
 const DEFAULT_DESCRIPTION =
-  "APES is an AI-powered personalized eLearning system. Smart course recommendations, live sessions, AI study tips, and adaptive learning tools — all in one platform.";
+  "APES is an AI-powered personalized eLearning system. Smart course recommendations, live sessions, AI study tips, and adaptive learning tools — all in one platform. welcome!";
 
 export function SEOHead({ title, description, canonical, noIndex = false }: SEOHeadProps) {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} – AI Personalization eLearning System`;

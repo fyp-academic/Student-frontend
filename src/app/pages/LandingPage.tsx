@@ -360,7 +360,7 @@ export default function LandingPage() {
           </p>
         </ScrollReveal>
 
-        <ScrollReveal className="mx-auto mt-14 max-w-3xl border-t border-line">
+        <ScrollReveal className="mt-14 border-t border-line">
           {features.map((f, i) => {
             const Icon = f.icon;
             const open = openFeature === i;

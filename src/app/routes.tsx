@@ -72,9 +72,9 @@ export const router = createBrowserRouter([
       { path: "/register",        element: <Register />       },
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/reset-password",  element: <ResetPassword />  },
+      { path: "/verify-email",    element: <VerifyEmail />    },
     ],
   },
-  { path: "/verify-email", element: <VerifyEmail /> },
   {
     // Pathless layout — wraps all app routes without adding a path prefix,
     // so /catalog, /my-courses, /lessons, etc. all keep their current URLs.

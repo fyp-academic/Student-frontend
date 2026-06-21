@@ -108,7 +108,7 @@ export default function Login() {
                 <p className="font-semibold text-amber-800 mb-1">Instructor account detected</p>
                 <p className="text-amber-700">
                   This portal is for students. Please use the{' '}
-                  <a href={INSTRUCTOR_URL} className="text-clay font-semibold hover:underline">
+                  <a href={`${INSTRUCTOR_URL}/login`} className="text-clay font-semibold hover:underline">
                     instructor portal →
                   </a>
                 </p>

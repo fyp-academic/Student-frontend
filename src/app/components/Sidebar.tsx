@@ -147,7 +147,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/');
   };
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
     navGroups.reduce((acc, g) => ({ ...acc, [g.id]: g.defaultOpen ?? true }), {})

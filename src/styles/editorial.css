@@ -130,6 +130,39 @@
   .link-underline:hover {
     background-size: 100% 1px;
   }
+
+  /* Right → left infinite marquee. The track holds the content twice; the
+     -50% translate produces a seamless loop. Pauses on hover. */
+  .ed-marquee {
+    display: flex;
+    width: max-content;
+    animation: ed-marquee 28s linear infinite;
+  }
+  .ed-marquee:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes ed-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ed-marquee {
+    animation: none;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  /* Hide the duplicated loop copy when not animating */
+  .ed-marquee > [data-dup='true'] {
+    display: none;
+  }
 }
 
 /* Custom-cursor support: hide native cursor only while it is active */

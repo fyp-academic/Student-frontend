@@ -17,14 +17,37 @@ import {
 import ScrollReveal from "../components/editorial/ScrollReveal";
 import ThemeToggle from "../components/editorial/ThemeToggle";
 import CustomCursor from "../components/editorial/CustomCursor";
+import HeroCarousel from "../components/editorial/HeroCarousel";
 import { useLenis } from "../components/editorial/useLenis";
 
 // Editorial stock imagery (Unsplash). Each <img> keeps a warm bg-paper-2
 // placeholder so the layout holds if a photo is slow / fails to load.
 const IMAGES = {
-  hero: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1100&q=80",
   story: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1100&q=80",
 };
+
+// Hero carousel — curated African / Tanzanian higher-education student photos.
+// They auto-cycle with a crossfade. DROP-IN: to use real University of Dodoma
+// photos, drop files into ../../assets, `import udom1 from "../../assets/udom1.jpg"`
+// and replace the `src` values below with the imported variables.
+const HERO_IMAGES = [
+  {
+    src: "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=1100&q=80",
+    alt: "African university students celebrating graduation",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1627556704302-624286467c65?auto=format&fit=crop&w=1100&q=80",
+    alt: "Tanzanian student studying on campus",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1100&q=80",
+    alt: "University students collaborating around a laptop",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1100&q=80",
+    alt: "Group of students learning together",
+  },
+];
 
 const features = [
   {
@@ -275,32 +298,33 @@ export default function LandingPage() {
         </ScrollReveal>
 
         <ScrollReveal className="lg:col-span-6" delay={0.1} y={28}>
-          <div className="overflow-hidden rounded-[18px] bg-paper-2 shadow-editorial-2">
-            <img
-              src={IMAGES.hero}
-              alt="Students learning together"
-              loading="eager"
-              className="aspect-[4/5] w-full object-cover"
-            />
-          </div>
+          <HeroCarousel images={HERO_IMAGES} />
         </ScrollReveal>
       </section>
 
-      {/* Stats */}
-      <section id="stats" className="border-y border-line bg-paper-2">
-        <div className="ed-shell grid grid-cols-2 gap-y-10 py-14 lg:grid-cols-4">
-          {stats.map((s, i) => (
-            <ScrollReveal
-              key={s.label}
-              delay={i * 0.06}
-              className="text-center"
-            >
-              <div className="font-display ed-display text-step-6 text-ink">
-                {s.value}
+      {/* Stats — right-to-left infinite marquee (content duplicated for a seamless loop) */}
+      <section
+        id="stats"
+        aria-label="By the numbers"
+        className="overflow-hidden border-y border-line bg-paper-2 py-14"
+      >
+        <div className="ed-marquee">
+          {[...stats, ...stats].map((s, i) => {
+            const dup = i >= stats.length;
+            return (
+              <div
+                key={`${s.label}-${i}`}
+                data-dup={dup ? "true" : undefined}
+                aria-hidden={dup ? true : undefined}
+                className="flex shrink-0 flex-col items-center justify-center border-l border-line px-12 text-center sm:px-16"
+              >
+                <span className="font-display ed-display text-step-6 text-ink">
+                  {s.value}
+                </span>
+                <span className="eyebrow mt-2 whitespace-nowrap">{s.label}</span>
               </div>
-              <div className="eyebrow mt-2">{s.label}</div>
-            </ScrollReveal>
-          ))}
+            );
+          })}
         </div>
       </section>
 

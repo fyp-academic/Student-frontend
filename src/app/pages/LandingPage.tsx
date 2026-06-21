@@ -13,6 +13,8 @@ import {
   Star,
   Menu,
   X,
+  Plus,
+  Minus,
 } from "lucide-react";
 import ScrollReveal from "../components/editorial/ScrollReveal";
 import ThemeToggle from "../components/editorial/ThemeToggle";
@@ -55,36 +57,54 @@ const features = [
     title: "Personalised Course Catalog",
     description:
       "AI-curated learning paths that adapt to each student's pace, level, and goals.",
+    image:
+      "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=900&q=80",
+    alt: "Stack of books and study notes on a desk",
   },
   {
     icon: Video,
     title: "Live & Recorded Classes",
     description:
       "Join interactive live sessions or learn on your schedule with on-demand recordings.",
+    image:
+      "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=900&q=80",
+    alt: "Laptop showing a live video class with participants in a grid",
   },
   {
     icon: FileText,
     title: "Smart Assignments",
     description:
       "Auto-graded quizzes, rich-text assignments, and instant feedback that actually helps.",
+    image:
+      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=80",
+    alt: "Student writing notes beside a laptop",
   },
   {
     icon: MessageCircle,
     title: "Built-in AI Tutor",
     description:
       "24/7 conversational tutor that explains concepts, debugs answers, and quizzes you.",
+    image:
+      "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?auto=format&fit=crop&w=900&q=80",
+    alt: "Student chatting and learning at a laptop",
   },
   {
     icon: TrendingUp,
     title: "Progress Analytics",
     description:
       "Visualise strengths, weaknesses, and momentum with beautiful dashboards.",
+    image:
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80",
+    alt: "Analytics dashboard with charts and graphs",
   },
   {
     icon: Users,
     title: "Community & Mentors",
     description:
       "Study groups, discussion forums, and 1:1 mentorship from verified educators.",
+    image:
+      "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=900&q=80",
+    alt: "Group of students collaborating around a laptop",
   },
 ];
 
@@ -131,6 +151,7 @@ const NAV = [
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [openFeature, setOpenFeature] = useState(0);
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -339,26 +360,71 @@ export default function LandingPage() {
           </p>
         </ScrollReveal>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal className="mx-auto mt-14 max-w-3xl border-t border-line">
           {features.map((f, i) => {
             const Icon = f.icon;
+            const open = openFeature === i;
             return (
-              <ScrollReveal
-                key={f.title}
-                delay={(i % 3) * 0.06}
-                className="group flex h-full flex-col rounded-[18px] border border-line bg-paper p-7 transition-shadow duration-300 hover:shadow-editorial-1"
-              >
-                <span className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full border border-line text-clay transition-colors duration-300 group-hover:border-ink">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="font-display ed-display text-step-4 text-ink">
-                  {f.title}
+              <div key={f.title} className="border-b border-line">
+                <h3>
+                  <button
+                    type="button"
+                    onClick={() => setOpenFeature(open ? -1 : i)}
+                    aria-expanded={open}
+                    aria-controls={`feature-panel-${i}`}
+                    className="group flex w-full items-center justify-between gap-4 py-6 text-left"
+                  >
+                    <span className="flex items-center gap-4">
+                      <span
+                        className={`inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border text-clay transition-colors duration-300 ${
+                          open ? "border-ink" : "border-line group-hover:border-ink"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="font-display ed-display text-step-4 text-ink">
+                        {f.title}
+                      </span>
+                    </span>
+                    <span
+                      className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition-colors duration-300 ${
+                        open
+                          ? "border-ink text-clay"
+                          : "border-line text-ink group-hover:border-ink"
+                      }`}
+                    >
+                      {open ? (
+                        <Minus className="h-4 w-4" />
+                      ) : (
+                        <Plus className="h-4 w-4" />
+                      )}
+                    </span>
+                  </button>
                 </h3>
-                <p className="mt-3 text-step-2 text-ink-2">{f.description}</p>
-              </ScrollReveal>
+
+                <div
+                  id={`feature-panel-${i}`}
+                  role="region"
+                  className={`grid transition-all duration-300 ease-out ${
+                    open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="grid gap-6 pb-8 md:grid-cols-2 md:items-center">
+                      <p className="text-step-2 text-ink-2">{f.description}</p>
+                      <img
+                        src={f.image}
+                        alt={f.alt}
+                        loading="lazy"
+                        className="h-56 w-full rounded-[14px] bg-paper-2 object-cover md:h-48"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             );
           })}
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* Testimonials */}

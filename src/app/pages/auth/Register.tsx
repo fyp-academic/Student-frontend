@@ -287,7 +287,7 @@ export default function Register() {
             <>
               <p className="eyebrow mb-3 text-center">Join APES</p>
               <h2 className="font-display ed-display text-step-5 text-ink mb-1 text-center">Create your account</h2>
-              <p className="text-step-2 text-ink-2 mb-7 text-center">Join the apes udom learning community</p>
+              <p className="text-step-2 text-ink-2 mb-7 text-center">Join the APES LMS learning community</p>
 
               {apiError && (
                 <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2">

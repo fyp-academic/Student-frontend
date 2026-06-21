@@ -251,7 +251,6 @@ export default function LandingPage() {
       {/* Hero — editorial split (replaces the background video) */}
       <section className="ed-shell grid grid-cols-1 items-center gap-10 pb-[var(--section-y)] pt-10 md:pt-16 lg:grid-cols-12 lg:gap-12">
         <ScrollReveal className="lg:col-span-6" y={28}>
-          <p className="eyebrow mb-5">AI Personalization eLearning System</p>
           <h1 className="font-display ed-display text-step-8 text-ink">
             Learning, personalised to every student
           </h1>

@@ -35,6 +35,12 @@ export default function Login() {
   const [resendSuccess, setResendSuccess] = useState(false);
 
   const INSTRUCTOR_URL = import.meta.env.VITE_INSTRUCTOR_URL ?? 'https://apesguide.codagenz.com';
+  // Guard against a build accidentally served on the instructor domain
+  // (redirecting to itself would loop forever).
+  const onInstructorOrigin = (() => {
+    try { return window.location.origin === new URL(INSTRUCTOR_URL).origin; }
+    catch { return false; }
+  })();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +62,11 @@ export default function Login() {
         // student-side token and hand the user over with their email pre-filled.
         await logout();
         setWrongRole(true);
-        setTimeout(() => {
-          window.location.href = `${INSTRUCTOR_URL}/login?email=${encodeURIComponent(email)}&from=student`;
-        }, 1500);
+        if (!onInstructorOrigin) {
+          setTimeout(() => {
+            window.location.href = `${INSTRUCTOR_URL}/login?email=${encodeURIComponent(email)}&from=student`;
+          }, 1500);
+        }
       } else {
         navigate('/dashboard');
       }

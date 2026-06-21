@@ -7,13 +7,13 @@ interface SEOHeadProps {
   noIndex?: boolean;
 }
 
-const SITE_NAME = "APES eLearning";
+const SITE_NAME = "APES LMS";
 const BASE_URL = "https://apesudom.codagenz.com";
 const DEFAULT_DESCRIPTION =
   "APES is an AI-powered personalized eLearning system. Smart course recommendations, live sessions, AI study tips, and adaptive learning tools — all in one platform. welcome!";
 
 export function SEOHead({ title, description, canonical, noIndex = false }: SEOHeadProps) {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} – AI Personalization eLearning System`;
+  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Smart Learning Platform`;
   const metaDescription = description ?? DEFAULT_DESCRIPTION;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { Eye, EyeOff, Loader2, Mail, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../services/api';
@@ -20,8 +20,9 @@ function validate(email: string, password: string) {
 export default function Login() {
   const { login, logout } = useAuth();
   const navigate   = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [email,    setEmail]    = useState('');
+  const [email,    setEmail]    = useState(searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [errors,   setErrors]   = useState<Record<string, string>>({});
@@ -51,8 +52,13 @@ export default function Login() {
       const user   = stored ? JSON.parse(stored) : null;
       const role   = String(user?.role ?? '');
       if (role === 'instructor' || role === 'admin') {
+        // Wrong portal: this account belongs on the instructor portal. Revoke the
+        // student-side token and hand the user over with their email pre-filled.
         await logout();
         setWrongRole(true);
+        setTimeout(() => {
+          window.location.href = `${INSTRUCTOR_URL}/login?email=${encodeURIComponent(email)}&from=student`;
+        }, 1500);
       } else {
         navigate('/dashboard');
       }
@@ -107,8 +113,8 @@ export default function Login() {
               <div className="mb-5 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm">
                 <p className="font-semibold text-amber-800 mb-1">Instructor account detected</p>
                 <p className="text-amber-700">
-                  This portal is for students. Please use the{' '}
-                  <a href={`${INSTRUCTOR_URL}/login`} className="text-clay font-semibold hover:underline">
+                  This portal is for students — taking you to the{' '}
+                  <a href={`${INSTRUCTOR_URL}/login?email=${encodeURIComponent(email)}&from=student`} className="text-clay font-semibold hover:underline">
                     instructor portal →
                   </a>
                 </p>

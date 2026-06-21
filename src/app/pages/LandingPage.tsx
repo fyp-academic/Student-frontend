@@ -175,8 +175,8 @@ export default function LandingPage() {
       style={{ fontFamily: '"Inter Variable", Inter, system-ui, sans-serif' }}
     >
       <SEOHead
-        title="APES – AI Personalization eLearning System"
-        description="APES is an AI-powered eLearning platform that personalises your learning journey through smart recommendations, adaptive quizzes, live sessions, and real-time engagement insights."
+        title="Smart Learning Platform"
+        description="APES LMS is an AI-powered eLearning platform that personalises your learning journey through smart recommendations, adaptive quizzes, live sessions, and real-time engagement insights."
         canonical="/"
       />
 

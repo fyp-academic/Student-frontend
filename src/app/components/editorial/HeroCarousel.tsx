@@ -10,11 +10,13 @@ export interface HeroImage {
 interface HeroCarouselProps {
   images: HeroImage[];
   interval?: number;
+  /** Full-bleed background mode: covers its positioned parent, no card chrome or dots. */
+  fill?: boolean;
 }
 
 // Auto-cycling hero image carousel with a crossfade + subtle Ken-Burns zoom.
 // Under reduced-motion it renders a single static image with no autoplay.
-export default function HeroCarousel({ images, interval = 4500 }: HeroCarouselProps) {
+export default function HeroCarousel({ images, interval = 4500, fill = false }: HeroCarouselProps) {
   const reduced = usePrefersReducedMotion();
   const [index, setIndex] = useState(0);
 
@@ -27,7 +29,13 @@ export default function HeroCarousel({ images, interval = 4500 }: HeroCarouselPr
   }, [reduced, images.length, interval]);
 
   const frame = (
-    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[18px] bg-paper-2 shadow-editorial-2">
+    <div
+      className={
+        fill
+          ? 'absolute inset-0 h-full w-full overflow-hidden bg-paper-2'
+          : 'relative aspect-[4/5] w-full overflow-hidden rounded-[18px] bg-paper-2 shadow-editorial-2'
+      }
+    >
       {reduced ? (
         <img
           src={images[0]?.src}
@@ -55,7 +63,7 @@ export default function HeroCarousel({ images, interval = 4500 }: HeroCarouselPr
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/15 to-transparent" />
 
       {/* dot indicators */}
-      {images.length > 1 && (
+      {!fill && images.length > 1 && (
         <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
           {images.map((img, i) => (
             <button

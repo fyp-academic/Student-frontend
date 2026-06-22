@@ -21,6 +21,10 @@ import ThemeToggle from "../components/editorial/ThemeToggle";
 import CustomCursor from "../components/editorial/CustomCursor";
 import HeroCarousel from "../components/editorial/HeroCarousel";
 import { useLenis } from "../components/editorial/useLenis";
+import heroImg1 from "../../assets/hero-images/image1.jpeg";
+import heroImg2 from "../../assets/hero-images/image2.jpeg";
+import heroImg3 from "../../assets/hero-images/image3.jpeg";
+import heroImg4 from "../../assets/hero-images/image4.jpeg";
 
 // Editorial stock imagery (Unsplash). Each <img> keeps a warm bg-paper-2
 // placeholder so the layout holds if a photo is slow / fails to load.
@@ -28,27 +32,13 @@ const IMAGES = {
   story: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1100&q=80",
 };
 
-// Hero carousel — curated African / Tanzanian higher-education student photos.
-// They auto-cycle with a crossfade. DROP-IN: to use real University of Dodoma
-// photos, drop files into ../../assets, `import udom1 from "../../assets/udom1.jpg"`
-// and replace the `src` values below with the imported variables.
+// Hero background slideshow — local student photos (src/assets/hero-images).
+// They auto-cycle with a crossfade behind the hero content.
 const HERO_IMAGES = [
-  {
-    src: "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=1100&q=80",
-    alt: "African university students celebrating graduation",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1627556704302-624286467c65?auto=format&fit=crop&w=1100&q=80",
-    alt: "Tanzanian student studying on campus",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1100&q=80",
-    alt: "University students collaborating around a laptop",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1100&q=80",
-    alt: "Group of students learning together",
-  },
+  { src: heroImg1, alt: "Students learning together" },
+  { src: heroImg2, alt: "Student studying on campus" },
+  { src: heroImg3, alt: "Students collaborating around a laptop" },
+  { src: heroImg4, alt: "Group of students in class" },
 ];
 
 const features = [
@@ -269,57 +259,57 @@ export default function LandingPage() {
         )}
       </header>
 
-      {/* Hero — editorial split (replaces the background video) */}
-      <section className="ed-shell grid grid-cols-1 items-center gap-10 pb-[var(--section-y)] pt-10 md:pt-16 lg:grid-cols-12 lg:gap-12">
-        <ScrollReveal className="lg:col-span-6" y={28}>
-          <h1 className="font-display ed-display text-step-8 text-ink">
-            Learning, personalised to every student
-          </h1>
-          <p className="mt-6 max-w-prose text-step-3 text-ink-2">
-            APES adapts to how you learn — smart course recommendations, adaptive
-            quizzes, live sessions, and real-time insights, all in one calm place.
-          </p>
-          <div className="mt-9 flex flex-wrap gap-4">
-            <Link
-              to="/register"
-              data-cursor
-              className="group inline-flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-step-2 text-paper transition-colors duration-300 hover:bg-clay-deep"
-            >
-              Start Learning Free
-              <ArrowRight
-                size={18}
-                className="transition-transform duration-300 group-hover:translate-x-1"
-              />
-            </Link>
-            <Link
-              to="/login"
-              data-cursor
-              className="inline-flex items-center gap-2 rounded-full border border-line px-7 py-3.5 text-step-2 text-ink transition-colors duration-300 hover:border-ink"
-            >
-              Sign In
-            </Link>
-          </div>
-          <div className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-1 text-step-1 text-ink-2">
-            {["Free forever plan", "No credit card", "Cancel anytime"].map(
-              (t, i) => (
-                <span
-                  key={t}
-                  className={
-                    i < 2
-                      ? "after:ml-3 after:text-line after:content-['/']"
-                      : ""
-                  }
-                >
-                  {t}
-                </span>
-              ),
-            )}
-          </div>
-        </ScrollReveal>
+      {/* Hero — local student photos as a full-bleed background slideshow */}
+      <section className="relative isolate flex min-h-[80vh] items-center overflow-hidden bg-ink">
+        {/* Background slideshow */}
+        <HeroCarousel images={HERO_IMAGES} fill />
+        {/* Legibility overlay */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/60 to-ink/45" />
 
-        <ScrollReveal className="lg:col-span-6" delay={0.1} y={28}>
-          <HeroCarousel images={HERO_IMAGES} />
-        </ScrollReveal>
+        {/* Content */}
+        <div className="relative w-full ed-shell py-24 md:py-28">
+          <ScrollReveal className="max-w-3xl" y={28}>
+            <h1 className="font-display ed-display text-step-8 text-paper">
+              Learning, personalised to every student
+            </h1>
+            <div className="mt-9 flex flex-wrap gap-4">
+              <Link
+                to="/register"
+                data-cursor
+                className="group inline-flex items-center gap-2 rounded-full bg-paper px-7 py-3.5 text-step-2 text-ink transition-colors duration-300 hover:bg-clay hover:text-paper"
+              >
+                Start Learning Free
+                <ArrowRight
+                  size={18}
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </Link>
+              <Link
+                to="/login"
+                data-cursor
+                className="inline-flex items-center gap-2 rounded-full border border-paper/40 px-7 py-3.5 text-step-2 text-paper transition-colors duration-300 hover:border-paper"
+              >
+                Sign In
+              </Link>
+            </div>
+            <div className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-1 text-step-1 text-paper/80">
+              {["Free forever plan", "No credit card", "Cancel anytime"].map(
+                (t, i) => (
+                  <span
+                    key={t}
+                    className={
+                      i < 2
+                        ? "after:ml-3 after:text-paper/40 after:content-['/']"
+                        : ""
+                    }
+                  >
+                    {t}
+                  </span>
+                ),
+              )}
+            </div>
+          </ScrollReveal>
+        </div>
       </section>
 
       {/* Stats — right-to-left infinite marquee (content duplicated for a seamless loop) */}

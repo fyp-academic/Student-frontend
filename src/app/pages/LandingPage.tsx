@@ -260,23 +260,23 @@ export default function LandingPage() {
       </header>
 
       {/* Hero — local student photos as a full-bleed background slideshow */}
-      <section className="relative isolate flex min-h-[80vh] items-center overflow-hidden bg-ink">
+      <section className="relative isolate flex min-h-[80vh] items-center overflow-hidden bg-neutral-900">
         {/* Background slideshow */}
         <HeroCarousel images={HERO_IMAGES} fill />
-        {/* Legibility overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/60 to-ink/45" />
+        {/* Legibility overlay — fixed dark scrim (theme-independent so photos stay clear in dark mode) */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/55 to-black/40" />
 
         {/* Content */}
         <div className="relative w-full ed-shell py-24 md:py-28">
           <ScrollReveal className="max-w-3xl" y={28}>
-            <h1 className="font-display ed-display text-step-8 text-paper">
+            <h1 className="font-display ed-display text-step-8 text-white">
               Learning, personalised to every student
             </h1>
             <div className="mt-9 flex flex-wrap gap-4">
               <Link
                 to="/register"
                 data-cursor
-                className="group inline-flex items-center gap-2 rounded-full bg-paper px-7 py-3.5 text-step-2 text-ink transition-colors duration-300 hover:bg-clay hover:text-paper"
+                className="group inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-step-2 text-neutral-900 transition-colors duration-300 hover:bg-clay hover:text-white"
               >
                 Start Learning Free
                 <ArrowRight
@@ -287,19 +287,19 @@ export default function LandingPage() {
               <Link
                 to="/login"
                 data-cursor
-                className="inline-flex items-center gap-2 rounded-full border border-paper/40 px-7 py-3.5 text-step-2 text-paper transition-colors duration-300 hover:border-paper"
+                className="inline-flex items-center gap-2 rounded-full border border-white/40 px-7 py-3.5 text-step-2 text-white transition-colors duration-300 hover:border-white"
               >
                 Sign In
               </Link>
             </div>
-            <div className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-1 text-step-1 text-paper/80">
+            <div className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-1 text-step-1 text-white/80">
               {["Free forever plan", "No credit card", "Cancel anytime"].map(
                 (t, i) => (
                   <span
                     key={t}
                     className={
                       i < 2
-                        ? "after:ml-3 after:text-paper/40 after:content-['/']"
+                        ? "after:ml-3 after:text-white/40 after:content-['/']"
                         : ""
                     }
                   >

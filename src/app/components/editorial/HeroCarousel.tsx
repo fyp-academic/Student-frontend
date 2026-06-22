@@ -32,7 +32,7 @@ export default function HeroCarousel({ images, interval = 4500, fill = false }: 
     <div
       className={
         fill
-          ? 'absolute inset-0 h-full w-full overflow-hidden bg-paper-2'
+          ? 'absolute inset-0 h-full w-full overflow-hidden bg-neutral-900'
           : 'relative aspect-[4/5] w-full overflow-hidden rounded-[18px] bg-paper-2 shadow-editorial-2'
       }
     >
@@ -59,8 +59,10 @@ export default function HeroCarousel({ images, interval = 4500, fill = false }: 
         </AnimatePresence>
       )}
 
-      {/* subtle warm wash for depth */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/15 to-transparent" />
+      {/* subtle warm wash for depth (card variant only; fill mode uses the page overlay) */}
+      {!fill && (
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/15 to-transparent" />
+      )}
 
       {/* dot indicators */}
       {!fill && images.length > 1 && (

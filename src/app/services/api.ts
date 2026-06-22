@@ -151,6 +151,11 @@ export const groupsApi = {
   myGroups: (courseId: string) => api.get(`/courses/${courseId}/my-groups`),
 };
 
+// ─── Group works ────────────────────────────────────────────────────────────────
+export const groupWorksApi = {
+  list: () => api.get('/my-group-works'),
+};
+
 // ─── Notifications ────────────────────────────────────────────────────────────
 export const notificationsApi = {
   list:        () => api.get('/notifications', { params: { channel: 'in_app' } }),

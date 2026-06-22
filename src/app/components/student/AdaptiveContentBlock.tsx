@@ -12,7 +12,7 @@ import type { PresentationConfig, PresentationMode, ModeConfig } from '@/app/typ
 import { cardVariantClass, presentationStyles } from '@/app/types/personalization';
 import {
   FileText, BarChart3, Lightbulb, ThumbsUp, ThumbsDown,
-  ShieldCheck, AlertCircle,
+  AlertCircle,
 } from 'lucide-react';
 
 function resolvePlayer(mode?: PresentationMode) {
@@ -38,10 +38,8 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
   presentationOverride,
 }) => {
   const [adaptedContent, setAdaptedContent] = useState<string | null>(null);
-  const [originalContent, setOriginalContent] = useState<string | null>(null);
   const [adaptationId, setAdaptationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showOriginal, setShowOriginal] = useState(false);
   const [currentModality, setCurrentModality] = useState<Modality>('text');
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [feedbackTimerStarted, setFeedbackTimerStarted] = useState(false);
@@ -65,7 +63,6 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
       const res = await adaptiveContentApi.get(chunkId, modality);
       const data = res.data;
       setAdaptedContent(data.adapted_text ?? null);
-      setOriginalContent(data.original_text ?? null);
       setAdaptationId(data.adaptation_id ?? null);
       setContentAdapted(data.content_adapted === true);
       setPresentation(data.presentation ?? null);
@@ -226,27 +223,6 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
           </div>
         );
       })()}
-
-      {!isLoading && originalContent && (
-        <div className="mt-3">
-          <button
-            type="button"
-            onClick={() => setShowOriginal((v) => !v)}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            {showOriginal ? 'Hide immutable instructor source' : 'View immutable instructor source'}
-          </button>
-          {showOriginal && (
-            <div className="mt-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Instructor authoritative version (stored unchanged)
-              </p>
-              <SafeMarkdown content={originalContent} />
-            </div>
-          )}
-        </div>
-      )}
 
       {showFeedbackStrip && (
         <div className="mt-4 rounded-lg border bg-accent/40 p-3">

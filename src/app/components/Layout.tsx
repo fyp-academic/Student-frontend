@@ -24,6 +24,7 @@ const breadcrumbMap: Record<string, string> = {
   activities: "Learning Flow / Activities",
   assessments: "Learning Flow / Assessments",
   assignments: "Learning Flow / Assignments",
+  "group-works": "Learning Flow / Group Works",
   practice: "Learning Flow / Practice",
   interactive: "Learning Flow / Interactive Activities",
   notifications: "Communication / Notifications",

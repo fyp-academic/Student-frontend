@@ -40,23 +40,26 @@ const typeConfig: Record<NotifType, { icon: React.ElementType; color: string; bg
 
 // Initialize Echo for real-time notifications
 let echoInstance: Echo<'reverb'> | null = null;
-function getEchoInstance(): Echo<'reverb'> {
-  if (!echoInstance) {
-    (window as unknown as Record<string, unknown>).Pusher = Pusher;
-    const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'https';
-    const tls = scheme === 'https';
-    echoInstance = new Echo({
-      broadcaster:  'reverb',
-      key:          import.meta.env.VITE_REVERB_APP_KEY,
-      wsHost:       import.meta.env.VITE_REVERB_HOST,
-      wsPort:       Number(import.meta.env.VITE_REVERB_PORT),
-      wssPort:      Number(import.meta.env.VITE_REVERB_PORT),
-      forceTLS:     tls,
-      enabledTransports: tls ? ['ws', 'wss'] : ['ws'],
-      authEndpoint: `${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://localhost:8000'}/api/broadcasting/auth`,
-      auth: { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') ?? ''}` } },
-    } as ConstructorParameters<typeof Echo>[0]);
-  }
+function getEchoInstance(): Echo<'reverb'> | null {
+  if (echoInstance) return echoInstance;
+  const key  = import.meta.env.VITE_REVERB_APP_KEY;
+  const host = import.meta.env.VITE_REVERB_HOST;
+  const port = Number(import.meta.env.VITE_REVERB_PORT);
+  if (!key || !host || !port) return null;
+  (window as unknown as Record<string, unknown>).Pusher = Pusher;
+  const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'https';
+  const tls = scheme === 'https';
+  echoInstance = new Echo({
+    broadcaster:  'reverb',
+    key,
+    wsHost:       host,
+    wsPort:       port,
+    wssPort:      port,
+    forceTLS:     tls,
+    enabledTransports: tls ? ['ws', 'wss'] : ['ws'],
+    authEndpoint: `${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://api.codagenz.com'}/api/broadcasting/auth`,
+    auth: { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') ?? ''}` } },
+  } as ConstructorParameters<typeof Echo>[0]);
   return echoInstance;
 }
 
@@ -89,8 +92,9 @@ export function Notifications() {
   useEffect(() => {
     try {
       const echo = getEchoInstance();
+      if (!echo) return;
       echoRef.current = echo;
-      
+
       // Subscribe to user's notification channel
       const channel = echo.private(`user.${localStorage.getItem('user_id') ?? 'unknown'}`);
       channelRef.current = channel;

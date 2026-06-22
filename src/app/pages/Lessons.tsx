@@ -6,6 +6,7 @@ import { AdaptiveContentBlock } from "../components/student/AdaptiveContentBlock
 import { AdaptiveActivityPanel } from "../components/student/AdaptiveActivityPanel";
 import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCourseSidebar";
 import { VideoLearningPanel } from "../components/student/VideoLearningPanel";
+import { SafeHtml } from "../components/SafeHtml";
 import { usePersonalization } from "../hooks/usePersonalization";
 import { presentationStyles } from "../types/personalization";
 import { useProctoringMonitor, ProctoringConfig } from '../hooks/useProctoringMonitor';
@@ -1432,9 +1433,9 @@ export function Lessons() {
                             <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", marginBottom: 16 }}>
                               {lessonPages[currentPageIndex]?.title ?? 'Page'}
                             </h2>
-                            <div
+                            <SafeHtml
                               className="prose prose-slate max-w-none"
-                              dangerouslySetInnerHTML={{ __html: lessonPages[currentPageIndex]?.content ?? '' }}
+                              html={lessonPages[currentPageIndex]?.content ?? ''}
                             />
                           </>
                         )}

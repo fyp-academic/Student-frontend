@@ -11,6 +11,7 @@ import { Lessons } from "./pages/Lessons";
 import { Activities } from "./pages/Activities";
 import { Assessments } from "./pages/Assessments";
 import { Assignments } from "./pages/Assignments";
+import { GroupWorks } from "./pages/GroupWorks";
 import { Practice } from "./pages/Practice";
 import { InteractiveActivities } from "./pages/InteractiveActivities";
 import { Notifications } from "./pages/Notifications";
@@ -92,6 +93,7 @@ export const router = createBrowserRouter([
       { path: "/activities",   Component: Activities          },
       { path: "/assessments",  Component: Assessments         },
       { path: "/assignments",  Component: Assignments         },
+      { path: "/group-works",  Component: GroupWorks          },
       { path: "/practice",     Component: Practice            },
       { path: "/interactive",  Component: InteractiveActivities },
       { path: "/notifications", Component: Notifications      },

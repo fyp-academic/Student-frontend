@@ -111,6 +111,7 @@ const navGroups: NavGroup[] = [
     defaultOpen: true,
     items: [
       { label: "Lessons", icon: BookMarked, path: "/lessons" },
+      { label: "Group Works", icon: Users, path: "/group-works" },
     ],
   },
   {

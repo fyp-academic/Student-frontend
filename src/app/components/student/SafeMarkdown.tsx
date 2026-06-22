@@ -1,18 +1,27 @@
 import React from 'react';
+import { resolveAssetUrl, resolveHtmlAssetUrls } from '../ui/utils';
 
 interface SafeMarkdownProps {
   content: string;
   className?: string;
 }
 
+// Markdown image syntax ![alt](url) → <img>, with the asset URL resolved to the API origin.
+const formatImages = (text: string): string =>
+  text.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,
+    (_m, alt, url) => `<img src="${resolveAssetUrl(url)}" alt="${alt}" class="max-w-full h-auto rounded-lg my-2" />`);
+
 const inlineFormat = (text: string): string => {
-  return text
+  return formatImages(text)
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/==(.+?)==/g, '<mark>$1</mark>')
     .replace(/`(.+?)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-sm">$1</code>');
 };
+
+// Lines that are raw media HTML (images/videos) emitted by the instructor's rich-text editor.
+const isMediaHtml = (line: string): boolean => /^<(img|video|source|audio|figure|picture)\b/i.test(line);
 
 const isTableDelimiter = (line: string): boolean =>
   /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(line);
@@ -100,7 +109,9 @@ export const SafeMarkdown: React.FC<SafeMarkdownProps> = ({ content, className =
       continue;
     }
 
-    if (trimmed.startsWith('> ')) {
+    if (isMediaHtml(trimmed)) {
+      elements.push(<div key={`media-${key++}`} className="my-2" dangerouslySetInnerHTML={{ __html: resolveHtmlAssetUrls(trimmed) }} />);
+    } else if (trimmed.startsWith('> ')) {
       elements.push(<blockquote key={`bq-${key++}`} dangerouslySetInnerHTML={{ __html: inlineFormat(trimmed.slice(2)) }} />);
     } else if (trimmed.startsWith('#### ')) {
       elements.push(<h4 key={`h-${key++}`} className="text-base font-semibold mt-3 mb-1" dangerouslySetInnerHTML={{ __html: inlineFormat(trimmed.slice(5)) }} />);

@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
+import { resolveAssetUrl } from './ui/utils';
 
 /**
- * Renders instructor-authored rich HTML (course descriptions, etc.) safely.
- * Removes dangerous elements and strips event handlers, data-* attributes
+ * Renders instructor-authored rich HTML (course descriptions, lesson pages, etc.)
+ * safely. Removes dangerous elements and strips event handlers, data-* attributes
  * (e.g. the data-start/data-end junk left by pasted ChatGPT content), and
- * javascript: URLs — while preserving real formatting (headings, lists, bold).
+ * javascript: URLs — while preserving real formatting (headings, lists, bold) and
+ * media (images/videos). Relative asset URLs are resolved to the API origin so
+ * uploaded images/videos load from the SPA's different origin.
  */
 function sanitizeHtml(html: string): string {
   if (typeof window === 'undefined' || !html) return '';
@@ -26,6 +29,12 @@ function sanitizeHtml(html: string): string {
         el.removeAttribute(attr.name);
       }
     });
+  });
+
+  // Resolve relative asset URLs (images, videos, <source>) to absolute URLs.
+  doc.body.querySelectorAll('img,video,source,audio').forEach(el => {
+    const src = el.getAttribute('src');
+    if (src) el.setAttribute('src', resolveAssetUrl(src));
   });
 
   return doc.body.innerHTML;

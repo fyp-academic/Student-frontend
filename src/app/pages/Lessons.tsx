@@ -1333,12 +1333,6 @@ export function Lessons() {
                     const docViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(resourceUrl)}&embedded=true`;
                     return (
                       <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                        <AdaptiveActivityPanel
-                          activityId={activeActivityId}
-                          courseId={selectedCourseId}
-                          title={contentTitle}
-                          presentationOverride={presentationConfig}
-                        />
                         {isVideo && (
                           <video controls className="w-full rounded-xl" style={{ maxHeight: "calc(100vh - 260px)", minHeight: "200px", display: "block" }}>
                             <source src={resourceUrl} type={fileMimeType || undefined} />

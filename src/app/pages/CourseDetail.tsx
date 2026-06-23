@@ -45,26 +45,41 @@ export default function CourseDetail() {
     if (!id || !course) return;
     setEnrolling(true);
     try {
-      const isEnrolled = Boolean(course.is_enrolled ?? course.enrolled);
-      if (isEnrolled) {
-        await coursesApi.leave(id);
-        toast({ title: "Left course", description: "You have left this course." });
-      } else {
-        await coursesApi.selfEnroll(id);
-        toast({ title: "Enrolled", description: "You have successfully enrolled in this course." });
-      }
-      setCourse((prev) =>
-        prev ? { ...prev, is_enrolled: !isEnrolled, enrolled: !isEnrolled } : prev
-      );
+      await coursesApi.selfEnroll(id);
+      toast({ title: "Enrolled", description: "You have successfully enrolled in this course." });
+      setCourse((prev) => (prev ? { ...prev, is_enrolled: true, enrolled: true } : prev));
     } catch {
       toast({
         title: "Error",
-        description: "Failed to update enrollment. Please try again.",
+        description: "Failed to enroll. Please try again.",
         variant: "destructive",
       });
     } finally {
       setEnrolling(false);
     }
+  };
+
+  const handleLeave = async () => {
+    if (!id || !course) return;
+    setEnrolling(true);
+    try {
+      await coursesApi.leave(id);
+      toast({ title: "Left course", description: "You have left this course." });
+      setCourse((prev) => (prev ? { ...prev, is_enrolled: false, enrolled: false } : prev));
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to leave the course. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const goToLessons = () => {
+    if (!id) return;
+    navigate("/lessons", { state: { courseId: id } });
   };
 
   if (loading) {
@@ -182,36 +197,52 @@ export default function CourseDetail() {
 
           {/* Description */}
           {description && (
-            <SafeHtml className="course-description" html={description} />
+            <div className="mt-2">
+              <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>
+                About this course
+              </h2>
+              <SafeHtml className="course-description" html={description} />
+            </div>
           )}
 
-          {/* Enroll Button */}
-          <button
-            disabled={enrolling}
-            onClick={handleEnroll}
-            className="mt-5 w-full sm:w-auto px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60"
-            style={{
-              fontSize: "14px",
-              fontWeight: 600,
-              backgroundColor: isEnrolled ? "#f0fdf4" : "#2563eb",
-              color: isEnrolled ? "#16a34a" : "#fff",
-              border: isEnrolled ? "1px solid #bbf7d0" : "none",
-            }}
-          >
-            {enrolling ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : isEnrolled ? (
-              <>
-                <CheckCircle size={16} />
-                Enrolled
-              </>
-            ) : (
-              <>
+          {/* Enroll / Continue Learning Button */}
+          {isEnrolled ? (
+            <div className="mt-5">
+              <button
+                disabled={enrolling}
+                onClick={goToLessons}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60"
+                style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#2563eb", color: "#fff" }}
+              >
                 <PlayCircle size={16} />
-                Enroll Now
-              </>
-            )}
-          </button>
+                Continue Learning →
+              </button>
+              <button
+                disabled={enrolling}
+                onClick={handleLeave}
+                className="block mt-2 transition-colors hover:underline disabled:opacity-60"
+                style={{ fontSize: "12px", fontWeight: 500, color: "#94a3b8", background: "none", border: "none", padding: 0 }}
+              >
+                {enrolling ? "Updating…" : "Leave course"}
+              </button>
+            </div>
+          ) : (
+            <button
+              disabled={enrolling}
+              onClick={handleEnroll}
+              className="mt-5 w-full sm:w-auto px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60"
+              style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#2563eb", color: "#fff", border: "none" }}
+            >
+              {enrolling ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <>
+                  <PlayCircle size={16} />
+                  Enroll Now
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 

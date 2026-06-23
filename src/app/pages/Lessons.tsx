@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import { useLocation } from "react-router";
 import { PlayCircle, Lock, CheckCircle, Clock, BookMarked, ChevronDown, ChevronRight, Loader2, X, FileText, ExternalLink, Menu, LayoutList, ArrowRight, Upload, Paperclip, MessageSquare, ThumbsUp, Eye, Plus, Search, Pin, Send, File, Download } from "lucide-react";
-import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, adaptiveContentApi, scormApi, h5pApi } from "../services/api";
-import { AdaptiveContentBlock } from "../components/student/AdaptiveContentBlock";
+import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, scormApi, h5pApi } from "../services/api";
 import { AdaptiveActivityPanel } from "../components/student/AdaptiveActivityPanel";
 import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCourseSidebar";
 import { VideoLearningPanel } from "../components/student/VideoLearningPanel";
@@ -79,8 +78,6 @@ export function Lessons() {
   const [lessonPages, setLessonPages] = useState<Array<{ id: string; title: string; content: string; is_viewed?: boolean; sort_order?: number }>>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [lessonPagesLoading, setLessonPagesLoading] = useState(false);
-  const [pageChunks, setPageChunks] = useState<Array<{ id: string; chunk_index: number; chunk_text: string; chunk_type: string }>>([]);
-  const [pageChunksLoading, setPageChunksLoading] = useState(false);
 
   // Inline quiz runner state
   const [quizMode, setQuizMode] = useState<'idle' | 'running' | 'submitted' | 'review'>('idle');
@@ -320,7 +317,6 @@ export function Lessons() {
             setCurrentPageIndex(0);
             const firstPage = pages[0];
             if (firstPage?.id) {
-              fetchPageChunks(firstPage.id);
               try { await lessonApi.markViewed(firstPage.id); } catch { /* silent */ }
             }
             // Check if all pages viewed and mark activity complete
@@ -441,18 +437,6 @@ export function Lessons() {
   };
 
   // ─── Lesson Navigation ───────────────────────────────────────────────────
-  const fetchPageChunks = async (contentId: string) => {
-    setPageChunksLoading(true);
-    try {
-      const res = await adaptiveContentApi.chunks(contentId);
-      setPageChunks(res.data?.chunks ?? []);
-    } catch {
-      setPageChunks([]);
-    } finally {
-      setPageChunksLoading(false);
-    }
-  };
-
   const goToLessonPage = async (index: number) => {
     if (index < 0 || index >= lessonPages.length) return;
     const allowSkip = navigationConfig?.lesson_page_navigation?.allow_page_skip ?? true;
@@ -460,7 +444,6 @@ export function Lessons() {
     setCurrentPageIndex(index);
     const page = lessonPages[index];
     if (page?.id) {
-      await fetchPageChunks(page.id);
       if (!page.is_viewed) {
         try {
           await lessonApi.markViewed(page.id);
@@ -841,7 +824,7 @@ export function Lessons() {
 
           {/* Scrollable content area */}
           <div className="flex-1 overflow-y-auto">
-            <div className="max-w-4xl mx-auto px-6 py-6" style={presentationStyles(presentationConfig)}>
+            <div className="max-w-6xl mx-auto px-6 py-6" style={presentationStyles(presentationConfig)}>
               {contentLoading ? (
                 <div className="flex items-center justify-center py-24"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
               ) : !activeActivityId ? (
@@ -1428,31 +1411,15 @@ export function Lessons() {
 
                       {/* Current page content */}
                       <div className="px-6 py-5">
-                        {lessonPagesLoading || pageChunksLoading ? (
+                        {lessonPagesLoading ? (
                           <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
-                        ) : pageChunks.length > 0 ? (
-                          <>
-                            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", marginBottom: 16 }}>
-                              {lessonPages[currentPageIndex]?.title ?? 'Page'}
-                            </h2>
-                            <div className="space-y-4">
-                              {pageChunks.map((chunk) => (
-                                <AdaptiveContentBlock
-                                  key={chunk.id}
-                                  courseId={selectedCourseId}
-                                  chunkId={chunk.id}
-                                  presentationOverride={presentationConfig}
-                                />
-                              ))}
-                            </div>
-                          </>
                         ) : (
                           <>
                             <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", marginBottom: 16 }}>
                               {lessonPages[currentPageIndex]?.title ?? 'Page'}
                             </h2>
                             <SafeHtml
-                              className="prose prose-slate max-w-none"
+                              className="lesson-prose prose prose-slate max-w-none"
                               html={lessonPages[currentPageIndex]?.content ?? ''}
                             />
                           </>

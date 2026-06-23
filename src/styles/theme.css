@@ -268,3 +268,22 @@
 .course-description video { max-width: 100%; height: auto; border-radius: 8px; margin: 0.5rem 0; }
 .course-description strong { font-weight: 700; }
 .course-description em { font-style: italic; }
+
+/* ----------------------------------------------------------------------------
+   Student lesson page body (original authored HTML rendered via SafeHtml).
+   Keep embedded media contained — a broken/large video must not become a
+   page-dominating black slab — and let images scale to the card.
+   ------------------------------------------------------------------------- */
+.lesson-prose { color: #334155; }
+.lesson-prose img { max-width: 100%; height: auto; border-radius: 8px; }
+.lesson-prose video,
+.lesson-prose iframe {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 8px;
+  margin: 12px 0;
+  border: 0;
+}

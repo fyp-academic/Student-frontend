@@ -137,7 +137,7 @@ export const presentationStyles = (config?: PresentationConfig | null): CSSPrope
   return {
     fontSize: `${baseFontSize}px`,
     lineHeight: config.line_height ?? 1.65,
-    maxWidth: config.content_max_width ?? '48rem',
+    maxWidth: config.content_max_width ?? '72rem',
     backgroundColor: bg,
     marginLeft: config.reading_rail === 'centered' ? 'auto' : undefined,
     marginRight: config.reading_rail === 'centered' ? 'auto' : undefined,

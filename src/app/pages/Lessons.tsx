@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import { useLocation } from "react-router";
 import { PlayCircle, Lock, CheckCircle, Clock, BookMarked, ChevronDown, ChevronRight, Loader2, X, FileText, ExternalLink, Menu, LayoutList, ArrowRight, Upload, Paperclip, MessageSquare, ThumbsUp, Eye, Plus, Search, Pin, Send, File, Download } from "lucide-react";
 import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, adaptiveContentApi, scormApi, h5pApi } from "../services/api";
@@ -756,12 +756,30 @@ export function Lessons() {
         </div>
       );
     }
-    if (embedSrc) return <iframe src={embedSrc} className="w-full rounded-lg" style={{ height: "calc(100vh - 220px)", minHeight: "360px", background: "#000" }} allow="autoplay; encrypted-media; fullscreen" allowFullScreen onError={() => setVideoError(true)} />;
-    return <video src={videoUrl} controls autoPlay className="w-full rounded-lg" style={{ maxHeight: "calc(100vh - 220px)", minHeight: "360px", background: "#000", objectFit: "contain" }} onError={() => setVideoError(true)}>Your browser does not support the video tag.</video>;
+    const frameStyle: CSSProperties = {
+      position: "relative",
+      width: "100%",
+      aspectRatio: "16 / 9",
+      maxHeight: "70vh",
+      backgroundColor: "#000",
+      borderRadius: 8,
+      overflow: "hidden",
+    };
+    const fillStyle: CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 };
+    if (embedSrc) return (
+      <div style={frameStyle}>
+        <iframe src={embedSrc} style={fillStyle} allow="autoplay; encrypted-media; fullscreen" allowFullScreen onError={() => setVideoError(true)} />
+      </div>
+    );
+    return (
+      <div style={frameStyle}>
+        <video src={videoUrl} controls autoPlay style={{ ...fillStyle, objectFit: "contain" }} onError={() => setVideoError(true)}>Your browser does not support the video tag.</video>
+      </div>
+    );
   };
 
   return (
-    <div className="flex flex-col" style={{ height: "100vh", overflow: "hidden" }}>
+    <div className="flex flex-col" style={{ height: "100vh", overflow: "hidden", backgroundColor: "#f8fafc" }}>
       {/* ── Proctoring hidden elements ── */}
       <video ref={procWebcamRef} autoPlay muted playsInline style={{ display: 'none' }} />
       <canvas ref={procCanvasRef} style={{ display: 'none' }} />
@@ -843,7 +861,7 @@ export function Lessons() {
                         title={contentTitle}
                         presentationOverride={presentationConfig}
                       />
-                      <div style={{ backgroundColor: "#000" }}>{renderVideo()}</div>
+                      <div className="p-3">{renderVideo()}</div>
                       <VideoLearningPanel
                         activityId={activeActivityId}
                         courseId={selectedCourseId}

@@ -40,7 +40,7 @@ export const SafeMarkdown: React.FC<SafeMarkdownProps> = ({ content, className =
     if (listItems.length === 0) return;
     const Tag = listType === 'ol' ? 'ol' : 'ul';
     elements.push(
-      <Tag key={`list-${key++}`} className={listType === 'ol' ? 'list-decimal' : 'list-disc'}>
+      <Tag key={`list-${key++}`} className={`pl-5 mb-2 ${listType === 'ol' ? 'list-decimal' : 'list-disc'}`}>
         {listItems.map((item, i) => (
           <li key={i} dangerouslySetInnerHTML={{ __html: inlineFormat(item) }} />
         ))}

@@ -4,21 +4,22 @@ import Pusher from 'pusher-js';
 import type { JitsiMeetExternalAPIInstance } from './useJitsiScript';
 import type { Participant } from '../components/sessions/types';
 import { sessionsApi } from '../services/api';
+import { getReverbConfig } from '../lib/reverb';
 
 let _echoInstance: Echo<'reverb'> | null = null;
 function getRoomEcho(): Echo<'reverb'> | null {
-  const appKey = import.meta.env.VITE_REVERB_APP_KEY;
-  if (!appKey) return null;
+  const cfg = getReverbConfig();
+  if (!cfg.key) return null;
   if (!_echoInstance) {
     (window as unknown as Record<string, unknown>).Pusher = Pusher;
     _echoInstance = new Echo({
       broadcaster: 'reverb',
-      key: appKey,
-      wsHost: import.meta.env.VITE_REVERB_HOST,
-      wsPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-      wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-      forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-      enabledTransports: ['ws', 'wss'],
+      key: cfg.key,
+      wsHost: cfg.wsHost,
+      wsPort: cfg.wsPort,
+      wssPort: cfg.wsPort,
+      forceTLS: cfg.forceTLS,
+      enabledTransports: cfg.enabledTransports,
       authEndpoint: 'https://api.codagenz.com/broadcasting/auth',
       auth: { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') ?? ''}` } },
     } as ConstructorParameters<typeof Echo>[0]);

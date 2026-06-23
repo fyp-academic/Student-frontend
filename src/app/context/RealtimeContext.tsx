@@ -10,6 +10,7 @@ import {
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { notificationsApi } from '../services/api';
+import { getReverbConfig } from '../lib/reverb';
 
 /* ── Echo singleton (module-level) ───────────────────────────────────── */
 let echoInstance: Echo<'reverb'> | null = null;
@@ -17,27 +18,22 @@ let echoInstance: Echo<'reverb'> | null = null;
 function getEchoInstance(): Echo<'reverb'> | null {
   if (echoInstance) return echoInstance;
 
-  const key = import.meta.env.VITE_REVERB_APP_KEY;
-  const host = import.meta.env.VITE_REVERB_HOST;
-  const port = Number(import.meta.env.VITE_REVERB_PORT);
-
-  if (!key || !host || !port) {
-    // Graceful degradation: env vars missing → no WebSocket
+  const cfg = getReverbConfig();
+  if (!cfg.key) {
+    // Graceful degradation: config missing → no WebSocket
     return null;
   }
 
   (window as unknown as Record<string, unknown>).Pusher = Pusher;
 
-  const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'https';
-  const tls = scheme === 'https';
   echoInstance = new Echo({
     broadcaster: 'reverb',
-    key,
-    wsHost: host,
-    wsPort: port,
-    wssPort: port,
-    forceTLS: tls,
-    enabledTransports: tls ? ['ws', 'wss'] : ['ws'],
+    key: cfg.key,
+    wsHost: cfg.wsHost,
+    wsPort: cfg.wsPort,
+    wssPort: cfg.wsPort,
+    forceTLS: cfg.forceTLS,
+    enabledTransports: cfg.enabledTransports,
     authEndpoint: `${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://localhost:8000'}/api/broadcasting/auth`,
     auth: {
       headers: {

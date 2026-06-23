@@ -7,6 +7,7 @@ import { notificationsApi } from "../services/api";
 import { useRealtime } from "../context/RealtimeContext";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { getReverbConfig } from "../lib/reverb";
 
 type NotifType = "assignment" | "quiz" | "message" | "achievement" | "reminder" | "announcement" | "grade" | "info" | "warning" | "success" | "danger" | "course_update";
 
@@ -42,21 +43,17 @@ const typeConfig: Record<NotifType, { icon: React.ElementType; color: string; bg
 let echoInstance: Echo<'reverb'> | null = null;
 function getEchoInstance(): Echo<'reverb'> | null {
   if (echoInstance) return echoInstance;
-  const key  = import.meta.env.VITE_REVERB_APP_KEY;
-  const host = import.meta.env.VITE_REVERB_HOST;
-  const port = Number(import.meta.env.VITE_REVERB_PORT);
-  if (!key || !host || !port) return null;
+  const cfg = getReverbConfig();
+  if (!cfg.key) return null;
   (window as unknown as Record<string, unknown>).Pusher = Pusher;
-  const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'https';
-  const tls = scheme === 'https';
   echoInstance = new Echo({
     broadcaster:  'reverb',
-    key,
-    wsHost:       host,
-    wsPort:       port,
-    wssPort:      port,
-    forceTLS:     tls,
-    enabledTransports: tls ? ['ws', 'wss'] : ['ws'],
+    key:          cfg.key,
+    wsHost:       cfg.wsHost,
+    wsPort:       cfg.wsPort,
+    wssPort:      cfg.wsPort,
+    forceTLS:     cfg.forceTLS,
+    enabledTransports: cfg.enabledTransports,
     authEndpoint: `${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://api.codagenz.com'}/api/broadcasting/auth`,
     auth: { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') ?? ''}` } },
   } as ConstructorParameters<typeof Echo>[0]);

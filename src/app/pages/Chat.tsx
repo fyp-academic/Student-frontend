@@ -5,26 +5,23 @@ import { useAuth } from "../context/AuthContext";
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import { getReverbConfig } from "../lib/reverb";
 
 
 let echo: Echo<"reverb"> | null = null;
 function getEcho(): Echo<"reverb"> | null {
   if (echo) return echo;
-  const key    = import.meta.env.VITE_REVERB_APP_KEY;
-  const host   = import.meta.env.VITE_REVERB_HOST;
-  const port   = Number(import.meta.env.VITE_REVERB_PORT);
-  const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'https';
-  if (!key || !host || !port) return null;
-  const tls = scheme === 'https';
+  const cfg = getReverbConfig();
+  if (!cfg.key) return null;
   (window as unknown as Record<string, unknown>).Pusher = Pusher;
   echo = new Echo({
     broadcaster: "reverb",
-    key,
-    wsHost:      host,
-    wsPort:      port,
-    wssPort:     port,
-    forceTLS:    tls,
-    enabledTransports: tls ? ["ws", "wss"] : ["ws"],
+    key:         cfg.key,
+    wsHost:      cfg.wsHost,
+    wsPort:      cfg.wsPort,
+    wssPort:     cfg.wsPort,
+    forceTLS:    cfg.forceTLS,
+    enabledTransports: cfg.enabledTransports,
     authEndpoint: `${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://localhost:8000'}/api/broadcasting/auth`,
     auth: { headers: { Authorization: `Bearer ${localStorage.getItem("auth_token") ?? ""}` } },
   } as ConstructorParameters<typeof Echo>[0]);

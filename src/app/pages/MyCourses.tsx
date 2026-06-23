@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router";
 import { BookOpen, Clock, TrendingUp, CheckCircle, PlayCircle, Loader2, LayoutGrid, List, MoreVertical } from "lucide-react";
 import { useRealtime } from "../context/RealtimeContext";
 import { coursesApi } from "../services/api";
+import { resolveAssetUrl } from "../components/ui/utils";
 
 const tabs = ["All", "In Progress", "Completed", "Not Started"];
 
@@ -43,6 +44,7 @@ export function MyCourses() {
     id:           String(c.id),
     code:         String(c.short_name ?? c.shortName ?? ''),
     title:        String(c.name       ?? ''),
+    image:        String(c.image ?? c.image_url ?? ''),
     instructor:   String(c.instructor_name ?? c.instructor ?? ''),
     progress:     Number(c.completion_rate ?? 0),
     lessonsTotal: Number(c.total_sections   ?? 0),
@@ -166,8 +168,12 @@ export function MyCourses() {
               className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-1"
               style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
             >
-              <div className="h-28 flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}66)` }}>
-                <span className="font-bold" style={{ fontSize: "15px", color: course.color }}>{course.code || 'COURSE'}</span>
+              <div className="h-28 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}66)` }}>
+                {course.image ? (
+                  <img src={resolveAssetUrl(course.image)} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <span className="font-bold" style={{ fontSize: "15px", color: course.color }}>{course.code || 'COURSE'}</span>
+                )}
                 {course.status === "Completed" && (
                   <div className="absolute top-3 right-3"><CheckCircle size={16} color="#22c55e" /></div>
                 )}
@@ -229,9 +235,13 @@ export function MyCourses() {
               style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}
             >
               <div className="flex">
-                {/* Thumbnail — colour block (no external image required) */}
-                <div className="w-32 flex-shrink-0 hidden sm:flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}55)` }}>
-                  <span className="font-bold" style={{ fontSize: "13px", color: course.color }}>{course.code || 'COURSE'}</span>
+                {/* Thumbnail — course image when available, else colour block */}
+                <div className="w-32 flex-shrink-0 hidden sm:flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${course.color}22, ${course.color}55)` }}>
+                  {course.image ? (
+                    <img src={resolveAssetUrl(course.image)} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <span className="font-bold" style={{ fontSize: "13px", color: course.color }}>{course.code || 'COURSE'}</span>
+                  )}
                 </div>
 
                 {/* Content */}

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import { useLocation } from "react-router";
 import { PlayCircle, Lock, CheckCircle, Clock, BookMarked, ChevronDown, ChevronRight, Loader2, X, FileText, ExternalLink, Menu, LayoutList, ArrowRight, Upload, Paperclip, MessageSquare, ThumbsUp, Eye, Plus, Search, Pin, Send, File, Download } from "lucide-react";
-import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, scormApi, h5pApi } from "../services/api";
+import { dashboardApi, lessonApi, activitiesApi, quizApi, assignmentsApi, forumApi, coursesApi, proctoringApi, scormApi, h5pApi, adaptiveContentApi } from "../services/api";
+import { AdaptiveContentBlock } from "../components/student/AdaptiveContentBlock";
 import { AdaptiveActivityPanel } from "../components/student/AdaptiveActivityPanel";
 import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCourseSidebar";
 import { VideoLearningPanel } from "../components/student/VideoLearningPanel";
@@ -78,6 +79,9 @@ export function Lessons() {
   const [lessonPages, setLessonPages] = useState<Array<{ id: string; title: string; content: string; is_viewed?: boolean; sort_order?: number }>>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [lessonPagesLoading, setLessonPagesLoading] = useState(false);
+  // Text-only lesson pages render through the adaptive players; media pages keep original HTML.
+  const [pageChunks, setPageChunks] = useState<Array<{ id: string; chunk_index: number }>>([]);
+  const [pageChunksLoading, setPageChunksLoading] = useState(false);
 
   // Inline quiz runner state
   const [quizMode, setQuizMode] = useState<'idle' | 'running' | 'submitted' | 'review'>('idle');
@@ -227,6 +231,25 @@ export function Lessons() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [refreshData]);
+
+  // For the active lesson page: media-bearing pages render original HTML, while
+  // text-only pages are delivered through the adaptive layout players. Fetch the
+  // page's adaptive chunks (auto-created server-side) only for text-only pages.
+  const hasInlineMedia = (html: string) => /<(img|video|iframe|source|audio|picture|figure)\b/i.test(html);
+  useEffect(() => {
+    const page = lessonPages[currentPageIndex];
+    if (!page?.id || hasInlineMedia(String(page.content ?? ''))) {
+      setPageChunks([]);
+      return;
+    }
+    let cancelled = false;
+    setPageChunksLoading(true);
+    adaptiveContentApi.chunks(page.id)
+      .then(r => { if (!cancelled) setPageChunks(r.data?.chunks ?? []); })
+      .catch(() => { if (!cancelled) setPageChunks([]); })
+      .finally(() => { if (!cancelled) setPageChunksLoading(false); });
+    return () => { cancelled = true; };
+  }, [lessonPages, currentPageIndex]);
 
   const loadSections = useCallback(async (cid: string) => {
     if (!cid) return;
@@ -1407,17 +1430,38 @@ export function Lessons() {
                       <div className="px-6 py-5">
                         {lessonPagesLoading ? (
                           <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
-                        ) : (
-                          <>
-                            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", marginBottom: 16 }}>
-                              {lessonPages[currentPageIndex]?.title ?? 'Page'}
-                            </h2>
-                            <SafeHtml
-                              className="lesson-prose prose prose-slate max-w-none"
-                              html={lessonPages[currentPageIndex]?.content ?? ''}
-                            />
-                          </>
-                        )}
+                        ) : (() => {
+                          const page = lessonPages[currentPageIndex];
+                          const content = String(page?.content ?? '');
+                          const mediaPage = hasInlineMedia(content);
+                          return (
+                            <>
+                              <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", marginBottom: 16 }}>
+                                {page?.title ?? 'Page'}
+                              </h2>
+                              {/* Media pages keep their original layout; text pages are personalized via the adaptive players. */}
+                              {!mediaPage && pageChunksLoading ? (
+                                <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                              ) : !mediaPage && pageChunks.length > 0 ? (
+                                <div className="space-y-4">
+                                  {pageChunks.map(ch => (
+                                    <AdaptiveContentBlock
+                                      key={ch.id}
+                                      chunkId={ch.id}
+                                      courseId={selectedCourseId}
+                                      presentationOverride={presentationConfig}
+                                    />
+                                  ))}
+                                </div>
+                              ) : (
+                                <SafeHtml
+                                  className="lesson-prose prose prose-slate max-w-none"
+                                  html={content}
+                                />
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Navigation footer */}

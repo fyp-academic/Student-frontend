@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  CheckCircle, ChevronDown, ChevronRight, Clock, LayoutList, Loader2, Lock, X,
+  ArrowRight, CheckCircle, ChevronDown, ChevronRight, Clock, LayoutList, Loader2, Lock, X,
 } from 'lucide-react';
 import type { ActivityOverlay, NavigationConfig, SectionOverlay } from '@/app/types/personalization';
 
@@ -63,6 +63,22 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
     onOpenActivity(act);
   };
 
+  // Neutral "where next" nudge: resolve the backend's suggested activity id to its title.
+  // We deliberately use only the id + neutral client-side copy — never the backend's
+  // direct_guidance.message/reason (which expose AI/weakness wording).
+  const suggestedId = navigation?.direct_guidance?.suggested_activity_id ?? null;
+  const suggestedActivity = suggestedId
+    ? sections.flatMap(s => (s.activities ?? []) as Activity[]).find(a => String(a.id ?? '') === suggestedId)
+    : undefined;
+  const suggestedOverlay = suggestedId ? activityOverlays[suggestedId] : undefined;
+  const showNudge = !!suggestedActivity
+    && suggestedId !== activeActivityId
+    && statKeyOf(suggestedActivity) !== 'completed'
+    && (!suggestedOverlay || suggestedOverlay.accessible);
+  const suggestedTitle = suggestedActivity
+    ? String(suggestedActivity.name ?? suggestedActivity.title ?? '')
+    : '';
+
   return (
     <aside
       className="flex-shrink-0 flex flex-col bg-white border-r overflow-hidden transition-all duration-300"
@@ -74,11 +90,6 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
           <span className="truncate" style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>
             Course Modules
           </span>
-          {navigation?.mode && (
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide" style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: '#cbd5e1' }}>
-              {navigation.mode}
-            </span>
-          )}
         </div>
         <button onClick={onClose} className="p-1 rounded hover:bg-white/10 transition-colors" type="button">
           <X size={14} color="#94a3b8" />
@@ -86,6 +97,22 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {showNudge && (
+          <button
+            type="button"
+            onClick={() => handleActivityClick(suggestedActivity as Activity, suggestedOverlay)}
+            className="w-full flex items-center gap-2.5 px-4 py-3 text-left border-b hover:bg-blue-50 transition-colors"
+            style={{ borderColor: '#e2e8f0', backgroundColor: '#f8fafc' }}
+          >
+            <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: '#dbeafe' }}>
+              <ArrowRight size={14} color="#2563eb" />
+            </div>
+            <div className="min-w-0">
+              <p style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>Continue where you left off</p>
+              <p className="truncate" style={{ fontSize: '14px', color: '#1e293b', fontWeight: 600 }}>{suggestedTitle}</p>
+            </div>
+          </button>
+        )}
         {sectionsLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 size={20} className="animate-spin" style={{ color: '#2563eb' }} />
@@ -142,8 +169,18 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
                     onClick={() => handleActivityClick(act, overlay)}
                     className={`w-full flex items-start gap-2.5 px-4 py-2 text-left transition-all ${isLck ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-50/60 cursor-pointer'}`}
                     style={{
-                      backgroundColor: isSel ? '#eff6ff' : 'transparent',
-                      borderLeft: isSel ? '3px solid #2563eb' : overlay?.annotation === 'recommended' ? '3px solid #93c5fd' : '3px solid transparent',
+                      backgroundColor: isSel
+                        ? '#eff6ff'
+                        : (!isLck && overlay?.annotation === 'recommended')
+                          ? '#f0f7ff'
+                          : 'transparent',
+                      borderLeft: isSel
+                        ? '3px solid #2563eb'
+                        : (!isLck && overlay?.annotation === 'recommended')
+                          ? '3px solid #2563eb'
+                          : overlay?.is_weak_topic
+                            ? '3px solid #f97316'
+                            : '3px solid transparent',
                     }}
                   >
                     <div className="flex-shrink-0 mt-0.5">
@@ -153,7 +190,10 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
                             <div className="w-1.5 h-1.5 rounded-full bg-white" />
                           </div>
                         ) : isLck ? <Lock size={14} color="#94a3b8" />
-                          : <div className="w-3.5 h-3.5 rounded-full border-2" style={{ borderColor: '#cbd5e1' }} />}
+                          : <div
+                              className="w-3.5 h-3.5 rounded-full border-2"
+                              style={{ borderColor: overlay?.annotation === 'recommended' ? '#2563eb' : overlay?.is_weak_topic ? '#f97316' : '#cbd5e1' }}
+                            />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="truncate" style={{ fontSize: '14px', fontWeight: isSel ? 600 : 400, color: isSel ? '#1e40af' : '#1e293b' }}>

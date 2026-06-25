@@ -51,7 +51,7 @@ export const NarrativeExamplePlayer: React.FC<NarrativeExamplePlayerProps> = ({ 
         <div className="mx-6 mt-4 rounded-xl border border-amber-200/70 bg-amber-50/50 px-5 py-4 sm:mx-8">
           <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">
             <Quote className="h-3.5 w-3.5" />
-            <span>Start with an example</span>
+            <span>Start here</span>
           </div>
           <SafeMarkdown
             content={parts.example}

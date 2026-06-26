@@ -12,19 +12,41 @@ interface GuidedStepsPlayerProps {
 }
 
 /**
- * Mayer's Signaling fallback: the model is supposed to wrap the key phrase of each step in
- * ==highlight== markers, but smaller models often skip the non-standard syntax. When the content
- * carries no ==...== of its own, deterministically promote the FIRST bold term on each
- * (non-heading) line to a highlight — models reliably emit **bold** for key terms — so the novice
- * always sees a yellow highlight per step regardless of the model's formatting compliance.
+ * Mayer's Signaling fallback — fully deterministic, independent of model formatting.
+ * The model is supposed to wrap each step's key phrase in ==highlight== markers, but smaller
+ * models (e.g. Haiku) often skip both ==...== AND **bold**, leaving nothing to highlight. So when
+ * the content has no ==...== of its own, derive a highlight per line from the raw text:
+ *   1. promote the first **bold** term (uses the model's own key-term pick), else
+ *   2. for a numbered/bulleted step, highlight its lead phrase (up to the first dash/colon, or
+ *      the first few words) — guaranteeing a yellow highlight on the step's subject.
  */
 const ensureSignalingHighlights = (content: string): string => {
-  if (/==[^=]+==/.test(content)) return content; // model already highlighted — leave it
+  if (/==[^=]+==/.test(content)) return content; // model already highlighted — respect it
+
   return content
     .split('\n')
-    .map((line) =>
-      /^\s*#{1,6}\s/.test(line) ? line : line.replace(/\*\*(.+?)\*\*/, '==$1=='),
-    )
+    .map((line) => {
+      if (/^\s*#{1,6}\s/.test(line)) return line;   // skip headings
+      if (/^\s*-{3,}\s*$/.test(line)) return line;  // skip --- separators
+
+      // 1) Promote the first bold term, if any.
+      if (/\*\*(.+?)\*\*/.test(line)) {
+        return line.replace(/\*\*(.+?)\*\*/, '==$1==');
+      }
+
+      // 2) No bold — highlight the lead phrase of a step line.
+      const step = line.match(/^(\s*(?:\d+[.)]|[-*•])\s+)(.+)$/);
+      if (step) {
+        const [, prefix, body] = step;
+        const sep = body.match(/^(.{2,60}?)\s+[—–-]\s+/) ?? body.match(/^(.{2,60}?):\s+/);
+        const lead = (sep ? sep[1] : body.split(/\s+/).slice(0, 4).join(' ')).trim();
+        if (lead && body.startsWith(lead)) {
+          return `${prefix}==${lead}==${body.slice(lead.length)}`;
+        }
+      }
+
+      return line;
+    })
     .join('\n');
 };
 

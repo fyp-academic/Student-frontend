@@ -11,7 +11,7 @@ import { cn } from '@/app/components/ui/utils';
 import type { PresentationConfig, PresentationMode, ModeConfig } from '@/app/types/personalization';
 import { cardVariantClass, presentationStyles } from '@/app/types/personalization';
 import {
-  FileText, BarChart3, Lightbulb, ThumbsUp, ThumbsDown,
+  ThumbsUp, ThumbsDown,
   AlertCircle,
 } from 'lucide-react';
 
@@ -124,11 +124,6 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
     };
   }, [feedbackTimerStarted]);
 
-  const handleModalitySwitch = (modality: Modality) => {
-    if (modality === currentModality) return;
-    fetchContent(modality);
-  };
-
   const submitFeedback = async (rating?: string, complexity?: string) => {
     if (!adaptationId) return;
     try {
@@ -153,32 +148,6 @@ export const AdaptiveContentBlock: React.FC<AdaptiveContentBlockProps> = ({
 
   return (
     <div ref={containerRef} className="w-full">
-      {!isLoading && contentAdapted && (
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs text-muted-foreground">Delivery format:</span>
-          {([
-            { key: 'text', label: 'Text', icon: FileText },
-            { key: 'visual', label: 'Visual', icon: BarChart3 },
-            { key: 'example-based', label: 'Example', icon: Lightbulb },
-          ] as { key: Modality; label: string; icon: React.ComponentType<{ className?: string }> }[]).map((m) => (
-            <button
-              key={m.key}
-              type="button"
-              onClick={() => handleModalitySwitch(m.key)}
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
-                currentModality === m.key
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              )}
-            >
-              <m.icon className="h-3.5 w-3.5" />
-              {m.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {isLoading && (
         <div className="space-y-3">
           <Skeleton className="h-4 w-full" />

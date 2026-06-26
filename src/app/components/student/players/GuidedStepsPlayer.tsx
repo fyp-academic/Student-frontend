@@ -12,11 +12,29 @@ interface GuidedStepsPlayerProps {
 }
 
 /**
+ * Mayer's Signaling fallback: the model is supposed to wrap the key phrase of each step in
+ * ==highlight== markers, but smaller models often skip the non-standard syntax. When the content
+ * carries no ==...== of its own, deterministically promote the FIRST bold term on each
+ * (non-heading) line to a highlight — models reliably emit **bold** for key terms — so the novice
+ * always sees a yellow highlight per step regardless of the model's formatting compliance.
+ */
+const ensureSignalingHighlights = (content: string): string => {
+  if (/==[^=]+==/.test(content)) return content; // model already highlighted — leave it
+  return content
+    .split('\n')
+    .map((line) =>
+      /^\s*#{1,6}\s/.test(line) ? line : line.replace(/\*\*(.+?)\*\*/, '==$1=='),
+    )
+    .join('\n');
+};
+
+/**
  * Step-by-step delivery for learners who benefit from scaffolding. Renders the
  * AI-structured numbered steps with signaling highlights via proper Markdown.
  */
 export const GuidedStepsPlayer: React.FC<GuidedStepsPlayerProps> = ({ content, config, className }) => {
-  const readingTime = useMemo(() => estimateReadingTime(content), [content]);
+  const signaledContent = useMemo(() => ensureSignalingHighlights(content), [content]);
+  const readingTime = useMemo(() => estimateReadingTime(signaledContent), [signaledContent]);
 
   return (
     <PlayerShell
@@ -26,7 +44,7 @@ export const GuidedStepsPlayer: React.FC<GuidedStepsPlayerProps> = ({ content, c
       measure="64ch"
     >
       <SafeMarkdown
-        content={content}
+        content={signaledContent}
         className={cn(
           academicProse,
           // Numbered steps get a little more air and an indigo marker

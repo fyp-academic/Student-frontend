@@ -6,7 +6,11 @@ import { AdaptiveContentBlock } from "../components/student/AdaptiveContentBlock
 import { AdaptiveActivityPanel } from "../components/student/AdaptiveActivityPanel";
 import { PersonalizedCourseSidebar } from "../components/student/PersonalizedCourseSidebar";
 import { VideoLearningPanel } from "../components/student/VideoLearningPanel";
+import { PracticalPanel } from "../components/student/PracticalPanel";
+import { DiscussionPanel } from "../components/student/DiscussionPanel";
 import { SafeHtml } from "../components/SafeHtml";
+import { CountdownBadge } from "../components/CountdownBadge";
+import { useCountdown, deadlineFromRemaining } from "../hooks/useCountdown";
 import { usePersonalization } from "../hooks/usePersonalization";
 import { presentationStyles } from "../types/personalization";
 import { useProctoringMonitor, ProctoringConfig } from '../hooks/useProctoringMonitor';
@@ -45,6 +49,8 @@ const typeConfig: Record<string, { color: string; label: string }> = {
   folder:          { color: "#64748b", label: "Folder" },
   glossary:        { color: "#2563eb", label: "Glossary" },
   ims_content_package: { color: "#ca8a04", label: "IMS CP" },
+  practical:       { color: "#059669", label: "Practical" },
+  discussion:      { color: "#0891b2", label: "Discussion" },
 };
 
 // Categorize quiz question types for review rendering (mirrors Quizzes.tsx)
@@ -92,6 +98,7 @@ export function Lessons() {
   const [quizAttemptId, setQuizAttemptId] = useState<string>('');
   const [quizLoading, setQuizLoading] = useState(false);
   const [quizResult, setQuizResult] = useState<Record<string, unknown> | null>(null);
+  const [quizDeadlineTs, setQuizDeadlineTs] = useState<number | null>(null);
   // Inline quiz review state (previous-attempt review for already-submitted quizzes)
   const [quizReviewQuestions, setQuizReviewQuestions] = useState<Record<string, unknown>[]>([]);
   const [quizReviewAnswers, setQuizReviewAnswers] = useState<Record<string, unknown[]>>({});
@@ -101,6 +108,7 @@ export function Lessons() {
   const [assignMode, setAssignMode] = useState<'idle' | 'form' | 'submitted'>('idle');
   const [assignText, setAssignText] = useState('');
   const [assignFile, setAssignFile] = useState<File | null>(null);
+  const [assignDeadlineTs, setAssignDeadlineTs] = useState<number | null>(null);
   const [assignLoading, setAssignLoading] = useState(false);
 
   // Proctoring session key — truthy only while quiz is running or assignment form is open
@@ -301,9 +309,9 @@ export function Lessons() {
     // Reset lesson state
     setLessonPages([]); setCurrentPageIndex(0);
     // Reset inline quiz/assignment/forum state
-    setQuizMode('idle'); setQuizQuestions([]); setQuizAnswers({}); setQuizSelected({}); setQuizCurrentQ(0); setQuizResult(null);
+    setQuizMode('idle'); setQuizQuestions([]); setQuizAnswers({}); setQuizSelected({}); setQuizCurrentQ(0); setQuizResult(null); setQuizDeadlineTs(null);
     setQuizReviewQuestions([]); setQuizReviewAnswers({}); setQuizReviewResponses({});
-    setAssignMode('idle'); setAssignText(''); setAssignFile(null);
+    setAssignMode('idle'); setAssignText(''); setAssignFile(null); setAssignDeadlineTs(null);
     setForumDiscussions([]); setForumPosts([]); setSelectedDiscussionId(''); setForumComposerOpen(false); setForumSearch('');
     setContext({ topicId: aid, topicName: title, activityType: rType });
     // Ensure parent section open
@@ -413,6 +421,9 @@ export function Lessons() {
         } catch { setForumDiscussions([]); }
         finally { setForumLoading(false); }
         setContentHtml('');
+      } else if (rType === 'practical' || rType === 'discussion') {
+        // Self-fetching panels render from currentRawType below; nothing to preload.
+        setContentHtml('');
       } else if (rType === 'h5p' || rType === 'scorm') {
         // Launch the token-authed player wrapper served by the backend (same
         // origin as the content) and embed it in an iframe.
@@ -507,6 +518,9 @@ export function Lessons() {
       const aid = String((attemptData as Record<string, unknown>).id ?? '');
       setQuizAttemptId(aid);
       setProcKey(`quiz:${aid}`);
+      // Server-authoritative countdown: seed from the remaining seconds it reports.
+      const limitSec = Number((startRes.data as Record<string, unknown>).time_limit_seconds ?? 0);
+      setQuizDeadlineTs(deadlineFromRemaining(limitSec));
       const qs: Record<string, unknown>[] = qRes.data.data ?? qRes.data ?? [];
       setQuizQuestions(qs);
       const ansMap: Record<string, unknown[]> = {};
@@ -603,22 +617,26 @@ export function Lessons() {
   };
 
   // ─── Inline Quiz: submit ────────────────────────────────────────────────
-  const handleSubmitQuiz = async () => {
+  const handleSubmitQuiz = async (auto = false) => {
     if (!quizAttemptId) return;
 
-    // Guard: require at least one answer
-    const answeredCount = Object.keys(quizSelected).length;
-    if (answeredCount === 0) {
-      alert('Please select at least one answer before submitting.');
-      return;
+    // Auto-submit (timer expiry) skips the guards and sends whatever is selected.
+    if (!auto) {
+      // Guard: require at least one answer
+      const answeredCount = Object.keys(quizSelected).length;
+      if (answeredCount === 0) {
+        alert('Please select at least one answer before submitting.');
+        return;
+      }
+
+      // Guard: confirm if not all questions answered
+      if (answeredCount < quizQuestions.length) {
+        const ok = window.confirm(`You have answered ${answeredCount} of ${quizQuestions.length} questions. Submit anyway?`);
+        if (!ok) return;
+      }
     }
 
-    // Guard: confirm if not all questions answered
-    if (answeredCount < quizQuestions.length) {
-      const ok = window.confirm(`You have answered ${answeredCount} of ${quizQuestions.length} questions. Submit anyway?`);
-      if (!ok) return;
-    }
-
+    setQuizDeadlineTs(null); // stop the countdown
     setQuizLoading(true);
     try {
       const responses = Object.entries(quizSelected).map(([question_id, answer_id]) => ({ question_id, answer_id }));
@@ -653,15 +671,23 @@ export function Lessons() {
     } finally { setQuizLoading(false); }
   };
 
+  // Drive the inline quiz countdown; auto-submit current answers when it expires.
+  const quizRemainingSec = useCountdown(
+    quizMode === 'running' ? quizDeadlineTs : null,
+    () => { void handleSubmitQuiz(true); },
+  );
+
   // ─── Inline Assignment: submit ──────────────────────────────────────────
-  const handleSubmitAssignment = async () => {
+  const handleSubmitAssignment = async (auto = false) => {
     if (!activeActivityId) return;
+    setAssignDeadlineTs(null); // stop the countdown
     setAssignLoading(true);
     try {
       // AI content check before submitting
       const fd = new FormData();
       fd.append('submission_text', assignText);
       if (assignFile) fd.append('file', assignFile);
+      if (auto) fd.append('auto_submitted', '1');
       if (procSessionId) {
         try {
           const afd = new FormData();
@@ -683,6 +709,12 @@ export function Lessons() {
       alert('Submission failed. Please try again.');
     } finally { setAssignLoading(false); }
   };
+
+  // Drive the inline assignment countdown (timed text-only); auto-submit on expiry.
+  const assignRemainingSec = useCountdown(
+    assignMode === 'form' ? assignDeadlineTs : null,
+    () => { void handleSubmitAssignment(true); },
+  );
 
   // Keep procForceRef up-to-date on every render so the stable callback fires
   // the correct handler depending on whether a quiz or assignment is active.
@@ -893,6 +925,23 @@ export function Lessons() {
                     </div>
                   )}
 
+                  {/* ── PRACTICAL PROBLEM (code editor + live preview) ── */}
+                  {currentRawType === 'practical' && activeActivityId && (
+                    <div className="mb-6">
+                      <PracticalPanel
+                        activityId={activeActivityId}
+                        onSubmitted={() => setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === activeActivityId ? { ...a, completion_status: 'completed' } : a) })))}
+                      />
+                    </div>
+                  )}
+
+                  {/* ── DISCUSSION (topic + threaded replies with reactions) ── */}
+                  {currentRawType === 'discussion' && activeActivityId && (
+                    <div className="mb-6">
+                      <DiscussionPanel activityId={activeActivityId} />
+                    </div>
+                  )}
+
                   {/* ── INLINE QUIZ RUNNER ── */}
                   {currentRawType === 'quiz' && quizMode === 'idle' && contentHtml && (() => {
                     // An already-completed quiz can only be reviewed, never re-started.
@@ -927,7 +976,10 @@ export function Lessons() {
                             <div className="px-6 pt-5 pb-3">
                               <div className="flex items-center justify-between mb-3">
                                 <span style={{ fontSize: "12px", fontWeight: 600, color: "#7c3aed" }}>Question {quizCurrentQ + 1} of {quizQuestions.length}</span>
-                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>{Object.keys(quizSelected).length}/{quizQuestions.length} answered</span>
+                                <div className="flex items-center gap-2">
+                                  <CountdownBadge remainingSec={quizRemainingSec} />
+                                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>{Object.keys(quizSelected).length}/{quizQuestions.length} answered</span>
+                                </div>
                               </div>
                               <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
                                 <div className="h-full rounded-full transition-all" style={{ width: `${((quizCurrentQ + 1) / quizQuestions.length) * 100}%`, backgroundColor: "#7c3aed" }} />
@@ -1131,7 +1183,14 @@ export function Lessons() {
                     <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                       <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
                       <div className="flex justify-center mt-6">
-                        <button onClick={() => { setAssignMode('form'); procActivityId.current = activeActivityId; procCourseId.current = selectedCourseId; setProcKey(`assign:${activeActivityId}`); }}
+                        <button onClick={async () => {
+                            setAssignMode('form'); procActivityId.current = activeActivityId; procCourseId.current = selectedCourseId; setProcKey(`assign:${activeActivityId}`);
+                            // Timed text-only assignment: start the server clock now.
+                            try {
+                              const r = await assignmentsApi.start(activeActivityId!);
+                              if (r.data?.timed) setAssignDeadlineTs(deadlineFromRemaining(Number(r.data.time_limit_seconds ?? 0)));
+                            } catch { /* untimed / not text-only → no countdown */ }
+                          }}
                           className="flex items-center gap-2 px-8 py-3 rounded-xl text-white transition-all"
                           style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#f59e0b", boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>
                           <Upload size={16} /> Submit Assignment
@@ -1140,32 +1199,47 @@ export function Lessons() {
                     </div>
                   )}
 
-                  {currentRawType === 'assignment' && assignMode === 'form' && (
+                  {currentRawType === 'assignment' && assignMode === 'form' && (() => {
+                    // Render inputs according to the instructor's configured submission types.
+                    const aSettings = (activeActivity?.settings ?? {}) as Record<string, unknown>;
+                    const textEnabled = (aSettings.textOnlineEnabled ?? false) as boolean;
+                    const fileEnabled = (aSettings.fileSubmissionEnabled ?? true) as boolean;
+                    const both = textEnabled && fileEnabled;
+                    const canSubmit = both ? (!!assignText.trim() || !!assignFile) : textEnabled ? !!assignText.trim() : !!assignFile;
+                    return (
                     <div className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                      <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>Submit: {contentTitle}</h3>
-                      <div>
-                        <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Your answer</label>
-                        <textarea value={assignText} onChange={e => setAssignText(e.target.value)} rows={6}
-                          className="w-full rounded-xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                          style={{ fontSize: "13px", borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
-                          placeholder="Write your answer or reflection here..." />
+                      <div className="flex items-center justify-between">
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1e293b" }}>Submit: {contentTitle}</h3>
+                        <CountdownBadge remainingSec={assignRemainingSec} />
                       </div>
-                      <div>
-                        <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Attach file (optional)</label>
-                        <input type="file" onChange={e => setAssignFile(e.target.files?.[0] ?? null)}
-                          className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                        {assignFile && <p className="mt-1 flex items-center gap-1" style={{ fontSize: "11px", color: "#64748b" }}><Paperclip size={10} /> {assignFile.name}</p>}
-                      </div>
+                      {textEnabled && (
+                        <div>
+                          <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Your answer</label>
+                          <textarea value={assignText} onChange={e => setAssignText(e.target.value)} rows={6}
+                            className="w-full rounded-xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                            style={{ fontSize: "13px", borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
+                            placeholder="Write your answer or reflection here..." />
+                        </div>
+                      )}
+                      {fileEnabled && (
+                        <div>
+                          <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Attach file{both ? ' (optional)' : ''}</label>
+                          <input type="file" onChange={e => setAssignFile(e.target.files?.[0] ?? null)}
+                            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                          {assignFile && <p className="mt-1 flex items-center gap-1" style={{ fontSize: "11px", color: "#64748b" }}><Paperclip size={10} /> {assignFile.name}</p>}
+                        </div>
+                      )}
                       <div className="flex justify-end gap-2 pt-2">
-                        <button onClick={() => { setAssignMode('idle'); setProcKey(null); }} className="px-4 py-2 rounded-xl border" style={{ fontSize: "13px", color: "#475569", borderColor: "#e2e8f0" }}>Cancel</button>
-                        <button onClick={handleSubmitAssignment} disabled={assignLoading || (!assignText.trim() && !assignFile)}
+                        <button onClick={() => { setAssignMode('idle'); setProcKey(null); setAssignDeadlineTs(null); }} className="px-4 py-2 rounded-xl border" style={{ fontSize: "13px", color: "#475569", borderColor: "#e2e8f0" }}>Cancel</button>
+                        <button onClick={() => handleSubmitAssignment()} disabled={assignLoading || !canSubmit}
                           className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-white disabled:opacity-60"
                           style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#2563eb" }}>
                           {assignLoading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Submit
                         </button>
                       </div>
                     </div>
-                  )}
+                    );
+                  })()}
 
                   {currentRawType === 'assignment' && assignMode === 'submitted' && (
                     <div className="bg-white rounded-xl p-8 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>

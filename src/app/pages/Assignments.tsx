@@ -5,6 +5,8 @@ import {
 } from "lucide-react";
 import { useRealtime } from "../context/RealtimeContext";
 import { assignmentsApi, dashboardApi, groupsApi } from "../services/api";
+import { CountdownBadge } from "../components/CountdownBadge";
+import { useCountdown, deadlineFromRemaining } from "../hooks/useCountdown";
 
 const tabs = ["All", "Pending", "Submitted", "Graded", "Overdue"];
 
@@ -68,6 +70,7 @@ export function Assignments() {
   const [submissionText, setSubmissionText] = useState("");
   const [submissionFile, setSubmissionFile] = useState<File | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [assignDeadlineTs, setAssignDeadlineTs] = useState<number | null>(null);
   const [myGroups, setMyGroups] = useState<Record<string, string[]>>({}); // courseId -> group names
 
   // Resolve the task instructions for a group assignment based on the student's group.
@@ -200,19 +203,27 @@ export function Assignments() {
         return a.status === activeTab.toLowerCase();
       });
 
-  const handleOpenSubmit = (item: AssignmentItem) => {
+  const handleOpenSubmit = async (item: AssignmentItem) => {
     setSubmittingTo(item);
     setSubmissionText('');
     setSubmissionFile(null);
+    setAssignDeadlineTs(null);
+    // Timed text-only assignment: start the server clock (no-op otherwise).
+    try {
+      const r = await assignmentsApi.start(item.activity_id);
+      if (r.data?.timed) setAssignDeadlineTs(deadlineFromRemaining(Number(r.data.time_limit_seconds ?? 0)));
+    } catch { /* untimed / not text-only → no countdown */ }
   };
 
-  const handleSubmitAssignment = async () => {
+  const handleSubmitAssignment = async (auto = false) => {
     if (!submittingTo) return;
+    setAssignDeadlineTs(null);
     setSubmitLoading(true);
     try {
       const fd = new FormData();
       fd.append('submission_text', submissionText);
       if (submissionFile) fd.append('file', submissionFile);
+      if (auto) fd.append('auto_submitted', '1');
       await assignmentsApi.submit(submittingTo.activity_id, fd);
       // Refresh after submit
       setAssignments(prev => prev.map(a => a.activity_id === submittingTo.activity_id ? { ...a, status: 'submitted', submittedAt: new Date().toISOString() } : a));
@@ -224,6 +235,12 @@ export function Assignments() {
       setSubmitLoading(false);
     }
   };
+
+  // Drive the assignment-modal countdown; auto-submit current text on expiry.
+  const assignRemainingSec = useCountdown(
+    submittingTo ? assignDeadlineTs : null,
+    () => { void handleSubmitAssignment(true); },
+  );
 
   return (
     <div className="space-y-6">
@@ -466,9 +483,12 @@ export function Assignments() {
                 <p className="text-xs font-semibold text-blue-600 mb-1">{submittingTo.course_name}</p>
                 <h2 className="text-lg font-bold text-slate-900">Submit: {submittingTo.title}</h2>
               </div>
-              <button onClick={() => setSubmittingTo(null)} disabled={submitLoading} className="p-2 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 disabled:opacity-50">
-                <X size={16} />
-              </button>
+              <div className="flex items-center gap-2">
+                <CountdownBadge remainingSec={assignRemainingSec} />
+                <button onClick={() => setSubmittingTo(null)} disabled={submitLoading} className="p-2 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 disabled:opacity-50">
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
             {(() => {
@@ -518,8 +538,8 @@ export function Assignments() {
                 Cancel
               </button>
               <button
-                onClick={handleSubmitAssignment}
-                disabled={submitLoading || (submittingTo.textOnlineEnabled && submittingTo.fileSubmissionEnabled 
+                onClick={() => handleSubmitAssignment()}
+                disabled={submitLoading || (submittingTo.textOnlineEnabled && submittingTo.fileSubmissionEnabled
                   ? (!submissionText.trim() && !submissionFile) 
                   : submittingTo.textOnlineEnabled 
                     ? !submissionText.trim() 

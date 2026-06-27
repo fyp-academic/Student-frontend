@@ -96,6 +96,8 @@ export const assignmentsApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   get:    (id: string) => api.get(`/submissions/${id}`),
+  // Starts the server-side clock for a timed text-only assignment (no-op otherwise).
+  start:  (activityId: string) => api.post(`/activities/${activityId}/assignment-start`),
 };
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
@@ -139,6 +141,17 @@ export const forumApi = {
     api.post(`/activities/${activityId}/discussions`, data),
   togglePin:       (discussionId: string)                            => api.patch(`/discussions/${discussionId}/pin`),
   toggleLock:      (discussionId: string)                            => api.patch(`/discussions/${discussionId}/lock`),
+  // Single-topic discussion activity + reactions
+  discussion:      (activityId: string)                              => api.get(`/activities/${activityId}/discussion`),
+  react:           (postId: string, value: 1 | -1)                   => api.post(`/posts/${postId}/react`, { value }),
+};
+
+// ─── Practical Problem ────────────────────────────────────────────────────────
+export const practicalApi = {
+  template:     (activityId: string) => api.get(`/activities/${activityId}/practical-template`),
+  mySubmission: (activityId: string) => api.get(`/activities/${activityId}/practical-submission`),
+  save:         (activityId: string, data: { files: Record<string, string>; status?: 'draft' | 'submitted' }) =>
+    api.post(`/activities/${activityId}/practical-submission`, data),
 };
 
 // ─── Grades ───────────────────────────────────────────────────────────────────

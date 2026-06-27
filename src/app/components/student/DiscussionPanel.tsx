@@ -7,6 +7,19 @@ interface Props {
   activityId: string;
 }
 
+/** Round profile picture with a generated fallback when the user has none. */
+function Avatar({ name, src, size = 32 }: { name: string; src: string | null; size?: number }) {
+  const url = src || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=0891b2&color=fff&size=64`;
+  return (
+    <img
+      src={url}
+      alt={name}
+      className="rounded-full object-cover flex-shrink-0 border border-gray-200"
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
 interface Reply {
   id: string;
   parent_id: string | null;
@@ -81,6 +94,15 @@ export function DiscussionPanel({ activityId }: Props) {
     <div className="space-y-5">
       {/* Topic */}
       <div className="rounded-xl border border-gray-200 bg-white p-5">
+        {data.topic_author && (
+          <div className="flex items-center gap-2 mb-3">
+            <Avatar name={data.topic_author.name ?? 'Instructor'} src={data.topic_author.avatar ?? null} size={36} />
+            <div>
+              <div className="text-sm font-semibold text-gray-800">{data.topic_author.name ?? 'Instructor'}</div>
+              <div className="text-xs text-gray-400">Topic author</div>
+            </div>
+          </div>
+        )}
         <h2 className="text-lg font-bold text-gray-900 mb-2">{data.title}</h2>
         <SafeHtml html={String(data.content ?? '')} className="prose prose-sm max-w-none text-gray-700" />
         <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
@@ -132,7 +154,9 @@ export function DiscussionPanel({ activityId }: Props) {
           {replies.map((r) => {
             const indent = opts.disallow_threaded ? 0 : Math.min(Math.max((r.depth_level ?? 1) - 1, 0), 4) * 24;
             return (
-              <div key={r.id} className="rounded-xl border border-gray-200 bg-white p-4" style={{ marginLeft: indent }}>
+              <div key={r.id} className="rounded-xl border border-gray-200 bg-white p-4 flex gap-3" style={{ marginLeft: indent }}>
+                <Avatar name={r.author?.name ?? 'Anonymous'} src={r.author?.avatar ?? null} />
+                <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-semibold text-gray-800">{r.author?.name ?? 'Anonymous'}{r.is_mine && <span className="text-xs text-gray-400 font-normal"> · you</span>}</span>
                   <span className="text-xs text-gray-400">{r.created_at ? new Date(r.created_at).toLocaleString() : ''}</span>
@@ -152,6 +176,7 @@ export function DiscussionPanel({ activityId }: Props) {
                       <MessageSquare size={13} /> Reply
                     </button>
                   )}
+                </div>
                 </div>
               </div>
             );

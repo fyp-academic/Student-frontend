@@ -157,6 +157,7 @@ export const practicalApi = {
 // ─── Grades ───────────────────────────────────────────────────────────────────
 export const gradesApi = {
   myGrades: (courseId: string) => api.get(`/courses/${courseId}/my-grades`),
+  gradebook: () => api.get('/my-gradebook'),
 };
 
 // ─── Groups ───────────────────────────────────────────────────────────────────

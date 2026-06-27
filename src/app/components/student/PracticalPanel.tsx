@@ -21,9 +21,9 @@ function buildSrcDoc({ html, css, js }: CodeFiles): string {
 
 /**
  * Student workspace for a Practical Problem:
- *  (a) instructor sample preview + instructions
- *  (b) student editor  — handled by CodeWorkspace
- *  (c) student live preview, rendered ABOVE the editor (per spec)
+ *  (a) student editor  — handled by CodeWorkspace (left)
+ *  (b) student live preview, rendered ABOVE the editor (left)
+ *  (c) instructor sample preview + instructions (right)
  * Student code autosaves as a draft and can be submitted for grading.
  */
 export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forceSubmitRef }: Props) {
@@ -123,25 +123,7 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      {/* (a) Instructor task: sample preview + instructions */}
-      <div className="space-y-4">
-        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-          <div className="px-3 py-2 text-xs font-semibold text-gray-600 bg-gray-50 border-b border-gray-100 flex items-center gap-1.5">
-            <Play size={13} /> Target — what to build
-          </div>
-          {sampleDoc
-            ? <iframe title="sample" sandbox="allow-scripts" srcDoc={sampleDoc} style={{ width: '100%', height: 300, border: 'none', background: '#fff' }} />
-            : <div className="p-6 text-sm text-gray-400">No sample provided.</div>}
-        </div>
-        {template?.instructions && (
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="text-xs font-semibold text-gray-600 mb-2">Instructions</div>
-            <SafeHtml html={String(template.instructions)} className="prose prose-sm max-w-none text-gray-700" />
-          </div>
-        )}
-      </div>
-
-      {/* (b)+(c) Student editor with live preview above it */}
+      {/* (a)+(b) Student editor with live preview above it (left) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-gray-600">Your solution</span>
@@ -160,6 +142,24 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
             <Send size={15} /> {submitting ? 'Submitting…' : status === 'submitted' ? 'Resubmit' : 'Submit'}
           </button>
         </div>
+      </div>
+
+      {/* (c) Instructor task: sample preview + instructions (right) */}
+      <div className="space-y-4">
+        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+          <div className="px-3 py-2 text-xs font-semibold text-gray-600 bg-gray-50 border-b border-gray-100 flex items-center gap-1.5">
+            <Play size={13} /> Target — what to build
+          </div>
+          {sampleDoc
+            ? <iframe title="sample" sandbox="allow-scripts" srcDoc={sampleDoc} style={{ width: '100%', height: 300, border: 'none', background: '#fff' }} />
+            : <div className="p-6 text-sm text-gray-400">No sample provided.</div>}
+        </div>
+        {template?.instructions && (
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <div className="text-xs font-semibold text-gray-600 mb-2">Instructions</div>
+            <SafeHtml html={String(template.instructions)} className="prose prose-sm max-w-none text-gray-700" />
+          </div>
+        )}
       </div>
     </div>
   );

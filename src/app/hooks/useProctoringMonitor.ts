@@ -61,7 +61,7 @@ interface UseProctoringOptions {
   sessionKey:       string | null | undefined;
   activityId:       string;
   courseId?:        string;
-  contextType?:     'quiz' | 'assignment';
+  contextType?:     'quiz' | 'assignment' | 'practical';
   quizAttemptId?:   string;
   config?:          ProctoringConfig;
   onForceSubmit:    () => void;

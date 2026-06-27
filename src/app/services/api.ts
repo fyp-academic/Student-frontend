@@ -113,7 +113,7 @@ export const quizApi = {
 
 // ─── Proctoring ───────────────────────────────────────────────────────────────
 export const proctoringApi = {
-  start:             (data: { activity_id: string; course_id?: string; context_type?: 'quiz' | 'assignment'; quiz_attempt_id?: string }) =>
+  start:             (data: { activity_id: string; course_id?: string; context_type?: 'quiz' | 'assignment' | 'practical'; quiz_attempt_id?: string }) =>
     api.post('/proctoring/start', data),
   violation:         (data: { session_id: string; type: string; metadata?: Record<string, unknown>; snapshot?: string }) =>
     api.post('/proctoring/violation', data),

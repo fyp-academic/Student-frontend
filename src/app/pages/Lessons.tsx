@@ -135,6 +135,8 @@ export function Lessons() {
   // handleSubmitQuiz / handleSubmitAssignment without a stale closure.
   const procForceRef = useRef<(() => void) | null>(null);
   const procForceSubmit = useCallback(() => procForceRef.current?.(), []);
+  // PracticalPanel registers its submit here so proctoring can force-submit the code.
+  const practicalForceRef = useRef<(() => void) | null>(null);
 
   // Resolve the proctored activity's instructor config from loaded sections.
   const proctoredActivity = procActivityId.current
@@ -147,7 +149,7 @@ export function Lessons() {
       sessionKey:    procKey,
       activityId:    procActivityId.current,
       courseId:      procCourseId.current,
-      contextType:   procKey?.startsWith('assign:') ? 'assignment' : 'quiz',
+      contextType:   procKey?.startsWith('assign:') ? 'assignment' : procKey?.startsWith('practical:') ? 'practical' : 'quiz',
       quizAttemptId: procKey?.startsWith('quiz:') ? procKey.replace('quiz:', '') : undefined,
       config:        proctoringConfig,
       onForceSubmit: procForceSubmit,
@@ -312,6 +314,7 @@ export function Lessons() {
     setQuizMode('idle'); setQuizQuestions([]); setQuizAnswers({}); setQuizSelected({}); setQuizCurrentQ(0); setQuizResult(null); setQuizDeadlineTs(null);
     setQuizReviewQuestions([]); setQuizReviewAnswers({}); setQuizReviewResponses({});
     setAssignMode('idle'); setAssignText(''); setAssignFile(null); setAssignDeadlineTs(null);
+    setProcKey(null); // end any prior proctoring session when switching activities
     setForumDiscussions([]); setForumPosts([]); setSelectedDiscussionId(''); setForumComposerOpen(false); setForumSearch('');
     setContext({ topicId: aid, topicName: title, activityType: rType });
     // Ensure parent section open
@@ -728,7 +731,9 @@ export function Lessons() {
   };
   procForceRef.current = procKey?.startsWith('quiz:')
     ? handleForceSubmitQuizState
-    : handleSubmitAssignment;
+    : procKey?.startsWith('practical:')
+      ? (() => practicalForceRef.current?.())
+      : handleSubmitAssignment;
 
   // ─── Inline Forum: load posts ───────────────────────────────────────────
   const handleLoadPosts = async (discussionId: string) => {
@@ -926,14 +931,36 @@ export function Lessons() {
                   )}
 
                   {/* ── PRACTICAL PROBLEM (code editor + live preview) ── */}
-                  {currentRawType === 'practical' && activeActivityId && (
-                    <div className="mb-6">
-                      <PracticalPanel
-                        activityId={activeActivityId}
-                        onSubmitted={() => setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === activeActivityId ? { ...a, completion_status: 'completed' } : a) })))}
-                      />
-                    </div>
-                  )}
+                  {currentRawType === 'practical' && activeActivityId && (() => {
+                    const pcfg = (activeActivity?.settings as Record<string, unknown> | undefined)?.proctoring as ProctoringConfig | undefined;
+                    const proctored = !!pcfg?.enabled;
+                    const started = procKey === `practical:${activeActivityId}`;
+                    // Proctored: require an explicit start (user gesture for camera + fullscreen).
+                    if (proctored && !started) {
+                      return (
+                        <div className="mb-6 bg-white rounded-xl p-6 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                          <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-3"><Eye size={26} color="#d97706" /></div>
+                          <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#1e293b", marginBottom: 6 }}>{contentTitle}</h3>
+                          <p style={{ fontSize: "13px", color: "#64748b", maxWidth: 420, margin: "0 auto 16px" }}>This is a proctored task. Your camera and screen activity are monitored, and repeated violations auto-submit your work. Click start to grant camera access and begin in fullscreen.</p>
+                          <button onClick={() => { procActivityId.current = activeActivityId; procCourseId.current = selectedCourseId; setProcKey(`practical:${activeActivityId}`); setContext({ mode: 'restricted', activityType: 'practical' }); }}
+                            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-white"
+                            style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#059669", boxShadow: "0 2px 8px rgba(5,150,105,0.3)" }}>
+                            <PlayCircle size={16} /> Start Proctored Task
+                          </button>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="mb-6">
+                        <PracticalPanel
+                          activityId={activeActivityId}
+                          proctorSessionId={proctored ? procSessionId : null}
+                          forceSubmitRef={practicalForceRef}
+                          onSubmitted={() => { setProcKey(null); setSections(prev => prev.map(sec => ({ ...sec, activities: ((sec.activities ?? []) as Activity[]).map(a => String(a.id ?? '') === activeActivityId ? { ...a, completion_status: 'completed' } : a) }))); }}
+                        />
+                      </div>
+                    );
+                  })()}
 
                   {/* ── DISCUSSION (topic + threaded replies with reactions) ── */}
                   {currentRawType === 'discussion' && activeActivityId && (

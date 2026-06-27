@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { Loader2, Play, CheckCircle, Send } from 'lucide-react';
-import { practicalApi } from '../../services/api';
+import { practicalApi, proctoringApi } from '../../services/api';
 import { SafeHtml } from '../SafeHtml';
 import CodeWorkspace, { CodeFiles, EMPTY_FILES } from '../CodeWorkspace';
 import { useCountdown, deadlineFromRemaining } from '../../hooks/useCountdown';
@@ -9,6 +9,10 @@ import { CountdownBadge } from '../CountdownBadge';
 interface Props {
   activityId: string;
   onSubmitted?: () => void;
+  /** When proctored, the active proctoring session id (for AI submission analysis). */
+  proctorSessionId?: string | null;
+  /** Lets the proctoring monitor force-submit the current code on the violation threshold. */
+  forceSubmitRef?: MutableRefObject<(() => void) | null>;
 }
 
 function buildSrcDoc({ html, css, js }: CodeFiles): string {
@@ -22,7 +26,7 @@ function buildSrcDoc({ html, css, js }: CodeFiles): string {
  *  (c) student live preview, rendered ABOVE the editor (per spec)
  * Student code autosaves as a draft and can be submitted for grading.
  */
-export function PracticalPanel({ activityId, onSubmitted }: Props) {
+export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forceSubmitRef }: Props) {
   const [loading, setLoading] = useState(true);
   const [template, setTemplate] = useState<any>(null);
   const [files, setFiles] = useState<CodeFiles>(EMPTY_FILES);
@@ -63,6 +67,13 @@ export function PracticalPanel({ activityId, onSubmitted }: Props) {
   useEffect(() => { filesRef.current = files; }, [files]);
   useEffect(() => { statusRef.current = status; }, [status]);
 
+  // Let the proctoring monitor force-submit the latest code on the violation threshold.
+  useEffect(() => {
+    if (!forceSubmitRef) return;
+    forceSubmitRef.current = () => { void submitFiles(filesRef.current); };
+    return () => { forceSubmitRef.current = null; };
+  }, [forceSubmitRef]);
+
   const remainingSec = useCountdown(deadlineTs, () => {
     if (statusRef.current !== 'submitted') void submitFiles(filesRef.current);
   });
@@ -85,6 +96,15 @@ export function PracticalPanel({ activityId, onSubmitted }: Props) {
     setSubmitting(true);
     setDeadlineTs(null); // stop the countdown
     try {
+      // Proctored: run the AI-content check on the code (non-blocking), like assignments.
+      if (proctorSessionId) {
+        try {
+          const afd = new FormData();
+          afd.append('session_id', proctorSessionId);
+          afd.append('text', `HTML:\n${toSubmit.html}\n\nCSS:\n${toSubmit.css}\n\nJS:\n${toSubmit.js}`);
+          await proctoringApi.analyzeSubmission(afd);
+        } catch { /* non-blocking */ }
+      }
       await practicalApi.save(activityId, { files: toSubmit, status: 'submitted' });
       setStatus('submitted');
       setSaveState('saved');

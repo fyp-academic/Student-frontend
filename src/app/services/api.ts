@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
+export const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.codagenz.com/api/v1';
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -299,6 +299,9 @@ export const engagementApi = {
   activityLog:     (params?: Record<string, unknown>)         => api.get('/engagement/my-activity-log', { params }),
   recommendations: ()                                          => api.get('/engagement/my-recommendations'),
   logEvent:        (data: Record<string, unknown>)            => api.post('/engagement/events', data),
+  sessionOpen:     (deviceType?: string)                      => api.post('/engagement/session/open', deviceType ? { device_type: deviceType } : {}),
+  sessionClose:    (sessionId: string)                        => api.post('/engagement/session/close', { session_id: sessionId }),
+  materialInteract:(materialId: string, data: Record<string, unknown>) => api.post(`/engagement/materials/${materialId}/interact`, data),
   markNotifClicked:(id: number)                               => api.patch(`/notifications/${id}/click`, { channel: 'in_app' }),
 };
 

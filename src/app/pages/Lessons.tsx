@@ -17,6 +17,7 @@ import { useProctoringMonitor, ProctoringConfig } from '../hooks/useProctoringMo
 import ViolationWarningModal from '../components/ViolationWarningModal';
 import { useAiWidgetContext } from "../context/AiWidgetContext";
 import { useRealtime } from "../context/RealtimeContext";
+import { telemetry } from "../services/telemetry";
 
 type Course  = Record<string, unknown>;
 type Section = Record<string, unknown>;
@@ -177,6 +178,19 @@ export function Lessons() {
   const nextActivity = activeIndex >= 0 && activeIndex < allActivities.length - 1 ? allActivities[activeIndex + 1] : null;
   const activeActivity = allActivities.find(a => String(a.id ?? '') === activeActivityId) ?? null;
   const activeSection = sections.find(s => ((s.activities ?? []) as Activity[]).some(a => String(a.id ?? '') === activeActivityId));
+
+  // Track real active time-on-task for the open activity. Overrides the
+  // route-level page context set by Layout; flushes when the activity changes
+  // or the lesson player unmounts.
+  useEffect(() => {
+    if (!activeActivityId || !selectedCourseId) return;
+    const type = String((activeActivity as Record<string, unknown>)?.type ?? 'activity');
+    telemetry.start(
+      { resourceType: type, resourceId: activeActivityId, courseId: selectedCourseId },
+      'content_view',
+    );
+    return () => { telemetry.stop(); };
+  }, [activeActivityId, selectedCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Push AI context
   useEffect(() => {
@@ -512,6 +526,7 @@ export function Lessons() {
     setContext({ mode: 'restricted', activityType: 'quiz' });
     procActivityId.current = activeActivityId;
     procCourseId.current   = selectedCourseId;
+    telemetry.emit('quiz_start', { resource_type: 'quiz', resource_id: activeActivityId, course_id: selectedCourseId });
     try {
       const [startRes, qRes] = await Promise.all([
         quizApi.start(activeActivityId),
@@ -816,7 +831,16 @@ export function Lessons() {
     );
     return (
       <div style={frameStyle}>
-        <video src={videoUrl} controls autoPlay style={{ ...fillStyle, objectFit: "contain" }} onError={() => setVideoError(true)}>Your browser does not support the video tag.</video>
+        <video
+          src={videoUrl}
+          controls
+          autoPlay
+          style={{ ...fillStyle, objectFit: "contain" }}
+          onError={() => setVideoError(true)}
+          onPlay={(e) => telemetry.emit('video_play', { resource_type: 'video', resource_id: activeActivityId, course_id: selectedCourseId, value: e.currentTarget.duration > 0 ? Math.round((e.currentTarget.currentTime / e.currentTarget.duration) * 100) : 0 })}
+          onPause={(e) => telemetry.emit('video_pause', { resource_type: 'video', resource_id: activeActivityId, course_id: selectedCourseId, value: e.currentTarget.duration > 0 ? Math.round((e.currentTarget.currentTime / e.currentTarget.duration) * 100) : 0 })}
+          onEnded={() => telemetry.emit('video_complete', { resource_type: 'video', resource_id: activeActivityId, course_id: selectedCourseId, value: 100 })}
+        >Your browser does not support the video tag.</video>
       </div>
     );
   };

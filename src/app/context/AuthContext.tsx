@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi } from '../services/api';
+import { ensureLoginSession } from '../services/telemetry';
 
 interface AuthUser {
   id: string;
@@ -55,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const u = res.data.data ?? res.data;
           setUser(u);
           localStorage.setItem('auth_user', JSON.stringify(u));
+          // Restored session on reload — open a login session for telemetry if missing.
+          void ensureLoginSession();
         })
         .catch(() => {
           setToken(null);
@@ -77,6 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('auth_user',  JSON.stringify(u));
     if (data.login_session_id) {
       localStorage.setItem('login_session_id', data.login_session_id);
+    } else {
+      // Login didn't return a session id — open one so telemetry has a session.
+      void ensureLoginSession();
     }
     setToken(t);
     setUser(u);

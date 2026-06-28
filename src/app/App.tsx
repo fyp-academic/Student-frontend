@@ -2,6 +2,7 @@ import { RouterProvider } from "react-router";
 import { router } from "./routes";
 import { AuthProvider } from "./context/AuthContext";
 import { RealtimeProvider } from "./context/RealtimeContext";
+import { telemetry } from "./services/telemetry";
 import { useState, useEffect } from "react";
 
 export default function App() {
@@ -9,6 +10,8 @@ export default function App() {
 
   useEffect(() => {
     setMounted(true);
+    // Start the active-time engine (global visibility/idle/heartbeat listeners).
+    telemetry.init();
   }, []);
 
   if (!mounted) {

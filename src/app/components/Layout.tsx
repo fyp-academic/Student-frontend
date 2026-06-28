@@ -6,6 +6,7 @@ import { AiWidgetProvider } from "../context/AiWidgetContext";
 import { useAuth } from "../context/AuthContext";
 import { useRealtime } from "../context/RealtimeContext";
 import { profileApi } from "../services/api";
+import { telemetry } from "../services/telemetry";
 import {
   Bell,
   Search,
@@ -46,6 +47,12 @@ export function Layout() {
       setProfile(p);
     }).catch(() => {});
   }, []);
+
+  // Track time-on-page per route. Pages with richer context (e.g. the lesson
+  // player) override this with their own start() once their activity is known.
+  useEffect(() => {
+    telemetry.start({ resourceType: 'page', resourceId: null, courseId: null }, 'page_view');
+  }, [location.pathname]);
 
   const profileImageUrl = profile?.profile_image_url as string | undefined;
 

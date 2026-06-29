@@ -135,10 +135,24 @@ export const lessonApi = {
 export const forumApi = {
   discussions:     (activityId: string)                              => api.get(`/activities/${activityId}/discussions`),
   posts:           (discussionId: string)                            => api.get(`/discussions/${discussionId}/posts`),
-  reply:           (discussionId: string, data: Record<string, unknown>) =>
-    api.post(`/discussions/${discussionId}/posts`, data),
-  startDiscussion: (activityId: string, data: Record<string, unknown>) =>
-    api.post(`/activities/${activityId}/discussions`, data),
+  reply:           (discussionId: string, data: Record<string, unknown>, file?: File) => {
+    if (!file) return api.post(`/discussions/${discussionId}/posts`, data);
+    const fd = new FormData();
+    Object.entries(data).forEach(([k, v]) => { if (v != null) fd.append(k, String(v)); });
+    fd.append('attachment', file);
+    return api.post(`/discussions/${discussionId}/posts`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  startDiscussion: (activityId: string, data: Record<string, unknown>, file?: File) => {
+    if (!file) return api.post(`/activities/${activityId}/discussions`, data);
+    const fd = new FormData();
+    Object.entries(data).forEach(([k, v]) => { if (v != null) fd.append(k, String(v)); });
+    fd.append('attachment', file);
+    return api.post(`/activities/${activityId}/discussions`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
   togglePin:       (discussionId: string)                            => api.patch(`/discussions/${discussionId}/pin`),
   toggleLock:      (discussionId: string)                            => api.patch(`/discussions/${discussionId}/lock`),
   // Single-topic discussion activity + reactions

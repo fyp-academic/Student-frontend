@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react';
-import { Loader2, ThumbsUp, ThumbsDown, MessageSquare, Send, Lock } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Loader2, ThumbsUp, ThumbsDown, MessageSquare, Send, Lock, X } from 'lucide-react';
 import { forumApi } from '../../services/api';
 import { SafeHtml } from '../SafeHtml';
+import { EmojiButton } from '../EmojiButton';
+import { VoiceRecorderButton } from '../VoiceRecorderButton';
+
+const storageUrl = (path: string) =>
+  `${import.meta.env.VITE_API_URL?.replace('/api/v1', '')}/storage/${path}`;
 
 interface Props {
   activityId: string;
@@ -32,6 +37,8 @@ interface Reply {
   anonymous: boolean;
   author: { id: string | null; name: string; avatar: string | null };
   is_mine: boolean;
+  attachment_path?: string | null;
+  attachment_type?: string | null;
 }
 
 /**
@@ -46,6 +53,13 @@ export function DiscussionPanel({ activityId }: Props) {
   const [anon, setAnon] = useState(false);
   const [replyTo, setReplyTo] = useState<Reply | null>(null);
   const [posting, setPosting] = useState(false);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+
+  const audioPreviewUrl = useMemo(
+    () => (audioFile ? URL.createObjectURL(audioFile) : null),
+    [audioFile]
+  );
+  useEffect(() => () => { if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl); }, [audioPreviewUrl]);
 
   const load = () => {
     setLoading(true);
@@ -60,15 +74,15 @@ export function DiscussionPanel({ activityId }: Props) {
   const discussionId: string = data?.discussion_id ?? '';
 
   const post = async () => {
-    if (!body.trim() || !discussionId) return;
+    if ((!body.trim() && !audioFile) || !discussionId) return;
     setPosting(true);
     try {
       await forumApi.reply(discussionId, {
         content: body.trim(),
         parent_id: replyTo?.id ?? null,
         anonymous: anon,
-      });
-      setBody(''); setReplyTo(null); setAnon(false);
+      }, audioFile ?? undefined);
+      setBody(''); setReplyTo(null); setAnon(false); setAudioFile(null);
       load();   // refetch to apply gating + ordering + counts
     } catch { /* keep composer open */ }
     finally { setPosting(false); }
@@ -126,6 +140,14 @@ export function DiscussionPanel({ activityId }: Props) {
           rows={3}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
+        {audioPreviewUrl && (
+          <div className="mt-2 flex items-center gap-2">
+            <audio controls src={audioPreviewUrl} className="h-9 w-full max-w-xs" />
+            <button onClick={() => setAudioFile(null)} className="p-1.5 rounded-full text-gray-400 hover:bg-gray-200" title="Discard voice note">
+              <X size={15} />
+            </button>
+          </div>
+        )}
         <div className="flex items-center justify-between mt-2">
           {opts.anonymous_mode === 'partial' ? (
             <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
@@ -134,10 +156,14 @@ export function DiscussionPanel({ activityId }: Props) {
           ) : opts.anonymous_mode === 'full' ? (
             <span className="text-xs text-gray-400">Your reply will be anonymous</span>
           ) : <span />}
-          <button onClick={post} disabled={posting || !body.trim()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50">
-            <Send size={14} /> {posting ? 'Posting…' : 'Reply'}
-          </button>
+          <div className="flex items-center gap-1">
+            <EmojiButton onPick={(e) => setBody(prev => prev + e)} />
+            <VoiceRecorderButton onRecorded={setAudioFile} accent="bg-cyan-600 hover:bg-cyan-700" />
+            <button onClick={post} disabled={posting || (!body.trim() && !audioFile)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50">
+              <Send size={14} /> {posting ? 'Posting…' : 'Reply'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -161,7 +187,10 @@ export function DiscussionPanel({ activityId }: Props) {
                   <span className="text-sm font-semibold text-gray-800">{r.author?.name ?? 'Anonymous'}{r.is_mine && <span className="text-xs text-gray-400 font-normal"> · you</span>}</span>
                   <span className="text-xs text-gray-400">{r.created_at ? new Date(r.created_at).toLocaleString() : ''}</span>
                 </div>
-                <div className="text-sm text-gray-700 whitespace-pre-wrap">{r.content}</div>
+                {r.content && <div className="text-sm text-gray-700 whitespace-pre-wrap">{r.content}</div>}
+                {r.attachment_path && r.attachment_type?.startsWith('audio/') && (
+                  <audio controls src={storageUrl(r.attachment_path)} className="mt-2 h-9 w-full max-w-xs" />
+                )}
                 <div className="flex items-center gap-4 mt-2 text-xs">
                   {opts.allow_liking !== false && <>
                     <button onClick={() => react(r, 1)} className={`inline-flex items-center gap-1 ${r.my_reaction === 1 ? 'text-cyan-600 font-semibold' : 'text-gray-500 hover:text-cyan-600'}`}>

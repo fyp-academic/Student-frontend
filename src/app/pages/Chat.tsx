@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Send, Search, MoreHorizontal, Paperclip, Smile, X, Download, MessageSquare, Trash2, Pin, Check, CheckCheck, BookOpen, GraduationCap, Users, ArrowLeft } from "lucide-react";
 import { messagingApi, chatAccessApi, courseChatApi, programmeChatApi } from "../services/api";
+import { VoiceRecorderButton } from "../components/VoiceRecorderButton";
 import { useAuth } from "../context/AuthContext";
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
@@ -376,6 +377,13 @@ export function Chat() {
       setSending(false);
     }
   }, [input, filePreview, selectedConvId, sending]);
+
+  // Object URL for previewing a pending audio voice-note before it is sent.
+  const filePreviewUrl = useMemo(
+    () => (filePreview && filePreview.type.startsWith("audio/") ? URL.createObjectURL(filePreview) : null),
+    [filePreview]
+  );
+  useEffect(() => () => { if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl); }, [filePreviewUrl]);
 
   const handleReact = async (messageId: string, emoji: string) => {
     if (!selectedConvId) return;
@@ -972,15 +980,21 @@ export function Chat() {
                           <>
                             {msg.content && <span>{msg.content}</span>}
                             {msg.attachment_path && (
-                              <div className="mt-2 flex items-center gap-2 text-xs rounded-lg px-2 py-1.5"
-                                style={{ backgroundColor: isOwn ? "rgba(255,255,255,0.15)" : "#f1f5f9" }}>
-                                <Paperclip size={11} className="flex-shrink-0" />
-                                <span className="truncate max-w-[130px]">{msg.attachment_name}</span>
-                                <a href={`${import.meta.env.VITE_API_URL?.replace("/api/v1", "")}/storage/${msg.attachment_path}`}
-                                  target="_blank" rel="noreferrer" className="ml-auto flex-shrink-0">
-                                  <Download size={11} />
-                                </a>
-                              </div>
+                              msg.attachment_type?.startsWith("audio/") ? (
+                                <audio controls
+                                  src={`${import.meta.env.VITE_API_URL?.replace("/api/v1", "")}/storage/${msg.attachment_path}`}
+                                  className="mt-2 h-9 w-full max-w-[240px]" />
+                              ) : (
+                                <div className="mt-2 flex items-center gap-2 text-xs rounded-lg px-2 py-1.5"
+                                  style={{ backgroundColor: isOwn ? "rgba(255,255,255,0.15)" : "#f1f5f9" }}>
+                                  <Paperclip size={11} className="flex-shrink-0" />
+                                  <span className="truncate max-w-[130px]">{msg.attachment_name}</span>
+                                  <a href={`${import.meta.env.VITE_API_URL?.replace("/api/v1", "")}/storage/${msg.attachment_path}`}
+                                    target="_blank" rel="noreferrer" className="ml-auto flex-shrink-0">
+                                    <Download size={11} />
+                                  </a>
+                                </div>
+                              )
                             )}
                           </>
                         )}
@@ -1111,12 +1125,18 @@ export function Chat() {
               </div>
             )}
 
-            {/* File preview */}
+            {/* File / voice-note preview */}
             {filePreview && (
               <div className="px-4 py-2 border-t flex items-center gap-2 text-sm"
                 style={{ borderColor: "#f1f5f9", backgroundColor: "#f8fafc", color: "#64748b" }}>
-                <Paperclip size={13} className="text-blue-500 flex-shrink-0" />
-                <span className="truncate flex-1">{filePreview.name}</span>
+                {filePreviewUrl ? (
+                  <audio controls src={filePreviewUrl} className="h-9 flex-1 max-w-[260px]" />
+                ) : (
+                  <>
+                    <Paperclip size={13} className="text-blue-500 flex-shrink-0" />
+                    <span className="truncate flex-1">{filePreview.name}</span>
+                  </>
+                )}
                 <button onClick={() => setFilePreview(null)} className="text-slate-400 hover:text-red-500">
                   <X size={14} />
                 </button>
@@ -1155,6 +1175,7 @@ export function Chat() {
                   title="Add emoji to message">
                   <Smile size={17} />
                 </button>
+                <VoiceRecorderButton onRecorded={(f) => setFilePreview(f)} />
                 <button onClick={handleSend} disabled={(!input.trim() && !filePreview) || sending}
                   className="p-2 rounded-xl text-white transition-all flex-shrink-0"
                   style={{ backgroundColor: (input.trim() || filePreview) && !sending ? "#2563eb" : "#cbd5e1" }}>

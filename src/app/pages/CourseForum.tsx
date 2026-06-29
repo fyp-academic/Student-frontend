@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MessageSquare, ThumbsUp, Eye, Clock, Plus, Search, Pin, CheckCircle, X, Loader2 } from "lucide-react";
 import { coursesApi, activitiesApi, forumApi } from "../services/api";
+import { EmojiButton } from "../components/EmojiButton";
+import { VoiceRecorderButton } from "../components/VoiceRecorderButton";
+
+const storageUrl = (path: string) =>
+  `${import.meta.env.VITE_API_URL?.replace("/api/v1", "")}/storage/${path}`;
 
 type Thread = Record<string, unknown>;
 type CourseItem = Record<string, unknown>;
@@ -47,6 +52,13 @@ export function CourseForum() {
   const [postsLoading, setPostsLoading] = useState(false);
   const [replyText, setReplyText]     = useState("");
   const [replying, setReplying]       = useState(false);
+  const [replyAudio, setReplyAudio]       = useState<File | null>(null);
+  const [newThreadAudio, setNewThreadAudio] = useState<File | null>(null);
+
+  const replyAudioUrl = useMemo(() => (replyAudio ? URL.createObjectURL(replyAudio) : null), [replyAudio]);
+  useEffect(() => () => { if (replyAudioUrl) URL.revokeObjectURL(replyAudioUrl); }, [replyAudioUrl]);
+  const newThreadAudioUrl = useMemo(() => (newThreadAudio ? URL.createObjectURL(newThreadAudio) : null), [newThreadAudio]);
+  useEffect(() => () => { if (newThreadAudioUrl) URL.revokeObjectURL(newThreadAudioUrl); }, [newThreadAudioUrl]);
 
   // Load enrolled courses on mount
   useEffect(() => {
@@ -93,8 +105,8 @@ export function CourseForum() {
   }, [selectedActivity, loadThreads]);
 
   const handlePublish = async () => {
-    if (!newThread.title.trim() || !newThread.details.trim() || !selectedActivity) {
-      alert('Please enter a thread title and message.');
+    if (!newThread.title.trim() || (!newThread.details.trim() && !newThreadAudio) || !selectedActivity) {
+      alert('Please enter a thread title and a message or voice note.');
       return;
     }
     setSubmitting(true);
@@ -103,9 +115,10 @@ export function CourseForum() {
       await forumApi.startDiscussion(selectedActivity, {
         title:   newThread.title,
         content: newThread.details,
-      });
+      }, newThreadAudio ?? undefined);
       setShowComposer(false);
       setNewThread({ title: '', category: 'General', details: '' });
+      setNewThreadAudio(null);
       loadThreads(selectedActivity);   // refetch so the new thread + its first post appear
     } catch {
       alert('Failed to create thread. Please try again.');
@@ -128,12 +141,13 @@ export function CourseForum() {
   };
 
   const handleReply = async () => {
-    if (!openThread || !replyText.trim()) return;
+    if (!openThread || (!replyText.trim() && !replyAudio)) return;
     const id = String(openThread.id ?? '');
     setReplying(true);
     try {
-      await forumApi.reply(id, { content: replyText });   // backend expects { content }
+      await forumApi.reply(id, { content: replyText }, replyAudio ?? undefined);   // backend expects { content }
       setReplyText("");
+      setReplyAudio(null);
       const r = await forumApi.posts(id);                 // refetch posts so the reply appears
       setPosts(r.data.data ?? r.data ?? []);
       if (selectedActivity) loadThreads(selectedActivity); // refresh reply counts
@@ -339,6 +353,8 @@ export function CourseForum() {
                   const content = String(p.content ?? p.message ?? '');
                   const when    = String(p.created_at ?? '');
                   const depth   = Number(p.depth_level ?? 0);
+                  const attachPath = p.attachment_path ? String(p.attachment_path) : '';
+                  const attachType = String(p.attachment_type ?? '');
                   return (
                     <div key={String(p.id ?? pi)} className="rounded-2xl p-3" style={{ backgroundColor: "#f8fafc", marginLeft: depth > 0 ? `${Math.min(depth, 4) * 16}px` : 0 }}>
                       <div className="flex items-center gap-2 mb-1">
@@ -346,7 +362,10 @@ export function CourseForum() {
                         <span style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b" }}>{author}</span>
                         {when && <span style={{ fontSize: "10px", color: "#94a3b8" }}>{timeAgo(when)}</span>}
                       </div>
-                      <p style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>{content}</p>
+                      {content && <p style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>{content}</p>}
+                      {attachPath && attachType.startsWith('audio/') && (
+                        <audio controls src={storageUrl(attachPath)} className="mt-2 h-9 w-full max-w-xs" />
+                      )}
                     </div>
                   );
                 })
@@ -357,24 +376,36 @@ export function CourseForum() {
               {openThread.locked ? (
                 <p style={{ fontSize: "12px", color: "#94a3b8", textAlign: "center" }}>This discussion is locked.</p>
               ) : (
-                <div className="flex items-end gap-2">
-                  <textarea
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    rows={2}
-                    className="flex-1 rounded-2xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                    style={{ borderColor: "#e2e8f0", fontSize: "13px", backgroundColor: "#f8fafc" }}
-                    placeholder="Write a reply…"
-                  />
-                  <button
-                    disabled={!replyText.trim() || replying}
-                    onClick={handleReply}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white disabled:opacity-60"
-                    style={{ fontSize: "12px", fontWeight: 600, background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
-                  >
-                    {replying ? <Loader2 size={13} className="animate-spin" /> : null}
-                    Reply
-                  </button>
+                <div>
+                  {replyAudioUrl && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <audio controls src={replyAudioUrl} className="h-9 w-full max-w-xs" />
+                      <button onClick={() => setReplyAudio(null)} className="p-1.5 rounded-full text-gray-400 hover:bg-gray-200" title="Discard voice note">
+                        <X size={15} />
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-end gap-2">
+                    <textarea
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      rows={2}
+                      className="flex-1 rounded-2xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      style={{ borderColor: "#e2e8f0", fontSize: "13px", backgroundColor: "#f8fafc" }}
+                      placeholder="Write a reply…"
+                    />
+                    <EmojiButton onPick={(e) => setReplyText(prev => prev + e)} />
+                    <VoiceRecorderButton onRecorded={setReplyAudio} />
+                    <button
+                      disabled={(!replyText.trim() && !replyAudio) || replying}
+                      onClick={handleReply}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white disabled:opacity-60"
+                      style={{ fontSize: "12px", fontWeight: 600, background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
+                    >
+                      {replying ? <Loader2 size={13} className="animate-spin" /> : null}
+                      Reply
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -427,7 +458,13 @@ export function CourseForum() {
               </div>
 
               <div>
-                <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Details & context</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Details & context</label>
+                  <div className="flex items-center gap-1">
+                    <EmojiButton onPick={(e) => setNewThread(prev => ({ ...prev, details: prev.details + e }))} />
+                    <VoiceRecorderButton onRecorded={setNewThreadAudio} />
+                  </div>
+                </div>
                 <textarea
                   value={newThread.details}
                   onChange={(e) => setNewThread(prev => ({ ...prev, details: e.target.value }))}
@@ -436,6 +473,14 @@ export function CourseForum() {
                   style={{ borderColor: "#e2e8f0", fontSize: "12px", backgroundColor: "#f8fafc" }}
                   placeholder="Share what you've tried, links, or what kind of support you're after."
                 />
+                {newThreadAudioUrl && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <audio controls src={newThreadAudioUrl} className="h-9 w-full max-w-xs" />
+                    <button onClick={() => setNewThreadAudio(null)} className="p-1.5 rounded-full text-gray-400 hover:bg-gray-200" title="Discard voice note">
+                      <X size={15} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

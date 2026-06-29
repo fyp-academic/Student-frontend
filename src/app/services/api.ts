@@ -326,6 +326,16 @@ export const personalizationApi = {
   forCourse: (courseId: string) => api.get(`/student/courses/${courseId}/personalization`),
 };
 
+// ─── Calendar / Scheduler ─────────────────────────────────────────────────────
+export const calendarApi = {
+  feed:      (params: { start: string; end: string; course_ids?: string[] }) =>
+    api.get('/calendar/events', { params }),
+  calendars: () => api.get('/calendar/calendars'),
+  create:    (data: Record<string, unknown>) => api.post('/calendar/events', data),
+  update:    (id: string, data: Record<string, unknown>) => api.put(`/calendar/events/${id}`, data),
+  remove:    (id: string) => api.delete(`/calendar/events/${id}`),
+};
+
 // ─── Notifications ───────────────────────────────────────────────────────────
 export const notificationApi = {
   getPreferences:    () => api.get('/notifications/preferences'),

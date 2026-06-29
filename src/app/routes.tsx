@@ -7,6 +7,7 @@ import { LearningCatalog } from "./pages/LearningCatalog";
 import { MyCourses } from "./pages/MyCourses";
 import { CourseFeed } from "./pages/CourseFeed";
 import { CourseForum } from "./pages/CourseForum";
+import { Calendar } from "./pages/Calendar";
 import { Lessons } from "./pages/Lessons";
 import { Activities } from "./pages/Activities";
 import { Assessments } from "./pages/Assessments";
@@ -103,6 +104,7 @@ export const router = createBrowserRouter([
       { path: "/sessions",     Component: StudentSessions     },
       { path: "/profile",      Component: LearnerProfile      },
       { path: "/engagement",   Component: LearnerEngagement   },
+      { path: "/calendar",     Component: Calendar            },
     ],
   },
 ]);

@@ -30,6 +30,7 @@ import {
   Users,
   Video,
   TrendingUp,
+  Calendar,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -103,6 +104,13 @@ const navGroups: NavGroup[] = [
     icon: GraduationCap,
     defaultOpen: true,
     items: [{ label: "Enrolled List", icon: ListChecks, path: "/my-courses" }],
+  },
+  {
+    id: "schedule",
+    label: "Schedule",
+    icon: Calendar,
+    defaultOpen: true,
+    items: [{ label: "Calendar", icon: Calendar, path: "/calendar" }],
   },
   {
     id: "learning-flow",

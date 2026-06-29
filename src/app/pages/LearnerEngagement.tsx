@@ -8,6 +8,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis,
 } from "recharts";
+import { useNavigate } from "react-router";
 import { engagementApi } from "../services/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -45,6 +46,8 @@ interface ActivityEvent {
 interface Recommendation {
   type: 'success' | 'warning' | 'danger' | 'info';
   title: string; message: string; action: string | null; metric: string; priority: number;
+  action_type?: string | null;
+  action_target?: { course_id?: string; activity_id?: string } | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,6 +71,21 @@ const recColors: Record<string, { bg: string; border: string; icon: string; icon
 };
 
 const deviceIcon = (d: string) => d === "mobile" ? <Smartphone className="w-4 h-4" /> : d === "tablet" ? <Cpu className="w-4 h-4" /> : <Monitor className="w-4 h-4" />;
+
+// Maps a recommendation's structured action to an in-app route + navigation state.
+function resolveRecAction(rec: Recommendation): { path: string; state?: Record<string, unknown> } | null {
+  const courseId = rec.action_target?.course_id;
+  const state = courseId ? { courseId } : undefined;
+  switch (rec.action_type) {
+    case "courses":     return { path: "/my-courses" };
+    case "lessons":     return { path: "/lessons", state };
+    case "assessments": return { path: "/assessments", state };
+    case "forum":       return { path: "/course-forum", state };
+    case "calendar":    return { path: "/calendar", state };
+    case "sessions":    return { path: "/sessions", state };
+    default:            return null;
+  }
+}
 
 const eventTypeBadge: Record<string, string> = {
   content_view:     "bg-blue-100 text-blue-700",
@@ -98,6 +116,7 @@ function ScoreGauge({ score }: { score: number }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function LearnerEngagement() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"overview" | "logs" | "ai">("overview");
   const [loading, setLoading] = useState(true);
 
@@ -533,9 +552,18 @@ export default function LearnerEngagement() {
                       <div className="flex-1">
                         <p className={`font-semibold text-sm ${c.icon}`}>{rec.title}</p>
                         <p className="text-sm text-gray-600 mt-1 leading-relaxed">{rec.message}</p>
-                        {rec.action && (
-                          <button className={`mt-3 text-xs font-semibold underline ${c.icon}`}>{rec.action} →</button>
-                        )}
+                        {rec.action && (() => {
+                          const target = resolveRecAction(rec);
+                          if (!target) return null;
+                          return (
+                            <button
+                              onClick={() => navigate(target.path, target.state ? { state: target.state } : undefined)}
+                              className={`mt-3 text-xs font-semibold underline ${c.icon} hover:opacity-80`}
+                            >
+                              {rec.action} →
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

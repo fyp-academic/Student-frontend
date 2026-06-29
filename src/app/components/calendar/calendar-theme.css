@@ -58,3 +58,15 @@
 .rbc-cal .rbc-time-header-gutter, .rbc-cal .rbc-time-gutter { font-size: 11px; color: #94a3b8; }
 .rbc-cal .rbc-slot-selection { background-color: rgba(34,197,94,.18); }
 .rbc-cal .rbc-show-more { color: var(--rbc-accent); font-size: 11px; font-weight: 600; }
+
+/* ── Mobile: shrink desktop-sized spacing so the grid fits small screens ──────── */
+@media (max-width: 640px) {
+  .rbc-cal .rbc-month-view,
+  .rbc-cal .rbc-time-view,
+  .rbc-cal .rbc-agenda-view { border-radius: 10px; }
+  .rbc-cal .rbc-header { padding: 6px 2px; font-size: 11px; }
+  .rbc-cal .rbc-date-cell { padding: 3px 4px; font-size: 11px; }
+  .rbc-cal .rbc-event { padding: 1px 4px; font-size: 11px; }
+  .rbc-cal .rbc-time-header-gutter, .rbc-cal .rbc-time-gutter { font-size: 10px; }
+  .rbc-cal .rbc-agenda-view td { padding: 6px 6px; font-size: 12px; }
+}

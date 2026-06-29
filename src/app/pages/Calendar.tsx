@@ -65,7 +65,10 @@ function deepLink(item: FeedItem): { path: string; state: Record<string, unknown
 
 export function Calendar() {
   const navigate = useNavigate();
-  const [view, setView] = useState<View>(Views.WEEK);
+  // Phones open in Agenda (a readable list); the Week time-grid is too cramped < 640px.
+  const [view, setView] = useState<View>(
+    () => (typeof window !== 'undefined' && window.innerWidth < 640 ? Views.AGENDA : Views.WEEK)
+  );
   const [date, setDate] = useState<Date>(new Date());
   const [items, setItems] = useState<FeedItem[]>([]);
   const [calendars, setCalendars] = useState<CalendarOption[]>([]);
@@ -166,16 +169,16 @@ export function Calendar() {
         <div className="flex-1 min-w-0">
           {/* Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
               <button onClick={() => setDate(new Date())} className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-50">Today</button>
               <div className="flex items-center rounded-lg border border-gray-300 bg-white">
                 <button onClick={() => navStep(-1)} className="p-1.5 hover:bg-gray-50 rounded-l-lg"><ChevronLeft className="w-4 h-4" /></button>
                 <button onClick={() => navStep(1)} className="p-1.5 hover:bg-gray-50 rounded-r-lg"><ChevronRight className="w-4 h-4" /></button>
               </div>
-              <span className="text-sm font-semibold text-gray-700">{label}</span>
+              <span className="text-sm font-semibold text-gray-700 truncate">{label}</span>
               {loading && <span className="text-xs text-gray-400">updating…</span>}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
                 {([Views.WEEK, Views.MONTH, Views.AGENDA] as View[]).map((v) => (
                   <button key={v} onClick={() => setView(v)}
@@ -191,7 +194,7 @@ export function Calendar() {
             </div>
           </div>
 
-          <div className="rbc-cal" style={{ height: 680 }}>
+          <div className="rbc-cal h-[68vh] min-h-[460px] sm:h-[680px]">
             <BigCalendar
               localizer={localizer}
               events={events}

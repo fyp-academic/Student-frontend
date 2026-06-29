@@ -6,6 +6,7 @@ import { useProctoringMonitor, ProctoringConfig } from '../hooks/useProctoringMo
 import ViolationWarningModal from '../components/ViolationWarningModal';
 import { useRealtime } from "../context/RealtimeContext";
 import { useAiWidgetContext } from "../context/AiWidgetContext";
+import { CountdownBadge } from "../components/CountdownBadge";
 
 type Quiz    = Record<string, unknown>;
 type QItem   = Record<string, unknown>;
@@ -490,12 +491,6 @@ export function Quizzes() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeQuiz, reviewMode, submitted, deadlineTs]);
 
-  const formatMMSS = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, '0')}`;
-  };
-
   if (loading) {
     return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;
   }
@@ -660,12 +655,6 @@ export function Quizzes() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  {!submitted && !reviewMode && remainingSec !== null && (
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${remainingSec <= 30 ? 'bg-red-100 text-red-600' : remainingSec <= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
-                      <Clock size={12} />
-                      {formatMMSS(remainingSec)}
-                    </div>
-                  )}
                   {!submitted && procSessionKey && (
                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${procWarningCount >= 3 ? 'bg-red-100 text-red-600' : procWarningCount > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-600'}`}>
                       <span className={`inline-block w-1.5 h-1.5 rounded-full ${procWarningCount >= 3 ? 'bg-red-500' : procWarningCount > 0 ? 'bg-yellow-500' : 'bg-green-500'}`} />
@@ -678,6 +667,13 @@ export function Quizzes() {
                 </div>
               </div>
             </div>
+
+            {/* Prominent countdown — sits above the questions for clear visibility */}
+            {!submitted && !reviewMode && remainingSec !== null && (
+              <div className="flex justify-center px-6 py-3 bg-gray-50 border-b border-gray-100">
+                <CountdownBadge remainingSec={remainingSec} prominent />
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-6">
               {quizLoading ? (

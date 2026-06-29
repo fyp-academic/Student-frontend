@@ -9,13 +9,30 @@ const formatMMSS = (s: number) => {
 /**
  * Color-coded countdown pill (blue → yellow ≤60s → red ≤30s).
  * Mirrors the quiz timer badge so every timed activity looks identical.
+ * `prominent` renders a larger banner-style timer for clear visibility above a quiz;
+ * it also softly pulses while in the red (≤30s) zone.
  */
-export function CountdownBadge({ remainingSec, className = '' }: { remainingSec: number | null; className?: string }) {
+export function CountdownBadge({
+  remainingSec, className = '', prominent = false,
+}: { remainingSec: number | null; className?: string; prominent?: boolean }) {
   if (remainingSec === null) return null;
   const tone =
     remainingSec <= 30 ? 'bg-red-100 text-red-600'
     : remainingSec <= 60 ? 'bg-yellow-100 text-yellow-700'
     : 'bg-blue-100 text-blue-700';
+  if (prominent) {
+    return (
+      <div
+        role="timer"
+        aria-live="polite"
+        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-base font-bold tabular-nums shadow-sm ring-1 ring-black/5 ${tone} ${remainingSec <= 30 ? 'animate-pulse' : ''} ${className}`}
+      >
+        <Clock size={18} />
+        <span className="uppercase tracking-wide text-[11px] font-semibold opacity-70">Time left</span>
+        {formatMMSS(remainingSec)}
+      </div>
+    );
+  }
   return (
     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${tone} ${className}`}>
       <Clock size={12} />

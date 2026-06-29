@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import { Loader2, Play, CheckCircle, Send } from 'lucide-react';
+import { Loader2, Play, CheckCircle, Send, Clock } from 'lucide-react';
 import { practicalApi, proctoringApi } from '../../services/api';
 import { SafeHtml } from '../SafeHtml';
 import CodeWorkspace, { CodeFiles, EMPTY_FILES } from '../CodeWorkspace';
@@ -34,10 +34,14 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [submitting, setSubmitting] = useState(false);
   const [deadlineTs, setDeadlineTs] = useState<number | null>(null);
+  const [timeLimitMin, setTimeLimitMin] = useState<number | null>(null);
+  const [started, setStarted] = useState(false);
+  const [starting, setStarting] = useState(false);
   const saveTimer = useRef<number | null>(null);
   const firstLoad = useRef(true);
   const filesRef = useRef<CodeFiles>(EMPTY_FILES);
   const statusRef = useRef<'draft' | 'submitted'>('draft');
+  const startingRef = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -49,19 +53,52 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
       if (!alive) return;
       const sub = mine?.data;
       setTemplate(tpl);
+      const limit = Number(mine?.time_limit_minutes ?? 0) || 0;
+      setTimeLimitMin(limit > 0 ? limit : null);
+      const hasStarted = !!sub?.started_at;
+      setStarted(hasStarted);
       if (sub?.files && (sub.files.html || sub.files.css || sub.files.js)) {
         setFiles({ ...EMPTY_FILES, ...sub.files });
         setStatus(sub.status === 'submitted' ? 'submitted' : 'draft');
       } else if (tpl?.starter) {
         setFiles({ ...EMPTY_FILES, ...tpl.starter });
       }
-      // Seed the countdown from the server's remaining seconds (unless already submitted).
-      if (sub?.status !== 'submitted') {
+      // Arm the countdown ONLY for an already-started, not-yet-submitted attempt.
+      // A passive open never arms it (so it can never auto-submit on view).
+      if (sub?.status !== 'submitted' && hasStarted) {
         setDeadlineTs(deadlineFromRemaining(mine?.time_limit_seconds));
       }
     }).finally(() => { if (alive) { setLoading(false); firstLoad.current = false; } });
     return () => { alive = false; };
   }, [activityId]);
+
+  // Explicit, idempotent start — anchors the server clock and arms the countdown.
+  const beginAttempt = async () => {
+    if (startingRef.current || statusRef.current === 'submitted') return;
+    startingRef.current = true;
+    setStarting(true);
+    try {
+      const { data } = await practicalApi.start(activityId);
+      setStarted(true);
+      if ((Number(data?.time_limit_minutes ?? 0) || 0) > 0) {
+        setDeadlineTs(deadlineFromRemaining(data?.time_limit_seconds));
+      }
+    } catch {
+      startingRef.current = false; // allow retry on failure
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  // Proctored: the student already clicked "Start Proctored Task" in the lesson, so
+  // begin the timed attempt automatically — no second gate.
+  useEffect(() => {
+    if (loading || !proctorSessionId) return;
+    if (timeLimitMin && !started && statusRef.current !== 'submitted') {
+      void beginAttempt();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, proctorSessionId, timeLimitMin, started]);
 
   // Keep refs current so the timer's auto-submit always sees the latest work.
   useEffect(() => { filesRef.current = files; }, [files]);
@@ -120,6 +157,28 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
   );
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-blue-600" /></div>;
+
+  // Timed practical that hasn't been started yet (and isn't proctored, which auto-starts):
+  // show an explicit Start gate so merely opening the activity never starts the clock.
+  const needsStartGate = !!timeLimitMin && !started && status !== 'submitted' && !proctorSessionId;
+  if (needsStartGate) {
+    return (
+      <div className="max-w-xl mx-auto text-center rounded-2xl border border-gray-200 bg-white p-8">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 mb-4">
+          <Clock size={26} className="text-blue-600" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-800">Timed practical</h3>
+        <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+          You have <span className="font-semibold text-gray-700">{timeLimitMin} minute{timeLimitMin === 1 ? '' : 's'}</span> once you begin.
+          The timer starts only when you click start, and your work auto-submits when it reaches zero.
+        </p>
+        <button onClick={beginAttempt} disabled={starting}
+          className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+          <Play size={16} /> {starting ? 'Starting…' : 'Start timed task'}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

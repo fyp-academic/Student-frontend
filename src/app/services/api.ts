@@ -150,6 +150,7 @@ export const forumApi = {
 export const practicalApi = {
   template:     (activityId: string) => api.get(`/activities/${activityId}/practical-template`),
   mySubmission: (activityId: string) => api.get(`/activities/${activityId}/practical-submission`),
+  start:        (activityId: string) => api.post(`/activities/${activityId}/practical-start`),
   save:         (activityId: string, data: { files: Record<string, string>; status?: 'draft' | 'submitted' }) =>
     api.post(`/activities/${activityId}/practical-submission`, data),
 };

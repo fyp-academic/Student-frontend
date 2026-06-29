@@ -1024,13 +1024,15 @@ export function Lessons() {
                         const qAnswersList = (quizAnswers[qid] ?? []) as Record<string, unknown>[];
                         return (
                           <>
+                            {quizRemainingSec !== null && (
+                              <div className="flex justify-center px-6 py-3 bg-gray-50 border-b border-gray-100">
+                                <CountdownBadge remainingSec={quizRemainingSec} prominent />
+                              </div>
+                            )}
                             <div className="px-6 pt-5 pb-3">
                               <div className="flex items-center justify-between mb-3">
                                 <span style={{ fontSize: "12px", fontWeight: 600, color: "#7c3aed" }}>Question {quizCurrentQ + 1} of {quizQuestions.length}</span>
-                                <div className="flex items-center gap-2">
-                                  <CountdownBadge remainingSec={quizRemainingSec} />
-                                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>{Object.keys(quizSelected).length}/{quizQuestions.length} answered</span>
-                                </div>
+                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>{Object.keys(quizSelected).length}/{quizQuestions.length} answered</span>
                               </div>
                               <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
                                 <div className="h-full rounded-full transition-all" style={{ width: `${((quizCurrentQ + 1) / quizQuestions.length) * 100}%`, backgroundColor: "#7c3aed" }} />

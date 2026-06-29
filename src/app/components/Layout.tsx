@@ -41,6 +41,12 @@ export function Layout() {
   const { user } = useAuth();
   const { unreadCount: notifCount } = useRealtime();
 
+  // The dashboard is designed light-only; a dark preference set on the public/landing
+  // pages must not bleed in (it black-boxes themed components like the calendar modal).
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+  }, []);
+
   useEffect(() => {
     profileApi.get().then(r => {
       const p: Record<string, unknown> = r.data.data ?? r.data;

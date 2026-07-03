@@ -99,10 +99,10 @@ const features = [
 ];
 
 const stats = [
-  { value: "50K+", label: "Active Learners" },
-  { value: "1.2K+", label: "Expert Instructors" },
-  { value: "8K+", label: "Courses & Tracks" },
-  { value: "98%", label: "Satisfaction" },
+  { value: "6", label: "Active Learners" },
+  { value: "2", label: "Expert Instructors" },
+  { value: "5", label: "Courses & Tracks" },
+  { value: "50%", label: "Satisfaction" },
 ];
 
 const testimonials = [

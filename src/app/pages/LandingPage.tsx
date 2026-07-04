@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { statsApi } from "../services/api";
 import { SEOHead } from "../components/SEOHead";
 import {
   BookOpen,
@@ -98,12 +99,22 @@ const features = [
   },
 ];
 
-const stats = [
-  { value: "6", label: "Active Learners" },
-  { value: "2", label: "Expert Instructors" },
-  { value: "5", label: "Courses & Tracks" },
-  { value: "50%", label: "Satisfaction" },
+// Neutral fallback shown until the live stats load (or if the request fails).
+const DEFAULT_STATS = [
+  { value: "—", label: "Active Learners" },
+  { value: "—", label: "Expert Instructors" },
+  { value: "—", label: "Courses & Tracks" },
 ];
+
+// 1500 -> "1.5K+", 50000 -> "50K+", small numbers stay as-is.
+function formatCount(n: number): string {
+  if (typeof n !== "number" || isNaN(n)) return "—";
+  if (n >= 1000) {
+    const k = n / 1000;
+    return `${k % 1 === 0 ? k : k.toFixed(1)}K+`;
+  }
+  return String(n);
+}
 
 
 const NAV = [
@@ -116,10 +127,33 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [openFeature, setOpenFeature] = useState(0);
+  const [stats, setStats] = useState(DEFAULT_STATS);
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useLenis();
+
+  // Live landing-page stats from the public backend endpoint.
+  useEffect(() => {
+    statsApi
+      .public()
+      .then((res) => {
+        const d = res.data?.data ?? res.data ?? {};
+        const next = [
+          { value: formatCount(d.active_learners ?? 0), label: "Active Learners" },
+          { value: formatCount(d.instructors ?? 0), label: "Expert Instructors" },
+          { value: formatCount(d.courses ?? 0), label: "Courses & Tracks" },
+        ];
+        // Only show Satisfaction when there is real rating data.
+        if (d.satisfaction != null) {
+          next.push({ value: `${d.satisfaction}%`, label: "Satisfaction" });
+        }
+        setStats(next);
+      })
+      .catch(() => {
+        /* keep DEFAULT_STATS on failure */
+      });
+  }, []);
 
   // sticky header shadow on scroll
   useEffect(() => {

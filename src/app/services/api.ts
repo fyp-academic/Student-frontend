@@ -46,6 +46,11 @@ export const dashboardApi = {
   studentHub: () => api.get('/dashboard/student'),
 };
 
+// ─── Public stats (landing page) ──────────────────────────────────────────────
+export const statsApi = {
+  public: () => api.get('/stats/public'),
+};
+
 // ─── Courses ─────────────────────────────────────────────────────────────────
 export const coursesApi = {
   catalog:      (params?: Record<string, unknown>) => api.get('/courses/catalog', { params }),

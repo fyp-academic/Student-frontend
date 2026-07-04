@@ -105,32 +105,6 @@ const stats = [
   { value: "50%", label: "Satisfaction" },
 ];
 
-const testimonials = [
-  {
-    quote:
-      "The AI tutor turned my hardest module into my favourite. I finally felt seen as a learner.",
-    name: "Amina K.",
-    role: "Computer Science, Year 2",
-    avatar:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80",
-  },
-  {
-    quote:
-      "Live classes, recordings, assignments — everything is in one place. Game changer.",
-    name: "Dr Kalira.",
-    role: "Web Development Master",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80",
-  },
-  {
-    quote:
-      "As an instructor, the analytics help me catch struggling students before they fall behind.",
-    name: "Dr Mfringe.",
-    role: "Instructor, Instructional Design",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80",
-  },
-];
 
 const NAV = [
   { href: "#features", label: "Features" },
@@ -418,47 +392,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="border-y border-line bg-paper-2">
-        <div className="ed-shell ed-section">
-          <ScrollReveal className="max-w-prose">
-            <p className="eyebrow mb-4">Stories</p>
-            <h2 className="font-display ed-display text-step-6 text-ink">
-              Loved by learners and educators
-            </h2>
-          </ScrollReveal>
-
-          <div className="mt-14 grid gap-6 md:grid-cols-3">
-            {testimonials.map((t, i) => (
-              <ScrollReveal
-                key={t.name}
-                delay={i * 0.08}
-                className="flex h-full flex-col rounded-[18px] border border-line bg-paper p-7"
-              >
-                <div className="flex gap-1 text-clay">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <Star key={j} className="h-4 w-4 fill-current" />
-                  ))}
-                </div>
-                <blockquote className="mt-5 font-display ed-display text-step-3 leading-snug text-ink">
-                  “{t.quote}”
-                </blockquote>
-                <figcaption className="mt-6 flex items-center gap-3">
-                  <img
-                    src={t.avatar}
-                    alt={t.name}
-                    loading="lazy"
-                    className="h-11 w-11 rounded-full bg-paper-2 object-cover"
-                  />
-                  <span className="text-step-1">
-                    <span className="block font-medium text-ink">{t.name}</span>
-                    <span className="block text-ink-2">{t.role}</span>
-                  </span>
-                </figcaption>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       {/* CTA */}
       <section id="cta" className="ed-shell ed-section">

@@ -111,7 +111,7 @@ function ResourceCard({ resource, index }: { resource: Resource; index: number }
       target="_blank"
       rel="noopener noreferrer"
       className="block rounded-xl border border-gray-200 overflow-hidden
-                 hover:border-blue-300 hover:shadow-md transition-all mt-2"
+                 hover:border-clay hover:shadow-md transition-all mt-2"
     >
       {/* Thumbnail */}
       <div className="relative w-full" style={{ aspectRatio: '16/9', background: '#f1f5f9' }}>
@@ -223,7 +223,7 @@ function MessageBubble({ message }: { message: Message }) {
   if (message.role === 'user') {
     return (
       <div className="flex justify-end mb-3">
-        <div className="max-w-xs bg-blue-600 text-white px-4 py-2 rounded-2xl
+        <div className="max-w-xs bg-clay text-white px-4 py-2 rounded-2xl
                         rounded-br-sm text-sm leading-relaxed">
           {message.content}
         </div>
@@ -278,9 +278,9 @@ function ModeBadge({ mode }: { mode: WidgetMode }) {
     study:       { label: '📚 Study Mode',       color: 'bg-green-100 text-green-700'   },
     restricted:  { label: '🔒 Quiz Mode',        color: 'bg-red-100 text-red-700'       },
     remediation: { label: '🔄 Review Mode',      color: 'bg-yellow-100 text-yellow-700' },
-    revision:    { label: '🎯 Exam Prep',        color: 'bg-purple-100 text-purple-700' },
+    revision:    { label: '🎯 Exam Prep',        color: 'bg-clay/10 text-clay' },
     reflection:  { label: '🪞 Reflection',       color: 'bg-teal-100 text-teal-700'     },
-    general:     { label: '💬 Open Chat',        color: 'bg-blue-100 text-blue-700'     },
+    general:     { label: '💬 Open Chat',        color: 'bg-clay/10 text-clay'     },
   };
   const { label, color } = config[mode];
   return (
@@ -633,8 +633,8 @@ export default function AiWidget(props: AiWidgetProps) {
     return (
       <button
         onClick={openWidget}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white
-                   rounded-full shadow-lg hover:bg-blue-700 transition-all
+        className="fixed bottom-6 right-6 w-14 h-14 bg-clay text-white
+                   rounded-full shadow-lg hover:bg-clay-deep transition-all
                    flex items-center justify-center text-2xl z-40
                    hover:scale-110 active:scale-95"
         title="AI Tutor"
@@ -650,13 +650,13 @@ export default function AiWidget(props: AiWidgetProps) {
                     shadow-2xl flex flex-col z-40 border border-gray-200 overflow-hidden">
 
       {/* Header */}
-      <div className="bg-blue-600 px-4 py-3 flex items-center gap-2 flex-shrink-0">
+      <div className="bg-clay px-4 py-3 flex items-center gap-2 flex-shrink-0">
         <div className="w-8 h-8 bg-white rounded-full flex items-center
                         justify-center text-sm">🤖</div>
         <div className="flex-1 min-w-0">
           <p className="text-white text-sm font-semibold leading-none">AI Tutor</p>
           {(ctx.courseName || ctx.topicName) && (
-            <p className="text-blue-200 text-xs truncate mt-0.5">
+            <p className="text-clay text-xs truncate mt-0.5">
               📍 {[ctx.courseName, ctx.topicName].filter(Boolean).join(' › ')}
             </p>
           )}
@@ -664,7 +664,7 @@ export default function AiWidget(props: AiWidgetProps) {
         <ModeBadge mode={mode} />
         <button
           onClick={() => setIsOpen(false)}
-          className="text-blue-200 hover:text-white ml-2 text-lg leading-none"
+          className="text-clay hover:text-white ml-2 text-lg leading-none"
         >✕</button>
       </div>
 
@@ -681,9 +681,9 @@ export default function AiWidget(props: AiWidgetProps) {
               <button
                 key={i}
                 onClick={() => handleChipClick(chip)}
-                className="w-full text-left px-4 py-3 rounded-xl border-2 border-blue-100
-                           bg-blue-50 text-blue-800 text-sm font-medium
-                           hover:border-blue-400 hover:bg-blue-100 transition-all"
+                className="w-full text-left px-4 py-3 rounded-xl border-2 border-clay/30
+                           bg-clay/10 text-clay text-sm font-medium
+                           hover:border-clay hover:bg-clay/10 transition-all"
               >
                 {chip.label}
               </button>
@@ -727,8 +727,8 @@ export default function AiWidget(props: AiWidgetProps) {
         </div>
       )}
       {mode === 'revision' && (
-        <div className="px-4 py-2 bg-purple-50 border-t border-purple-100 flex-shrink-0">
-          <p className="text-xs text-purple-700 text-center">
+        <div className="px-4 py-2 bg-clay/10 border-t border-clay/30 flex-shrink-0">
+          <p className="text-xs text-clay text-center">
             🎯 Exam prep — focused practice & spaced review
           </p>
         </div>
@@ -757,14 +757,14 @@ export default function AiWidget(props: AiWidgetProps) {
           disabled={loading}
           rows={1}
           className="flex-1 border rounded-xl px-3 py-2 text-sm resize-none
-                     focus:outline-none focus:ring-2 focus:ring-blue-300
+                     focus:outline-none focus:ring-2 focus:ring-clay
                      disabled:bg-gray-50 max-h-24"
         />
         <button
           onClick={() => sendMessage(input)}
           disabled={loading || !input.trim()}
-          className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium
-                     hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed
+          className="bg-clay text-white px-4 py-2 rounded-xl text-sm font-medium
+                     hover:bg-clay-deep disabled:opacity-40 disabled:cursor-not-allowed
                      flex-shrink-0"
         >
           Send

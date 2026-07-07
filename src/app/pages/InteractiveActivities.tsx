@@ -4,7 +4,7 @@ import { coursesApi, activitiesApi } from "../services/api";
 
 type Act = Record<string, unknown>;
 
-const COLORS = ["#2563eb","#7c3aed","#0891b2","#059669","#dc2626","#f59e0b"];
+const COLORS = ["#b5613d","#8c4a2f","#0891b2","#059669","#dc2626","#f59e0b"];
 
 const INTERACTIVE_TYPES = ['lab', 'resource', 'interactive', 'simulation', 'game', 'forum', 'project'];
 
@@ -16,9 +16,9 @@ const iconForType = (t: string) => {
 
 const typeColors: Record<string, { bg: string; text: string }> = {
   lab:         { bg: "#f0fdf4", text: "#16a34a" },
-  resource:    { bg: "#eff6ff", text: "#2563eb" },
+  resource:    { bg: "#f3ece6", text: "#b5613d" },
   simulation:  { bg: "#f0fdfa", text: "#0d9488" },
-  interactive: { bg: "#eff6ff", text: "#2563eb" },
+  interactive: { bg: "#f3ece6", text: "#b5613d" },
   game:        { bg: "#fef2f2", text: "#dc2626" },
   forum:       { bg: "#fff7ed", text: "#ea580c" },
   project:     { bg: "#fdf4ff", text: "#9333ea" },
@@ -105,7 +105,7 @@ export function InteractiveActivities() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Available",  value: loading ? '…' : activities.filter(a => a.status !== 'completed').length, color: "#2563eb", bg: "#eff6ff" },
+          { label: "Available",  value: loading ? '…' : activities.filter(a => a.status !== 'completed').length, color: "#b5613d", bg: "#f3ece6" },
           { label: "Completed",  value: loading ? '…' : completed,          color: "#22c55e", bg: "#f0fdf4" },
           { label: "Total",      value: loading ? '…' : activities.length,   color: "#f59e0b", bg: "#fffbeb" },
         ].map((s) => (

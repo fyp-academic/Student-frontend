@@ -12,7 +12,7 @@ type Quiz    = Record<string, unknown>;
 type QItem   = Record<string, unknown>;
 type AItem   = Record<string, unknown>;
 
-const COLORS = ["#2563eb","#7c3aed","#0891b2","#059669","#dc2626","#f59e0b"];
+const COLORS = ["#b5613d","#8c4a2f","#0891b2","#059669","#dc2626","#f59e0b"];
 
 // Categorize question types for rendering
 const getQType = (q: QItem): string => String(q.type ?? '').toLowerCase();
@@ -56,7 +56,7 @@ const getChoiceLabel = (format: string | null | undefined, index: number): strin
   }
 };
 
-const getScoreColor = (score: number) => score >= 90 ? "#16a34a" : score >= 80 ? "#2563eb" : score >= 70 ? "#f59e0b" : "#dc2626";
+const getScoreColor = (score: number) => score >= 90 ? "#16a34a" : score >= 80 ? "#b5613d" : score >= 70 ? "#f59e0b" : "#dc2626";
 const getScoreLabel = (score: number) => score >= 90 ? "Excellent" : score >= 80 ? "Good" : score >= 70 ? "Fair" : "Needs Improvement";
 
 // A quiz is reviewable (never re-startable) once it has a completed attempt.
@@ -492,7 +492,7 @@ export function Quizzes() {
   }, [activeQuiz, reviewMode, submitted, deadlineTs]);
 
   if (loading) {
-    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;
+    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} /></div>;
   }
 
   return (
@@ -509,9 +509,9 @@ export function Quizzes() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Available", value: quizzes.filter(q => !['submitted', 'graded', 'completed'].includes(String(q.status ?? '').toLowerCase())).length, color: "#2563eb", bg: "#eff6ff", icon: HelpCircle },
+          { label: "Available", value: quizzes.filter(q => !['submitted', 'graded', 'completed'].includes(String(q.status ?? '').toLowerCase())).length, color: "#b5613d", bg: "#f3ece6", icon: HelpCircle },
           { label: "Completed", value: quizzes.filter(q => ['submitted', 'graded', 'completed'].includes(String(q.status ?? '').toLowerCase())).length, color: "#22c55e", bg: "#f0fdf4", icon: CheckCircle },
-          { label: "Avg. Score", value: scored.length ? `${avgScore}%` : "—", color: "#7c3aed", bg: "#fdf4ff", icon: Trophy },
+          { label: "Avg. Score", value: scored.length ? `${avgScore}%` : "—", color: "#8c4a2f", bg: "#fdf4ff", icon: Trophy },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: s.bg }}>
@@ -535,9 +535,9 @@ export function Quizzes() {
             style={{
               fontSize: "12px",
               fontWeight: activeFilter === f ? 600 : 400,
-              backgroundColor: activeFilter === f ? "#2563eb" : "white",
+              backgroundColor: activeFilter === f ? "#b5613d" : "white",
               color: activeFilter === f ? "white" : "#475569",
-              borderColor: activeFilter === f ? "#2563eb" : "#e2e8f0",
+              borderColor: activeFilter === f ? "#b5613d" : "#e2e8f0",
             }}
           >
             {f}
@@ -617,7 +617,7 @@ export function Quizzes() {
                     <button
                       onClick={() => handleStartQuiz(quiz)}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white transition-all"
-                      style={{ fontSize: "12px", fontWeight: 600, backgroundColor: "#2563eb" }}
+                      style={{ fontSize: "12px", fontWeight: 600, backgroundColor: "#b5613d" }}
                     >
                       <PlayCircle size={13} /> Start Quiz
                     </button>
@@ -677,7 +677,7 @@ export function Quizzes() {
 
             <div className="flex-1 overflow-y-auto p-6">
               {quizLoading ? (
-                <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} /></div>
               ) : submitted ? (
                 <div className="text-center py-8">
                   <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#f0fdf4" }}>
@@ -701,7 +701,7 @@ export function Quizzes() {
                       )}
                     </>
                   )}
-                  <button onClick={() => setActiveQuiz(null)} className="mt-6 px-6 py-2.5 rounded-xl text-white font-semibold" style={{ backgroundColor: "#2563eb" }}>Close</button>
+                  <button onClick={() => setActiveQuiz(null)} className="mt-6 px-6 py-2.5 rounded-xl text-white font-semibold" style={{ backgroundColor: "#b5613d" }}>Close</button>
                 </div>
               ) : reviewMode ? (
                 <div className="space-y-6">
@@ -744,27 +744,27 @@ export function Quizzes() {
                                     key={aid}
                                     className="w-full text-left px-4 py-3 rounded-xl border flex items-center gap-2"
                                     style={{
-                                      borderColor: isCorrect ? "#86efac" : isStudentPick ? "#bfdbfe" : "#e2e8f0",
-                                      backgroundColor: isCorrect ? "#f0fdf4" : isStudentPick ? "#eff6ff" : "white",
-                                      color: isCorrect ? "#166534" : isStudentPick ? "#1d4ed8" : "#374151",
+                                      borderColor: isCorrect ? "#86efac" : isStudentPick ? "#e3cdbc" : "#e2e8f0",
+                                      backgroundColor: isCorrect ? "#f0fdf4" : isStudentPick ? "#f3ece6" : "white",
+                                      color: isCorrect ? "#166534" : isStudentPick ? "#a1542f" : "#374151",
                                       fontWeight: isCorrect ? 700 : isStudentPick ? 600 : 400,
                                       fontSize: "13px",
                                     }}
                                   >
                                     <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0 text-[10px]"
                                       style={{
-                                        borderColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "#d1d5db",
-                                        backgroundColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "transparent",
+                                        borderColor: isCorrect ? "#22c55e" : isStudentPick ? "#b5613d" : "#d1d5db",
+                                        backgroundColor: isCorrect ? "#22c55e" : isStudentPick ? "#b5613d" : "transparent",
                                         color: isCorrect || isStudentPick ? "white" : "#6b7280",
                                       }}>
                                       {isCorrect ? '✓' : isStudentPick ? '●' : ''}
                                     </span>
                                     {label && (
-                                      <span className="font-semibold flex-shrink-0 min-w-[1.5rem] text-right" style={{ color: isCorrect ? '#166534' : isStudentPick ? '#1d4ed8' : '#6b7280' }}>{label}</span>
+                                      <span className="font-semibold flex-shrink-0 min-w-[1.5rem] text-right" style={{ color: isCorrect ? '#166534' : isStudentPick ? '#a1542f' : '#6b7280' }}>{label}</span>
                                     )}
                                     <span>{text}</span>
                                     {isCorrect && <span className="ml-auto text-[10px] font-bold text-emerald-600">Correct</span>}
-                                    {isStudentPick && !isCorrect && <span className="ml-auto text-[10px] font-bold text-blue-500">Your answer</span>}
+                                    {isStudentPick && !isCorrect && <span className="ml-auto text-[10px] font-bold text-clay">Your answer</span>}
                                   </div>
                                 );
                               })}
@@ -819,12 +819,12 @@ export function Quizzes() {
                   <div className="space-y-5">
                     {/* Progress bar */}
                     <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${((currentQ + 1) / questions.length) * 100}%`, backgroundColor: "#2563eb" }} />
+                      <div className="h-full rounded-full transition-all" style={{ width: `${((currentQ + 1) / questions.length) * 100}%`, backgroundColor: "#b5613d" }} />
                     </div>
 
-                    <div className="bg-blue-50 rounded-2xl p-5">
+                    <div className="bg-clay/10 rounded-2xl p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-100 px-2 py-0.5 rounded">{qType.replace(/_/g, ' ')}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-clay bg-clay/10 px-2 py-0.5 rounded">{qType.replace(/_/g, ' ')}</span>
                         <span className="text-xs text-gray-500">{String(q.default_mark ?? q.defaultMark ?? 1)} pt{Number(q.default_mark ?? q.defaultMark ?? 1) !== 1 ? 's' : ''}</span>
                       </div>
                       <p className="font-semibold text-gray-900" style={{ fontSize: "15px", lineHeight: "1.5" }}>
@@ -848,15 +848,15 @@ export function Quizzes() {
                               onClick={() => setSelected(prev => ({ ...prev, [qid]: aid }))}
                               className="w-full text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-2"
                               style={{
-                                borderColor: isSel ? "#2563eb" : "#e2e8f0",
-                                backgroundColor: isSel ? "#eff6ff" : "white",
-                                color: isSel ? "#1d4ed8" : "#374151",
+                                borderColor: isSel ? "#b5613d" : "#e2e8f0",
+                                backgroundColor: isSel ? "#f3ece6" : "white",
+                                color: isSel ? "#a1542f" : "#374151",
                                 fontWeight: isSel ? 600 : 400,
                                 fontSize: "13px",
                               }}
                             >
                               <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0"
-                                style={{ borderColor: isSel ? "#2563eb" : "#d1d5db", backgroundColor: isSel ? "#2563eb" : "transparent" }}>
+                                style={{ borderColor: isSel ? "#b5613d" : "#d1d5db", backgroundColor: isSel ? "#b5613d" : "transparent" }}>
                                 {isSel && <span className="w-2 h-2 rounded-full bg-white" />}
                               </span>
                               {label && (
@@ -879,7 +879,7 @@ export function Quizzes() {
                             onChange={(e) => setSelected(prev => ({ ...prev, [qid]: e.target.value }))}
                             placeholder="Type your answer here..."
                             rows={6}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-clay focus:border-transparent resize-y"
                           />
                         ) : (
                           <input
@@ -887,7 +887,7 @@ export function Quizzes() {
                             value={String(selected[qid] ?? '')}
                             onChange={(e) => setSelected(prev => ({ ...prev, [qid]: e.target.value }))}
                             placeholder={qType === 'numerical' ? 'Enter a number...' : 'Type your answer here...'}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-clay focus:border-transparent"
                           />
                         )}
                       </div>
@@ -941,7 +941,7 @@ export function Quizzes() {
                   <button
                     onClick={() => setCurrentQ(q => q + 1)}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white"
-                    style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#2563eb" }}
+                    style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#b5613d" }}
                   >
                     Next <ChevronRight size={14} />
                   </button>
@@ -967,8 +967,8 @@ export function Quizzes() {
           <div className="absolute inset-0 bg-slate-900/60" />
           <div className="relative bg-white rounded-2xl p-6 max-w-sm shadow-xl">
             <div className="flex items-start gap-3 mb-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <HelpCircle className="w-6 h-6 text-blue-600" />
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-clay/10 flex items-center justify-center">
+                <HelpCircle className="w-6 h-6 text-clay" />
               </div>
               <div className="flex-1">
                 <h3 className="text-base font-semibold text-slate-900">Quiz Already Submitted</h3>
@@ -987,7 +987,7 @@ export function Quizzes() {
                   setQuizError(null);
                   handleReviewQuiz(quizError.quiz);
                 }}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 text-sm font-medium text-white bg-clay rounded-lg hover:bg-clay-deep transition-colors flex items-center gap-1.5"
               >
                 <Eye size={14} /> Review Quiz
               </button>

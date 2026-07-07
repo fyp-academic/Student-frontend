@@ -6,7 +6,7 @@ import { useAiWidgetContext } from "../context/AiWidgetContext";
 type DrillItem   = Record<string, unknown>;
 type CategoryItem = { id: string; title: string; code: string; color: string; drills: DrillItem[] };
 
-const COLORS = ["#2563eb","#7c3aed","#0891b2","#059669","#dc2626","#f59e0b"];
+const COLORS = ["#b5613d","#8c4a2f","#0891b2","#059669","#dc2626","#f59e0b"];
 
 const difficultyConfig: Record<string, { color: string; bg: string }> = {
   easy:   { color: "#16a34a", bg: "#f0fdf4" },
@@ -14,7 +14,7 @@ const difficultyConfig: Record<string, { color: string; bg: string }> = {
   hard:   { color: "#dc2626", bg: "#fef2f2" },
 };
 
-const getScoreColor = (s: number) => s >= 90 ? "#22c55e" : s >= 75 ? "#2563eb" : "#f59e0b";
+const getScoreColor = (s: number) => s >= 90 ? "#22c55e" : s >= 75 ? "#b5613d" : "#f59e0b";
 
 export function Practice() {
   const [activeCategory, setActiveCategory] = useState(0);
@@ -90,7 +90,7 @@ export function Practice() {
   const totalAttempts = allScores.length;
 
   if (loading) {
-    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;
+    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} /></div>;
   }
 
   return (
@@ -103,7 +103,7 @@ export function Practice() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Attempts",  value: totalAttempts, icon: Target, color: "#2563eb", bg: "#eff6ff" },
+          { label: "Total Attempts",  value: totalAttempts, icon: Target, color: "#b5613d", bg: "#f3ece6" },
           { label: "Drills Mastered", value: mastered,      icon: Star,   color: "#22c55e", bg: "#f0fdf4" },
           { label: "Courses",         value: categories.length, icon: Zap, color: "#f59e0b", bg: "#fffbeb" },
         ].map((s) => (

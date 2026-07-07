@@ -5,34 +5,34 @@ import { coursesApi, activitiesApi } from "../services/api";
 
 type Act = Record<string, unknown>;
 
-const COLORS = ["#2563eb","#7c3aed","#059669","#0891b2","#dc2626","#f59e0b"];
+const COLORS = ["#b5613d","#8c4a2f","#059669","#0891b2","#dc2626","#f59e0b"];
 
 const typeColors: Record<string, { bg: string; text: string }> = {
-  lab:         { bg: "#eff6ff",  text: "#2563eb" },
+  lab:         { bg: "#f3ece6",  text: "#b5613d" },
   assignment:  { bg: "#fdf4ff",  text: "#9333ea" },
   quiz:        { bg: "#f0fdfa",  text: "#0d9488" },
   forum:       { bg: "#fefce8",  text: "#ca8a04" },
   resource:    { bg: "#f0fdf4",  text: "#16a34a" },
   project:     { bg: "#fff7ed",  text: "#ea580c" },
-  video:       { bg: "#eff6ff",  text: "#2563eb" },
-  lesson:      { bg: "#eff6ff",  text: "#2563eb" },
+  video:       { bg: "#f3ece6",  text: "#b5613d" },
+  lesson:      { bg: "#f3ece6",  text: "#b5613d" },
   url:         { bg: "#ecfeff",  text: "#06b6d4" },
   file:        { bg: "#f8fafc",  text: "#64748b" },
   h5p:         { bg: "#fef2f2",  text: "#dc2626" },
   scorm:       { bg: "#fefce8",  text: "#ca8a04" },
   workshop:    { bg: "#fdf4ff",  text: "#9333ea" },
   label:       { bg: "#f8fafc",  text: "#94a3b8" },
-  page:        { bg: "#eff6ff",  text: "#2563eb" },
-  attendance:      { bg: "#eff6ff",  text: "#2563eb" },
-  bigbluebutton:   { bg: "#eff6ff",  text: "#2563eb" },
-  book:            { bg: "#eff6ff",  text: "#2563eb" },
+  page:        { bg: "#f3ece6",  text: "#b5613d" },
+  attendance:      { bg: "#f3ece6",  text: "#b5613d" },
+  bigbluebutton:   { bg: "#f3ece6",  text: "#b5613d" },
+  book:            { bg: "#f3ece6",  text: "#b5613d" },
   checklist:       { bg: "#f0fdf4",  text: "#16a34a" },
   choice:          { bg: "#fdf4ff",  text: "#9333ea" },
   certificate:     { bg: "#fff7ed",  text: "#ea580c" },
   database:        { bg: "#f8fafc",  text: "#64748b" },
   feedback:        { bg: "#f0fdff",  text: "#0891b2" },
   folder:          { bg: "#f8fafc",  text: "#64748b" },
-  glossary:        { bg: "#eff6ff",  text: "#2563eb" },
+  glossary:        { bg: "#f3ece6",  text: "#b5613d" },
   ims_content_package: { bg: "#fefce8", text: "#ca8a04" },
 };
 
@@ -84,9 +84,9 @@ export function Activities() {
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Available",  value: loading ? '…' : available, color: "#2563eb", bg: "#eff6ff" },
+          { label: "Available",  value: loading ? '…' : available, color: "#b5613d", bg: "#f3ece6" },
           { label: "Completed",  value: loading ? '…' : done,      color: "#22c55e", bg: "#f0fdf4" },
-          { label: "Total",      value: loading ? '…' : activities.length, color: "#7c3aed", bg: "#fdf4ff" },
+          { label: "Total",      value: loading ? '…' : activities.length, color: "#8c4a2f", bg: "#fdf4ff" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl p-4 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <p style={{ fontSize: "24px", fontWeight: 700, color: s.color }}>{s.value}</p>
@@ -96,7 +96,7 @@ export function Activities() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16"><Loader2 size={26} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+        <div className="flex items-center justify-center py-16"><Loader2 size={26} className="animate-spin" style={{ color: "#b5613d" }} /></div>
       ) : activities.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <p style={{ fontSize: "14px", color: "#94a3b8" }}>No activities found in your enrolled courses.</p>
@@ -116,7 +116,7 @@ export function Activities() {
             const dueDate   = activity.due_date ? new Date(String(activity.due_date)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
             const points    = Number(activity.points ?? activity.max_score ?? 0);
             const code      = String(activity._code ?? '');
-            const color     = String(activity._color ?? '#2563eb');
+            const color     = String(activity._color ?? '#b5613d');
 
             return (
               <div key={aid} className="bg-white rounded-2xl p-5 transition-all hover:-translate-y-0.5"

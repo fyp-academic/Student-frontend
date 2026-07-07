@@ -204,7 +204,7 @@ function SessionCard({ session, onJoin, onWatchRecording, onSetReminder }: Sessi
             {isLive && (
               <Button
                 onClick={() => onJoin(session)}
-                className="bg-blue-600 hover:bg-blue-700 text-white animate-pulse"
+                className="bg-clay hover:bg-clay-deep text-white animate-pulse"
               >
                 <Video className="h-4 w-4 mr-2" />
                 Join Now
@@ -215,7 +215,7 @@ function SessionCard({ session, onJoin, onWatchRecording, onSetReminder }: Sessi
                 onClick={() => onSetReminder(session.id)}
                 variant="ghost"
                 size="sm"
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                className="text-clay hover:text-clay-deep hover:bg-clay/10"
               >
                 <Bell className="h-4 w-4 mr-2" />
                 Remind Me
@@ -225,7 +225,7 @@ function SessionCard({ session, onJoin, onWatchRecording, onSetReminder }: Sessi
               <Button
                 onClick={() => onWatchRecording(session)}
                 variant="outline"
-                className="border-blue-300 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                className="border-clay text-clay hover:bg-clay/10 hover:text-clay-deep"
               >
                 <Play className="h-4 w-4 mr-2" />
                 Watch
@@ -243,7 +243,7 @@ function SessionCard({ session, onJoin, onWatchRecording, onSetReminder }: Sessi
             <Button
               variant="link"
               size="sm"
-              className="h-auto p-0 text-blue-600 hover:text-blue-700"
+              className="h-auto p-0 text-clay hover:text-clay-deep"
               onClick={() => onWatchRecording(session)}
             >
               View Recording

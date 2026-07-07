@@ -23,13 +23,13 @@ function getInitials(name: string): string {
 
 function getAvatarColor(id: string): string {
   const colors = [
-    'bg-blue-500',
+    'bg-clay',
     'bg-green-500',
     'bg-yellow-500',
     'bg-red-500',
-    'bg-purple-500',
+    'bg-clay',
     'bg-pink-500',
-    'bg-indigo-500',
+    'bg-clay',
     'bg-cyan-500',
   ];
   return colors[id.charCodeAt(0) % colors.length];
@@ -89,7 +89,7 @@ export function ParticipantList({
                   className={cn(
                     'px-1.5 py-0.5 rounded text-[10px] font-medium',
                     participant.role === 'instructor'
-                      ? 'bg-purple-100 text-purple-700'
+                      ? 'bg-clay/10 text-clay'
                       : 'bg-gray-100 text-gray-600'
                   )}
                 >

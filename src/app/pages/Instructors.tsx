@@ -53,7 +53,7 @@ export default function Instructors() {
     return (
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#2563eb" }} />
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#b5613d" }} />
         </div>
       </div>
     );
@@ -82,7 +82,7 @@ export default function Instructors() {
           <button
             onClick={fetchInstructors}
             className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 rounded-lg transition-colors hover:bg-slate-100"
-            style={{ color: "#2563eb", fontSize: "14px" }}
+            style={{ color: "#b5613d", fontSize: "14px" }}
           >
             <RefreshCw size={16} />
             Try Again
@@ -124,9 +124,9 @@ export default function Instructors() {
               ) : (
                 <div
                   className="w-24 h-24 rounded-2xl flex items-center justify-center"
-                  style={{ backgroundColor: "#eff6ff", border: "2px solid #e2e8f0" }}
+                  style={{ backgroundColor: "#f3ece6", border: "2px solid #e2e8f0" }}
                 >
-                  <User size={40} color="#2563eb" />
+                  <User size={40} color="#b5613d" />
                 </div>
               )}
             </div>
@@ -149,15 +149,15 @@ export default function Instructors() {
               <div className="flex flex-wrap gap-4 mt-4">
                 {selectedInstructor.email && (
                   <div className="flex items-center gap-2" style={{ fontSize: "13px", color: "#475569" }}>
-                    <Mail size={16} color="#2563eb" />
-                    <a href={`mailto:${selectedInstructor.email}`} className="hover:underline" style={{ color: "#2563eb" }}>
+                    <Mail size={16} color="#b5613d" />
+                    <a href={`mailto:${selectedInstructor.email}`} className="hover:underline" style={{ color: "#b5613d" }}>
                       {selectedInstructor.email}
                     </a>
                   </div>
                 )}
                 {selectedInstructor.phone_number && (
                   <div className="flex items-center gap-2" style={{ fontSize: "13px", color: "#475569" }}>
-                    <Phone size={16} color="#2563eb" />
+                    <Phone size={16} color="#b5613d" />
                     <span>{selectedInstructor.phone_number}</span>
                   </div>
                 )}
@@ -205,7 +205,7 @@ export default function Instructors() {
             className="flex items-center gap-2 mb-4"
             style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b" }}
           >
-            <BookOpen size={20} color="#2563eb" />
+            <BookOpen size={20} color="#b5613d" />
             Courses Teaching
           </h2>
 
@@ -228,9 +228,9 @@ export default function Instructors() {
                   <div className="flex items-start gap-3">
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: "#eff6ff" }}
+                      style={{ backgroundColor: "#f3ece6" }}
                     >
-                      <GraduationCap size={20} color="#2563eb" />
+                      <GraduationCap size={20} color="#b5613d" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4
@@ -301,9 +301,9 @@ export default function Instructors() {
                   ) : (
                     <div
                       className="w-14 h-14 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: "#eff6ff", border: "2px solid #e2e8f0" }}
+                      style={{ backgroundColor: "#f3ece6", border: "2px solid #e2e8f0" }}
                     >
-                      <User size={24} color="#2563eb" />
+                      <User size={24} color="#b5613d" />
                     </div>
                   )}
                 </div>
@@ -325,7 +325,7 @@ export default function Instructors() {
                     {instructor.courses.length > 0 && (
                       <div
                         className="flex items-center gap-1 px-2 py-1 rounded-full"
-                        style={{ backgroundColor: "#eff6ff", fontSize: "12px", color: "#2563eb" }}
+                        style={{ backgroundColor: "#f3ece6", fontSize: "12px", color: "#b5613d" }}
                       >
                         <BookOpen size={12} />
                         {instructor.courses.length} course{instructor.courses.length !== 1 ? "s" : ""}

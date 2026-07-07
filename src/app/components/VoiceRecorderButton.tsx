@@ -11,7 +11,7 @@ const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart
  * parent so it can reuse its existing attachment-preview area.
  */
 export function VoiceRecorderButton({
-  onRecorded, disabled = false, accent = 'bg-blue-600 hover:bg-blue-700',
+  onRecorded, disabled = false, accent = 'bg-clay hover:bg-clay-deep',
 }: {
   onRecorded: (file: File) => void;
   disabled?: boolean;

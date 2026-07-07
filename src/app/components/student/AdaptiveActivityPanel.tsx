@@ -63,7 +63,7 @@ export const AdaptiveActivityPanel: React.FC<AdaptiveActivityPanelProps> = ({
   if (chunks.length === 0) {
     if (status === 'processing' || status === 'pending') {
       return (
-        <div className="flex items-start gap-2 px-4 py-3 text-sm text-blue-800 border-b bg-blue-50">
+        <div className="flex items-start gap-2 px-4 py-3 text-sm text-clay border-b bg-clay/10">
           <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <span>Original resource preserved. Text extraction is in progress — personalized summary will appear when ready.</span>
         </div>
@@ -96,7 +96,7 @@ export const AdaptiveActivityPanel: React.FC<AdaptiveActivityPanelProps> = ({
 
   return (
     <div className="px-4 py-4 border-b bg-gradient-to-b from-slate-50 to-white space-y-4">
-      {message && <p className="text-xs text-blue-700">{message}</p>}
+      {message && <p className="text-xs text-clay">{message}</p>}
       {chunks.map((chunk) => (
         <AdaptiveContentBlock
           key={chunk.id}

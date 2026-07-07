@@ -5,13 +5,13 @@ import { coursesApi, activitiesApi } from "../services/api";
 
 type Act = Record<string, unknown>;
 
-const COLORS = ["#2563eb","#7c3aed","#059669","#0891b2","#dc2626","#f59e0b"];
+const COLORS = ["#b5613d","#8c4a2f","#059669","#0891b2","#dc2626","#f59e0b"];
 const ASSESSMENT_TYPES = ['quiz', 'assignment', 'exam', 'assessment', 'midterm', 'final', 'test'];
 
 const statusCfg = {
   upcoming:  { label: "Upcoming",  color: "#f59e0b", bg: "#fffbeb", icon: AlertCircle },
   completed: { label: "Completed", color: "#16a34a", bg: "#f0fdf4", icon: CheckCircle },
-  scheduled: { label: "Scheduled", color: "#2563eb", bg: "#eff6ff", icon: Calendar },
+  scheduled: { label: "Scheduled", color: "#b5613d", bg: "#f3ece6", icon: Calendar },
   available: { label: "Available", color: "#f59e0b", bg: "#fffbeb", icon: AlertCircle },
 };
 
@@ -72,7 +72,7 @@ export function Assessments() {
         {[
           { label: "Upcoming",   value: loading ? '…' : upcoming,                        icon: Calendar,     color: "#f59e0b", bg: "#fffbeb" },
           { label: "Completed",  value: loading ? '…' : completed,                       icon: CheckCircle,  color: "#22c55e", bg: "#f0fdf4" },
-          { label: "Avg. Score", value: loading ? '…' : avgScore !== null ? `${avgScore}%` : '—', icon: Trophy, color: "#2563eb", bg: "#eff6ff" },
+          { label: "Avg. Score", value: loading ? '…' : avgScore !== null ? `${avgScore}%` : '—', icon: Trophy, color: "#b5613d", bg: "#f3ece6" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: s.bg }}>
@@ -87,7 +87,7 @@ export function Assessments() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16"><Loader2 size={26} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+        <div className="flex items-center justify-center py-16"><Loader2 size={26} className="animate-spin" style={{ color: "#b5613d" }} /></div>
       ) : assessments.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <ClipboardList size={32} style={{ color: "#cbd5e1", margin: "0 auto 12px" }} />
@@ -105,7 +105,7 @@ export function Assessments() {
             const stat      = statusCfg[statKey as keyof typeof statusCfg] ?? statusCfg.upcoming;
             const StatusIcon = stat.icon;
             const code      = String(item._code ?? '');
-            const color     = String(item._color ?? '#2563eb');
+            const color     = String(item._color ?? '#b5613d');
             const dueDate   = item.due_date ? new Date(String(item.due_date)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
             const duration  = item.time_limit ? `${item.time_limit} min` : '';
             const maxScore  = Number(item.max_score ?? item.points ?? 0);

@@ -16,21 +16,21 @@ import { cn } from '@/app/components/ui/utils';
 export type PlayerAccent = 'indigo' | 'teal' | 'slate' | 'amber';
 
 export const accentText: Record<PlayerAccent, string> = {
-  indigo: 'text-indigo-700',
+  indigo: 'text-clay',
   teal: 'text-teal-700',
   slate: 'text-slate-700',
   amber: 'text-amber-800',
 };
 
 export const accentSoftBg: Record<PlayerAccent, string> = {
-  indigo: 'bg-indigo-50/70',
+  indigo: 'bg-clay/10/70',
   teal: 'bg-teal-50/70',
   slate: 'bg-slate-50',
   amber: 'bg-amber-50/70',
 };
 
 export const accentRule: Record<PlayerAccent, string> = {
-  indigo: 'bg-indigo-400/70',
+  indigo: 'bg-clay/70',
   teal: 'bg-teal-400/70',
   slate: 'bg-slate-400/70',
   amber: 'bg-amber-400/70',

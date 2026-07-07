@@ -28,7 +28,7 @@ const gradeFromProgress = (p: number) =>
   p >= 70 ? "C" : p > 0 ? "D" : "—";
 
 const gradeColor = (g: string) =>
-  g.startsWith("A") ? "#16a34a" : g.startsWith("B") ? "#2563eb" : g === "—" ? "#94a3b8" : "#f59e0b";
+  g.startsWith("A") ? "#16a34a" : g.startsWith("B") ? "#b5613d" : g === "—" ? "#94a3b8" : "#f59e0b";
 
 const TYPE_LABELS: Record<GradeRow["type"], string> = {
   quiz: "Quiz",
@@ -38,8 +38,8 @@ const TYPE_LABELS: Record<GradeRow["type"], string> = {
 };
 
 const TYPE_BADGE: Record<GradeRow["type"], { color: string; bg: string }> = {
-  quiz:        { color: "#7c3aed", bg: "#fdf4ff" },
-  assignment:  { color: "#2563eb", bg: "#eff6ff" },
+  quiz:        { color: "#8c4a2f", bg: "#fdf4ff" },
+  assignment:  { color: "#b5613d", bg: "#f3ece6" },
   practical:   { color: "#0891b2", bg: "#ecfeff" },
   interactive: { color: "#db2777", bg: "#fdf2f8" },
 };
@@ -107,7 +107,7 @@ export function GradeBook() {
   }, [filtered]);
 
   if (loading) {
-    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;
+    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} /></div>;
   }
 
   const selectStyle: React.CSSProperties = {
@@ -116,10 +116,10 @@ export function GradeBook() {
   };
 
   const cards = [
-    { label: "Overall Average", value: `${overall}%`, icon: TrendingUp, color: "#2563eb", bg: "#eff6ff", sub: undefined },
+    { label: "Overall Average", value: `${overall}%`, icon: TrendingUp, color: "#b5613d", bg: "#f3ece6", sub: undefined },
     { label: "Grade", value: overallLetter, icon: Award, color: gradeColor(overallLetter), bg: "#fdf4ff", sub: undefined },
     { label: "Graded Items", value: `${rows.filter(r => r.graded).length}`, icon: ClipboardCheck, color: "#16a34a", bg: "#f0fdf4", sub: `of ${rows.length}` },
-    { label: "Courses", value: `${courses.length}`, icon: BookOpen, color: "#7c3aed", bg: "#fdf4ff", sub: "with tasks" },
+    { label: "Courses", value: `${courses.length}`, icon: BookOpen, color: "#8c4a2f", bg: "#fdf4ff", sub: "with tasks" },
   ];
 
   return (

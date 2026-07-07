@@ -61,7 +61,7 @@ export function ChatPanel({ messages, onSendMessage, isInstructor }: ChatPanelPr
                 className={cn(
                   'max-w-[85%] rounded-lg p-3',
                   isAI(msg)
-                    ? 'bg-purple-50 border border-purple-200'
+                    ? 'bg-clay/10 border border-clay/30'
                     : msg.senderId === 'me'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted'
@@ -70,12 +70,12 @@ export function ChatPanel({ messages, onSendMessage, isInstructor }: ChatPanelPr
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-1">
                   {isAI(msg) && (
-                    <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+                    <Sparkles className="h-3.5 w-3.5 text-clay" />
                   )}
                   <span
                     className={cn(
                       'text-xs font-medium',
-                      isAI(msg) ? 'text-purple-700' : 'text-muted-foreground'
+                      isAI(msg) ? 'text-clay' : 'text-muted-foreground'
                     )}
                   >
                     {msg.senderName}
@@ -111,7 +111,7 @@ export function ChatPanel({ messages, onSendMessage, isInstructor }: ChatPanelPr
 
         {/* AI suggestion for students */}
         {!isInstructor && input.startsWith('@ai') && (
-          <p className="text-xs text-purple-500 mt-2">
+          <p className="text-xs text-clay mt-2">
             Ask the AI assistant anything about the session
           </p>
         )}

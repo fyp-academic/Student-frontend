@@ -19,7 +19,7 @@ export function CountdownBadge({
   const tone =
     remainingSec <= 30 ? 'bg-red-100 text-red-600'
     : remainingSec <= 60 ? 'bg-yellow-100 text-yellow-700'
-    : 'bg-blue-100 text-blue-700';
+    : 'bg-clay/10 text-clay';
   if (prominent) {
     return (
       <div

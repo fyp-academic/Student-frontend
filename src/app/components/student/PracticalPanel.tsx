@@ -156,7 +156,7 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
     [template]
   );
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-blue-600" /></div>;
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-clay" /></div>;
 
   // Timed practical that hasn't been started yet (and isn't proctored, which auto-starts):
   // show an explicit Start gate so merely opening the activity never starts the clock.
@@ -164,8 +164,8 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
   if (needsStartGate) {
     return (
       <div className="max-w-xl mx-auto text-center rounded-2xl border border-gray-200 bg-white p-8">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 mb-4">
-          <Clock size={26} className="text-blue-600" />
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-clay/10 mb-4">
+          <Clock size={26} className="text-clay" />
         </div>
         <h3 className="text-lg font-bold text-gray-800">Timed practical</h3>
         <p className="text-sm text-gray-500 mt-2 leading-relaxed">
@@ -173,7 +173,7 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
           The timer starts only when you click start, and your work auto-submits when it reaches zero.
         </p>
         <button onClick={beginAttempt} disabled={starting}
-          className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+          className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold bg-clay text-white rounded-lg hover:bg-clay-deep disabled:opacity-50">
           <Play size={16} /> {starting ? 'Starting…' : 'Start timed task'}
         </button>
       </div>
@@ -197,7 +197,7 @@ export function PracticalPanel({ activityId, onSubmitted, proctorSessionId, forc
         <CodeWorkspace files={files} onChange={handleChange} previewAbove previewHeight={260} editorHeight={260} />
         <div className="flex justify-end">
           <button onClick={submit} disabled={submitting}
-            className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-clay text-white rounded-lg hover:bg-clay-deep disabled:opacity-50">
             <Send size={15} /> {submitting ? 'Submitting…' : status === 'submitted' ? 'Resubmit' : 'Submit'}
           </button>
         </div>

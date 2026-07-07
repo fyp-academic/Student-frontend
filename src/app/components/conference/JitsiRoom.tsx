@@ -246,12 +246,12 @@ export function JitsiRoom({
               )}
               {activePanel === 'ai' && (
                 <div className="flex flex-col h-full p-4">
-                  <div className="p-3 rounded-lg bg-purple-50 border border-purple-100 mb-4">
+                  <div className="p-3 rounded-lg bg-clay/10 border border-clay/30 mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Bot className="h-4 w-4 text-purple-600" />
-                      <span className="text-sm font-medium text-purple-900">AI Assistant</span>
+                      <Bot className="h-4 w-4 text-clay" />
+                      <span className="text-sm font-medium text-clay">AI Assistant</span>
                     </div>
-                    <p className="text-xs text-purple-700">
+                    <p className="text-xs text-clay">
                       Ask questions about the session content.
                     </p>
                   </div>
@@ -263,7 +263,7 @@ export function JitsiRoom({
                         <div key={`${msg.id}-${idx}`} className="flex gap-2">
                           <div className={
                             msg.isAI
-                              ? 'bg-purple-50 text-purple-900 rounded-lg px-3 py-2 text-sm max-w-[80%]'
+                              ? 'bg-clay/10 text-clay rounded-lg px-3 py-2 text-sm max-w-[80%]'
                               : 'bg-accent rounded-lg px-3 py-2 text-sm max-w-[80%] ml-auto'
                           }>
                             <p className="text-xs font-medium mb-1">{msg.isAI ? 'AI Assistant' : 'You'}</p>
@@ -273,7 +273,7 @@ export function JitsiRoom({
                       ))}
                     {isAiTyping && (
                       <div className="flex gap-2">
-                        <div className="bg-purple-50 text-purple-900 rounded-lg px-3 py-2 text-sm">
+                        <div className="bg-clay/10 text-clay rounded-lg px-3 py-2 text-sm">
                           <p className="flex items-center gap-1">
                             <Loader2 className="h-3 w-3 animate-spin" />
                             AI is thinking...

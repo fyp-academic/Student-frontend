@@ -9,13 +9,13 @@ type Category = Record<string, unknown>;
 const levelColors: Record<string, { bg: string; text: string }> = {
   Beginner:     { bg: "#f0fdf4", text: "#16a34a" },
   beginner:     { bg: "#f0fdf4", text: "#16a34a" },
-  Intermediate: { bg: "#eff6ff", text: "#2563eb" },
-  intermediate: { bg: "#eff6ff", text: "#2563eb" },
+  Intermediate: { bg: "#f3ece6", text: "#b5613d" },
+  intermediate: { bg: "#f3ece6", text: "#b5613d" },
   Advanced:     { bg: "#fdf4ff", text: "#9333ea" },
   advanced:     { bg: "#fdf4ff", text: "#9333ea" },
 };
 
-const COURSE_COLORS = ["#2563eb","#0891b2","#7c3aed","#059669","#dc2626","#f59e0b","#0f766e","#be185d"];
+const COURSE_COLORS = ["#b5613d","#0891b2","#8c4a2f","#059669","#dc2626","#f59e0b","#0f766e","#be185d"];
 
 export function LearningCatalog() {
   const [search, setSearch] = useState("");
@@ -96,7 +96,7 @@ export function LearningCatalog() {
           <button
             onClick={loadCatalog}
             className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 rounded-lg transition-colors hover:bg-slate-100"
-            style={{ color: "#2563eb", fontSize: "14px" }}
+            style={{ color: "#b5613d", fontSize: "14px" }}
           >
             <RefreshCw size={16} />
             Try Again
@@ -109,7 +109,7 @@ export function LearningCatalog() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} />
       </div>
     );
   }
@@ -133,7 +133,7 @@ export function LearningCatalog() {
             placeholder="Search courses, instructors, keywords..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
+            className="w-full pl-10 pr-10 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-clay/30 focus:border-clay transition-all"
             style={{ fontSize: "13px", borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
           />
           {search && (
@@ -161,10 +161,10 @@ export function LearningCatalog() {
             style={{
               fontSize: "12px",
               fontWeight: activeCategory === cat ? 600 : 400,
-              backgroundColor: activeCategory === cat ? "#2563eb" : "white",
+              backgroundColor: activeCategory === cat ? "#b5613d" : "white",
               color: activeCategory === cat ? "white" : "#475569",
-              borderColor: activeCategory === cat ? "#2563eb" : "#e2e8f0",
-              boxShadow: activeCategory === cat ? "0 2px 8px rgba(37,99,235,0.3)" : "none",
+              borderColor: activeCategory === cat ? "#b5613d" : "#e2e8f0",
+              boxShadow: activeCategory === cat ? "0 2px 8px rgba(181,97,61,0.3)" : "none",
             }}
           >
             {cat}
@@ -297,9 +297,9 @@ export function LearningCatalog() {
                     className="w-full mt-3 py-2 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60"
                     style={{
                       fontSize: "13px", fontWeight: 600,
-                      backgroundColor: isEnrolled ? "#f0fdf4" : "#eff6ff",
-                      color: isEnrolled ? "#16a34a" : "#2563eb",
-                      border: `1px solid ${isEnrolled ? "#bbf7d0" : "#bfdbfe"}`,
+                      backgroundColor: isEnrolled ? "#f0fdf4" : "#f3ece6",
+                      color: isEnrolled ? "#16a34a" : "#b5613d",
+                      border: `1px solid ${isEnrolled ? "#bbf7d0" : "#e3cdbc"}`,
                     }}
                   >
                     {isEnrollingThis ? (

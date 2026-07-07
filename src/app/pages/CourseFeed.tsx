@@ -7,12 +7,12 @@ type FeedPost   = Record<string, unknown>;
 
 type PostType = "announcement" | "material" | "video" | "assignment" | "reminder" | "live" | "general";
 
-const COURSE_COLORS = ["#2563eb","#0891b2","#7c3aed","#059669","#dc2626","#f59e0b","#0f766e","#be185d"];
+const COURSE_COLORS = ["#b5613d","#0891b2","#8c4a2f","#059669","#dc2626","#f59e0b","#0f766e","#be185d"];
 
 const typeConfig: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
   announcement: { icon: Bell,     color: "#dc2626", bg: "#fef2f2", label: "Announcement" },
-  material:     { icon: FileText, color: "#2563eb", bg: "#eff6ff", label: "New Material"  },
-  video:        { icon: Video,    color: "#7c3aed", bg: "#fdf4ff", label: "Video Lecture" },
+  material:     { icon: FileText, color: "#b5613d", bg: "#f3ece6", label: "New Material"  },
+  video:        { icon: Video,    color: "#8c4a2f", bg: "#fdf4ff", label: "Video Lecture" },
   assignment:   { icon: BookOpen, color: "#f59e0b", bg: "#fffbeb", label: "Assignment"    },
   reminder:     { icon: Bell,     color: "#f59e0b", bg: "#fffbeb", label: "Reminder"      },
   live:         { icon: Radio,    color: "#0f766e", bg: "#ecfdf5", label: "Live Session"  },
@@ -66,7 +66,7 @@ export function CourseFeed() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} />
       </div>
     );
   }
@@ -86,9 +86,9 @@ export function CourseFeed() {
           onClick={() => setSelectedCourse("all")}
           className="px-3 py-1.5 rounded-xl border transition-all"
           style={{ fontSize: "12px", fontWeight: selectedCourse === "all" ? 600 : 400,
-            backgroundColor: selectedCourse === "all" ? "#2563eb" : "white",
+            backgroundColor: selectedCourse === "all" ? "#b5613d" : "white",
             color: selectedCourse === "all" ? "white" : "#475569",
-            borderColor: selectedCourse === "all" ? "#2563eb" : "#e2e8f0" }}
+            borderColor: selectedCourse === "all" ? "#b5613d" : "#e2e8f0" }}
         >
           All Courses
         </button>
@@ -103,9 +103,9 @@ export function CourseFeed() {
               onClick={() => setSelectedCourse(cid)}
               className="px-3 py-1.5 rounded-xl border transition-all"
               style={{ fontSize: "12px", fontWeight: selectedCourse === cid ? 600 : 400,
-                backgroundColor: selectedCourse === cid ? "#2563eb" : "white",
+                backgroundColor: selectedCourse === cid ? "#b5613d" : "white",
                 color: selectedCourse === cid ? "white" : "#475569",
-                borderColor: selectedCourse === cid ? "#2563eb" : "#e2e8f0" }}
+                borderColor: selectedCourse === cid ? "#b5613d" : "#e2e8f0" }}
             >
               {label}
             </button>
@@ -144,7 +144,7 @@ export function CourseFeed() {
               <div
                 key={id}
                 className="bg-white rounded-2xl overflow-hidden"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)", borderLeft: pinned ? "3px solid #2563eb" : "none" }}
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)", borderLeft: pinned ? "3px solid #b5613d" : "none" }}
               >
                 <div className="p-4 pb-3">
                   <div className="flex items-start justify-between gap-3">
@@ -171,7 +171,7 @@ export function CourseFeed() {
                         <div className="flex items-center gap-2 mt-0.5">
                           <span style={{ fontSize: "11px", color: "#94a3b8" }}>{role}{role && timeLabel ? " · " : ""}{timeLabel}</span>
                           {pinned && (
-                            <span className="flex items-center gap-0.5" style={{ fontSize: "10px", color: "#2563eb" }}>
+                            <span className="flex items-center gap-0.5" style={{ fontSize: "10px", color: "#b5613d" }}>
                               <Pin size={10} /> Pinned
                             </span>
                           )}
@@ -210,14 +210,14 @@ export function CourseFeed() {
                       <Heart size={15} fill={isLiked ? "#ef4444" : "none"} />
                       {likes + (isLiked ? 1 : 0)}
                     </button>
-                    <button className="flex items-center gap-1.5 text-slate-500 hover:text-blue-600 transition-colors" style={{ fontSize: "12px" }}>
+                    <button className="flex items-center gap-1.5 text-slate-500 hover:text-clay-deep transition-colors" style={{ fontSize: "12px" }}>
                       <MessageCircle size={15} /> {comments}
                     </button>
-                    <button className="flex items-center gap-1.5 text-slate-500 hover:text-blue-600 transition-colors" style={{ fontSize: "12px" }}>
+                    <button className="flex items-center gap-1.5 text-slate-500 hover:text-clay-deep transition-colors" style={{ fontSize: "12px" }}>
                       <Share2 size={15} /> Share
                     </button>
-                    <button onClick={() => toggleSave(id)} className="ml-auto transition-colors" style={{ color: isSaved ? "#2563eb" : "#94a3b8" }}>
-                      <Bookmark size={15} fill={isSaved ? "#2563eb" : "none"} />
+                    <button onClick={() => toggleSave(id)} className="ml-auto transition-colors" style={{ color: isSaved ? "#b5613d" : "#94a3b8" }}>
+                      <Bookmark size={15} fill={isSaved ? "#b5613d" : "none"} />
                     </button>
                   </div>
                 </div>

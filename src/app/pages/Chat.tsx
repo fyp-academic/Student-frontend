@@ -678,8 +678,8 @@ export function Chat() {
   // Get conversation icon based on type
   const getConversationIcon = (type?: ChatType) => {
     switch (type) {
-      case 'course': return <BookOpen size={14} className="text-blue-500" />;
-      case 'programme': return <GraduationCap size={14} className="text-purple-500" />;
+      case 'course': return <BookOpen size={14} className="text-clay" />;
+      case 'programme': return <GraduationCap size={14} className="text-clay" />;
       default: return null;
     }
   };
@@ -707,7 +707,7 @@ export function Chat() {
                 className="flex-1 py-1.5 px-1 sm:px-2 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1"
                 style={{
                   backgroundColor: activeTab === tab ? "white" : "transparent",
-                  color: activeTab === tab ? "#2563eb" : "#64748b",
+                  color: activeTab === tab ? "#b5613d" : "#64748b",
                   boxShadow: activeTab === tab ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
                 }}
               >
@@ -725,7 +725,7 @@ export function Chat() {
             <input
               type="text" placeholder="Search conversations..." value={searchConvo}
               onChange={(e) => setSearchConvo(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+              className="w-full pl-9 pr-3 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-clay/30 transition-all"
               style={{ fontSize: "12px", borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }} />
           </div>
         </div>
@@ -737,7 +737,7 @@ export function Chat() {
               <div className="p-3">
                 <button
                   onClick={() => setShowNewMessageModal(true)}
-                  className="w-full py-2 px-3 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2 px-3 rounded-lg bg-clay text-white text-sm font-medium hover:bg-clay-deep transition-colors flex items-center justify-center gap-2"
                 >
                   <MessageSquare size={14} />
                   New Message
@@ -770,9 +770,9 @@ export function Chat() {
                   key={course.id}
                   onClick={() => handleCourseClick(course)}
                   className="flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-slate-50"
-                  style={{ backgroundColor: selectedConv?.course_id === course.id ? "#eff6ff" : "transparent" }}
+                  style={{ backgroundColor: selectedConv?.course_id === course.id ? "#f3ece6" : "transparent" }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center text-sm font-bold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-clay to-clay-deep text-white flex items-center justify-center text-sm font-bold">
                     <BookOpen size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -801,9 +801,9 @@ export function Chat() {
                   key={programme.id}
                   onClick={() => handleProgrammeClick(programme)}
                   className="flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-slate-50"
-                  style={{ backgroundColor: selectedConv?.programme_id === programme.id ? "#eff6ff" : "transparent" }}
+                  style={{ backgroundColor: selectedConv?.programme_id === programme.id ? "#f3ece6" : "transparent" }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 text-white flex items-center justify-center text-sm font-bold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-clay to-pink-500 text-white flex items-center justify-center text-sm font-bold">
                     <GraduationCap size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -826,9 +826,9 @@ export function Chat() {
                   if (window.innerWidth < 768) setShowSidebar(false);
                 }}
                 className="flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-slate-50"
-                style={{ backgroundColor: selectedConvId === convo.id ? "#eff6ff" : "transparent" }}>
+                style={{ backgroundColor: selectedConvId === convo.id ? "#f3ece6" : "transparent" }}>
                 <div className="relative flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center text-sm font-bold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-clay to-clay-deep text-white flex items-center justify-center text-sm font-bold">
                     {isGroupChat ? (convo.type === 'course' ? <BookOpen size={16} /> : <GraduationCap size={16} />) : initials(convo.participant_name ?? "")}
                   </div>
                   {!isGroupChat && online && (
@@ -849,7 +849,7 @@ export function Chat() {
                     </p>
                     {convo.unread_count > 0 && (
                       <span className="flex-shrink-0 text-white rounded-full flex items-center justify-center ml-2"
-                        style={{ fontSize: "10px", fontWeight: 700, width: "18px", height: "18px", backgroundColor: "#2563eb" }}>
+                        style={{ fontSize: "10px", fontWeight: 700, width: "18px", height: "18px", backgroundColor: "#b5613d" }}>
                         {convo.unread_count}
                       </span>
                     )}
@@ -880,7 +880,7 @@ export function Chat() {
                   <ArrowLeft size={18} />
                 </button>
                 <div className="relative">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center text-sm font-bold">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-clay to-clay-deep text-white flex items-center justify-center text-sm font-bold">
                     {(selectedConv.type === 'course' || selectedConv.type === 'programme')
                       ? (selectedConv.type === 'course' ? <BookOpen size={16} /> : <GraduationCap size={16} />)
                       : initials(getConversationName(selectedConv) ?? "")}
@@ -903,7 +903,7 @@ export function Chat() {
                   <button
                     onClick={() => setShowPinned(!showPinned)}
                     className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors"
-                    style={{ backgroundColor: showPinned ? "#dbeafe" : "#f1f5f9", color: showPinned ? "#2563eb" : "#64748b" }}
+                    style={{ backgroundColor: showPinned ? "#ecdccf" : "#f1f5f9", color: showPinned ? "#b5613d" : "#64748b" }}
                   >
                     <Pin size={12} />
                     {pinnedMessages.length} pinned
@@ -917,10 +917,10 @@ export function Chat() {
 
             {/* Pinned Messages Banner */}
             {showPinned && pinnedMessages.length > 0 && (
-              <div className="px-4 py-2 border-b" style={{ borderColor: "#f1f5f9", backgroundColor: "#eff6ff" }}>
+              <div className="px-4 py-2 border-b" style={{ borderColor: "#f1f5f9", backgroundColor: "#f3ece6" }}>
                 <div className="flex items-center gap-2 mb-2">
-                  <Pin size={12} className="text-blue-500" />
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#2563eb" }}>Pinned Messages</span>
+                  <Pin size={12} className="text-clay" />
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#b5613d" }}>Pinned Messages</span>
                 </div>
                 <div className="space-y-2 max-h-32 overflow-y-auto">
                   {pinnedMessages.map((msg) => (
@@ -948,7 +948,7 @@ export function Chat() {
                 return (
                   <div key={msg.id} className={`flex group ${isOwn ? "justify-end" : "justify-start"}`}>
                     {!isOwn && (
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center text-xs font-bold mr-2 mt-auto flex-shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-clay to-clay-deep text-white flex items-center justify-center text-xs font-bold mr-2 mt-auto flex-shrink-0">
                         {initials(msg.sender_name)}
                       </div>
                     )}
@@ -957,7 +957,7 @@ export function Chat() {
                         onContextMenu={(e) => handleContextMenu(e, msg.id)}
                         className={`relative ${isDeleted ? 'opacity-60' : ''}`}
                         style={{
-                          backgroundColor: isDeleted ? "#f1f5f9" : (isOwn ? "#2563eb" : "white"),
+                          backgroundColor: isDeleted ? "#f1f5f9" : (isOwn ? "#b5613d" : "white"),
                           color: isDeleted ? "#94a3b8" : (isOwn ? "white" : "#1e293b"),
                           borderRadius: "16px",
                           borderBottomRightRadius: isOwn ? "4px" : "16px",
@@ -1044,8 +1044,8 @@ export function Chat() {
                               <button key={emoji} onClick={() => handleReact(msg.id, emoji)}
                                 className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors"
                                 style={{
-                                  backgroundColor: users.includes(user?.id ?? "") ? "#dbeafe" : "#f1f5f9",
-                                  borderColor:     users.includes(user?.id ?? "") ? "#93c5fd"  : "#e2e8f0",
+                                  backgroundColor: users.includes(user?.id ?? "") ? "#ecdccf" : "#f1f5f9",
+                                  borderColor:     users.includes(user?.id ?? "") ? "#dcab8c"  : "#e2e8f0",
                                   color: "#1e293b",
                                 }}>
                                 {emoji} <span>{users.length}</span>
@@ -1115,9 +1115,9 @@ export function Chat() {
             {typingUsers.length > 0 && (
               <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: "#f8fafc" }}>
                 <div className="flex items-end gap-1 h-5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-clay animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-clay animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-clay animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
                 <p style={{ fontSize: "12px", color: "#64748b" }}>
                   {typingUsers.map((u) => u.user_name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing
@@ -1133,7 +1133,7 @@ export function Chat() {
                   <audio controls src={filePreviewUrl} className="h-9 flex-1 max-w-[260px]" />
                 ) : (
                   <>
-                    <Paperclip size={13} className="text-blue-500 flex-shrink-0" />
+                    <Paperclip size={13} className="text-clay flex-shrink-0" />
                     <span className="truncate flex-1">{filePreview.name}</span>
                   </>
                 )}
@@ -1161,7 +1161,7 @@ export function Chat() {
                 <input ref={fileInputRef} type="file" className="hidden"
                   onChange={(e) => setFilePreview(e.target.files?.[0] ?? null)} />
                 <button onClick={() => fileInputRef.current?.click()}
-                  className="text-slate-400 hover:text-blue-500 transition-colors flex-shrink-0">
+                  className="text-slate-400 hover:text-clay-deep transition-colors flex-shrink-0">
                   <Paperclip size={17} />
                 </button>
                 <input
@@ -1178,7 +1178,7 @@ export function Chat() {
                 <VoiceRecorderButton onRecorded={(f) => setFilePreview(f)} />
                 <button onClick={handleSend} disabled={(!input.trim() && !filePreview) || sending}
                   className="p-2 rounded-xl text-white transition-all flex-shrink-0"
-                  style={{ backgroundColor: (input.trim() || filePreview) && !sending ? "#2563eb" : "#cbd5e1" }}>
+                  style={{ backgroundColor: (input.trim() || filePreview) && !sending ? "#b5613d" : "#cbd5e1" }}>
                   <Send size={15} />
                 </button>
               </div>
@@ -1218,7 +1218,7 @@ export function Chat() {
                 <select
                   value={selectedRecipient || ""}
                   onChange={(e) => setSelectedRecipient(e.target.value || null)}
-                  className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-clay/30"
                   style={{ fontSize: "13px", borderColor: "#e2e8f0" }}
                 >
                   <option value="">Select a recipient...</option>
@@ -1238,7 +1238,7 @@ export function Chat() {
                   onChange={(e) => setNewMessageText(e.target.value)}
                   placeholder="Type your first message..."
                   rows={3}
-                  className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500/30 resize-none"
+                  className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-clay/30 resize-none"
                   style={{ fontSize: "13px", borderColor: "#e2e8f0" }}
                 />
               </div>
@@ -1258,7 +1258,7 @@ export function Chat() {
               <button
                 onClick={handleStartDirectChat}
                 disabled={!selectedRecipient || !newMessageText.trim() || creatingConversation}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-clay hover:bg-clay-deep transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {creatingConversation ? "Starting..." : "Start Chat"}
               </button>

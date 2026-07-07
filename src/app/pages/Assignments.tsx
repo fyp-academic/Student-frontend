@@ -12,12 +12,12 @@ const tabs = ["All", "Pending", "Submitted", "Graded", "Overdue"];
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
   pending:   { label: "Pending",   color: "#f59e0b", bg: "#fffbeb", icon: Clock },
-  submitted: { label: "Submitted", color: "#2563eb", bg: "#eff6ff", icon: CheckCircle },
+  submitted: { label: "Submitted", color: "#b5613d", bg: "#f3ece6", icon: CheckCircle },
   graded:    { label: "Graded",    color: "#16a34a", bg: "#f0fdf4", icon: CheckCircle },
   overdue:   { label: "Overdue",   color: "#dc2626", bg: "#fef2f2", icon: AlertCircle },
 };
 
-const COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#f59e0b", "#e11d48"];
+const COLORS = ["#b5613d", "#8c4a2f", "#059669", "#0891b2", "#f59e0b", "#e11d48"];
 
 type Submission = {
   id: string;
@@ -262,7 +262,7 @@ export function Assignments() {
       {/* Summary */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Total", count: assignments.length, color: "#2563eb", bg: "#eff6ff" },
+          { label: "Total", count: assignments.length, color: "#b5613d", bg: "#f3ece6" },
           { label: "Pending", count: assignments.filter(a => a.status === "pending").length, color: "#f59e0b", bg: "#fffbeb" },
           { label: "Submitted", count: assignments.filter(a => a.status === "submitted" || a.status === "graded").length, color: "#22c55e", bg: "#f0fdf4" },
           { label: "Overdue", count: assignments.filter(a => a.status === "overdue").length, color: "#dc2626", bg: "#fef2f2" },
@@ -284,9 +284,9 @@ export function Assignments() {
             style={{
               fontSize: "12px",
               fontWeight: activeTab === tab ? 600 : 400,
-              backgroundColor: activeTab === tab ? "#2563eb" : "white",
+              backgroundColor: activeTab === tab ? "#b5613d" : "white",
               color: activeTab === tab ? "white" : "#475569",
-              borderColor: activeTab === tab ? "#2563eb" : "#e2e8f0",
+              borderColor: activeTab === tab ? "#b5613d" : "#e2e8f0",
             }}
           >
             {tab}
@@ -297,7 +297,7 @@ export function Assignments() {
       {/* Assignment Cards */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-blue-400" />
+          <Loader2 size={28} className="animate-spin text-clay" />
         </div>
       )}
       {!loading && filtered.length === 0 && (
@@ -383,7 +383,7 @@ export function Assignments() {
                       <button
                         onClick={() => handleOpenSubmit(assignment)}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white transition-all hover:opacity-90"
-                        style={{ fontSize: "12px", fontWeight: 600, backgroundColor: "#2563eb" }}
+                        style={{ fontSize: "12px", fontWeight: 600, backgroundColor: "#b5613d" }}
                       >
                         <Upload size={13} /> Submit
                       </button>
@@ -410,7 +410,7 @@ export function Assignments() {
           <div className="relative w-full max-w-xl bg-white rounded-3xl p-6 space-y-4" style={{ boxShadow: "0 25px 60px rgba(15,23,42,0.25)", maxHeight: "90vh", overflowY: "auto" }}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold text-blue-600 mb-1">{viewing.course_name}</p>
+                <p className="text-xs font-semibold text-clay mb-1">{viewing.course_name}</p>
                 <h2 className="text-lg font-bold text-slate-900">{viewing.title}</h2>
               </div>
               <button onClick={() => setViewing(null)} className="p-2 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800">
@@ -433,13 +433,13 @@ export function Assignments() {
                 <div className="border-t border-slate-100 pt-4 space-y-3">
                   <h3 className="text-sm font-bold text-slate-900">Your Submission</h3>
                   {viewing.submission_text && (
-                    <div className="bg-blue-50 rounded-xl p-4 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                    <div className="bg-clay/10 rounded-xl p-4 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
                       {viewing.submission_text}
                     </div>
                   )}
                   {viewing.submission_file && (
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 text-sm text-blue-600">
+                      <div className="flex items-center gap-2 text-sm text-clay">
                         <Paperclip size={14} />
                         <span>{viewing.submission_file}</span>
                       </div>
@@ -448,7 +448,7 @@ export function Assignments() {
                           href={viewing.submission_file_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                          className="flex items-center gap-1 text-xs text-clay hover:underline"
                         >
                           <Download size={12} /> Download
                         </a>
@@ -480,7 +480,7 @@ export function Assignments() {
           <div className="relative w-full max-w-lg bg-white rounded-3xl p-6 space-y-4" style={{ boxShadow: "0 25px 60px rgba(15,23,42,0.25)" }}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold text-blue-600 mb-1">{submittingTo.course_name}</p>
+                <p className="text-xs font-semibold text-clay mb-1">{submittingTo.course_name}</p>
                 <h2 className="text-lg font-bold text-slate-900">Submit: {submittingTo.title}</h2>
               </div>
               <div className="flex items-center gap-2">
@@ -510,7 +510,7 @@ export function Assignments() {
                     value={submissionText}
                     onChange={(e) => setSubmissionText(e.target.value)}
                     rows={5}
-                    className="w-full rounded-xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-sm"
+                    className="w-full rounded-xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-clay/30 text-sm"
                     style={{ borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
                     placeholder="Write your answer or reflection here..."
                   />
@@ -522,7 +522,7 @@ export function Assignments() {
                   <input
                     type="file"
                     onChange={(e) => setSubmissionFile(e.target.files?.[0] ?? null)}
-                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-clay/10 file:text-clay hover:file:bg-clay/10"
                   />
                   {submissionFile && (
                     <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
@@ -545,7 +545,7 @@ export function Assignments() {
                     ? !submissionText.trim() 
                     : !submissionFile)}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white disabled:opacity-60 text-sm font-semibold"
-                style={{ backgroundColor: "#2563eb" }}
+                style={{ backgroundColor: "#b5613d" }}
               >
                 {submitLoading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                 Submit Assignment

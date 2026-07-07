@@ -24,10 +24,10 @@ type Section = Record<string, unknown>;
 type Activity = Record<string, unknown>;
 
 const typeConfig: Record<string, { color: string; label: string }> = {
-  video:       { color: "#2563eb", label: "Video" },
-  lesson:      { color: "#2563eb", label: "Lesson" },
+  video:       { color: "#b5613d", label: "Video" },
+  lesson:      { color: "#b5613d", label: "Lesson" },
   lab:         { color: "#059669", label: "Lab" },
-  quiz:        { color: "#7c3aed", label: "Quiz" },
+  quiz:        { color: "#8c4a2f", label: "Quiz" },
   assignment:  { color: "#f59e0b", label: "Assignment" },
   project:     { color: "#f59e0b", label: "Project" },
   forum:       { color: "#0891b2", label: "Forum" },
@@ -35,20 +35,20 @@ const typeConfig: Record<string, { color: string; label: string }> = {
   file:        { color: "#64748b", label: "File" },
   h5p:         { color: "#dc2626", label: "H5P" },
   scorm:       { color: "#ca8a04", label: "SCORM" },
-  workshop:    { color: "#7c3aed", label: "Workshop" },
+  workshop:    { color: "#8c4a2f", label: "Workshop" },
   label:       { color: "#94a3b8", label: "Label" },
-  page:        { color: "#2563eb", label: "Page" },
+  page:        { color: "#b5613d", label: "Page" },
   resource:    { color: "#64748b", label: "Resource" },
-  attendance:      { color: "#2563eb", label: "Attendance" },
-  bigbluebutton:   { color: "#2563eb", label: "BBB" },
-  book:            { color: "#2563eb", label: "Book" },
+  attendance:      { color: "#b5613d", label: "Attendance" },
+  bigbluebutton:   { color: "#b5613d", label: "BBB" },
+  book:            { color: "#b5613d", label: "Book" },
   checklist:       { color: "#059669", label: "Checklist" },
-  choice:          { color: "#7c3aed", label: "Choice" },
+  choice:          { color: "#8c4a2f", label: "Choice" },
   certificate:     { color: "#f59e0b", label: "Certificate" },
   database:        { color: "#64748b", label: "Database" },
   feedback:        { color: "#0891b2", label: "Feedback" },
   folder:          { color: "#64748b", label: "Folder" },
-  glossary:        { color: "#2563eb", label: "Glossary" },
+  glossary:        { color: "#b5613d", label: "Glossary" },
   ims_content_package: { color: "#ca8a04", label: "IMS CP" },
   practical:       { color: "#059669", label: "Practical" },
   discussion:      { color: "#0891b2", label: "Discussion" },
@@ -387,7 +387,7 @@ export function Lessons() {
           setContentHtml(String(act.description ?? (act.settings as any)?.content ?? 'No content available'));
         } finally { setLessonPagesLoading(false); }
       } else if (rType === 'quiz') {
-        setContentHtml(`<div style="text-align:center;padding:48px 20px"><div style="width:64px;height:64px;border-radius:16px;background:#f5f3ff;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><h3 style="font-size:16px;font-weight:600;color:#1e293b;margin-bottom:8px">${title}</h3><p style="font-size:13px;color:#64748b">Ready to test your knowledge? Click Start Quiz below.</p></div>`);
+        setContentHtml(`<div style="text-align:center;padding:48px 20px"><div style="width:64px;height:64px;border-radius:16px;background:#f4ece7;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8c4a2f" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><h3 style="font-size:16px;font-weight:600;color:#1e293b;margin-bottom:8px">${title}</h3><p style="font-size:13px;color:#64748b">Ready to test your knowledge? Click Start Quiz below.</p></div>`);
       } else if (rType === 'assignment') {
         setContentHtml(`<div style="text-align:center;padding:48px 20px"><div style="width:64px;height:64px;border-radius:16px;background:#fffbeb;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><h3 style="font-size:16px;font-weight:600;color:#1e293b;margin-bottom:8px">${title}</h3><p style="font-size:13px;color:#64748b">Submit your work for this assignment.</p></div>`);
       } else if (rType === 'url') {
@@ -793,7 +793,7 @@ export function Lessons() {
   };
 
   if (coursesLoading) {
-    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;
+    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} /></div>;
   }
 
   const currentRawType = activeActivity ? rawTypeOf(activeActivity) : '';
@@ -910,7 +910,7 @@ export function Lessons() {
           <div className="flex-1 overflow-y-auto">
             <div className="max-w-6xl mx-auto px-6 py-6" style={presentationStyles(presentationConfig)}>
               {contentLoading ? (
-                <div className="flex items-center justify-center py-24"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                <div className="flex items-center justify-center py-24"><Loader2 size={24} className="animate-spin" style={{ color: "#b5613d" }} /></div>
               ) : !activeActivityId ? (
                 <div className="flex flex-col items-center justify-center py-24 text-center">
                   <BookMarked size={40} style={{ color: "#cbd5e1", marginBottom: 16 }} />
@@ -1003,7 +1003,7 @@ export function Lessons() {
                         <div className="flex justify-center mt-6">
                           <button onClick={handleStartQuiz} disabled={quizLoading}
                             className="flex items-center gap-2 px-8 py-3 rounded-xl text-white transition-all"
-                            style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#7c3aed", boxShadow: "0 2px 8px rgba(124,58,237,0.3)" }}>
+                            style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#8c4a2f", boxShadow: "0 2px 8px rgba(124,58,237,0.3)" }}>
                             {quizLoading ? <Loader2 size={16} className="animate-spin" /> : alreadyDone ? <Eye size={16} /> : <PlayCircle size={16} />}
                             {alreadyDone ? 'Review Quiz' : 'Start Quiz'}
                           </button>
@@ -1015,7 +1015,7 @@ export function Lessons() {
                   {currentRawType === 'quiz' && quizMode === 'running' && (
                     <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                       {quizLoading ? (
-                        <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin" style={{ color: "#7c3aed" }} /></div>
+                        <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin" style={{ color: "#8c4a2f" }} /></div>
                       ) : quizQuestions.length === 0 ? (
                         <p className="text-center py-12" style={{ color: "#94a3b8", fontSize: "13px" }}>No questions available for this quiz.</p>
                       ) : (() => {
@@ -1031,15 +1031,15 @@ export function Lessons() {
                             )}
                             <div className="px-6 pt-5 pb-3">
                               <div className="flex items-center justify-between mb-3">
-                                <span style={{ fontSize: "12px", fontWeight: 600, color: "#7c3aed" }}>Question {quizCurrentQ + 1} of {quizQuestions.length}</span>
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: "#8c4a2f" }}>Question {quizCurrentQ + 1} of {quizQuestions.length}</span>
                                 <span style={{ fontSize: "11px", color: "#94a3b8" }}>{Object.keys(quizSelected).length}/{quizQuestions.length} answered</span>
                               </div>
                               <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f1f5f9" }}>
-                                <div className="h-full rounded-full transition-all" style={{ width: `${((quizCurrentQ + 1) / quizQuestions.length) * 100}%`, backgroundColor: "#7c3aed" }} />
+                                <div className="h-full rounded-full transition-all" style={{ width: `${((quizCurrentQ + 1) / quizQuestions.length) * 100}%`, backgroundColor: "#8c4a2f" }} />
                               </div>
                             </div>
                             <div className="px-6 pb-4">
-                              <div className="bg-violet-50 rounded-xl p-5 mb-4">
+                              <div className="bg-clay/10 rounded-xl p-5 mb-4">
                                 <p style={{ fontSize: "15px", fontWeight: 600, color: "#1e293b", lineHeight: "1.6" }}>
                                   {String(q.question_text ?? q.text ?? q.question ?? '')}
                                 </p>
@@ -1052,9 +1052,9 @@ export function Lessons() {
                                   return (
                                     <button key={aId} onClick={() => setQuizSelected(prev => ({ ...prev, [qid]: aId }))}
                                       className="w-full text-left px-4 py-3 rounded-xl border transition-all"
-                                      style={{ borderColor: isSel ? "#7c3aed" : "#e2e8f0", backgroundColor: isSel ? "#f5f3ff" : "white", color: isSel ? "#6d28d9" : "#374151", fontWeight: isSel ? 600 : 400, fontSize: "13px" }}>
+                                      style={{ borderColor: isSel ? "#8c4a2f" : "#e2e8f0", backgroundColor: isSel ? "#f4ece7" : "white", color: isSel ? "#8c4a2f" : "#374151", fontWeight: isSel ? 600 : 400, fontSize: "13px" }}>
                                       <span className="inline-flex w-5 h-5 rounded-full border-2 mr-3 items-center justify-center flex-shrink-0 align-middle"
-                                        style={{ borderColor: isSel ? "#7c3aed" : "#d1d5db", backgroundColor: isSel ? "#7c3aed" : "transparent" }}>
+                                        style={{ borderColor: isSel ? "#8c4a2f" : "#d1d5db", backgroundColor: isSel ? "#8c4a2f" : "transparent" }}>
                                         {isSel && <span className="w-2 h-2 rounded-full bg-white" />}
                                       </span>
                                       {aText}
@@ -1070,7 +1070,7 @@ export function Lessons() {
                               </button>
                               {quizCurrentQ < quizQuestions.length - 1 ? (
                                 <button onClick={() => setQuizCurrentQ(q => q + 1)}
-                                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white" style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#7c3aed" }}>
+                                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white" style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#8c4a2f" }}>
                                   Next <ChevronRight size={14} />
                                 </button>
                               ) : (
@@ -1108,7 +1108,7 @@ export function Lessons() {
                       )}
                       <button onClick={goNext} disabled={!nextActivity}
                         className="mt-6 flex items-center gap-2 px-6 py-2.5 rounded-xl text-white mx-auto"
-                        style={{ fontSize: "13px", fontWeight: 600, backgroundColor: nextActivity ? "#2563eb" : "#94a3b8" }}>
+                        style={{ fontSize: "13px", fontWeight: 600, backgroundColor: nextActivity ? "#b5613d" : "#94a3b8" }}>
                         {nextActivity ? <>Continue <ArrowRight size={14} /></> : 'Completed'}
                       </button>
                     </div>
@@ -1118,7 +1118,7 @@ export function Lessons() {
                   {currentRawType === 'quiz' && quizMode === 'review' && (
                     <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                       {quizLoading ? (
-                        <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin" style={{ color: "#7c3aed" }} /></div>
+                        <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin" style={{ color: "#8c4a2f" }} /></div>
                       ) : (
                         <div className="space-y-6">
                           <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex items-center gap-2">
@@ -1159,24 +1159,24 @@ export function Lessons() {
                                             key={aid}
                                             className="w-full text-left px-4 py-3 rounded-xl border flex items-center gap-2"
                                             style={{
-                                              borderColor: isCorrect ? "#86efac" : isStudentPick ? "#bfdbfe" : "#e2e8f0",
-                                              backgroundColor: isCorrect ? "#f0fdf4" : isStudentPick ? "#eff6ff" : "white",
-                                              color: isCorrect ? "#166534" : isStudentPick ? "#1d4ed8" : "#374151",
+                                              borderColor: isCorrect ? "#86efac" : isStudentPick ? "#e3cdbc" : "#e2e8f0",
+                                              backgroundColor: isCorrect ? "#f0fdf4" : isStudentPick ? "#f3ece6" : "white",
+                                              color: isCorrect ? "#166534" : isStudentPick ? "#a1542f" : "#374151",
                                               fontWeight: isCorrect ? 700 : isStudentPick ? 600 : 400,
                                               fontSize: "13px",
                                             }}
                                           >
                                             <span className="inline-flex w-5 h-5 rounded-full border-2 items-center justify-center flex-shrink-0 text-[10px]"
                                               style={{
-                                                borderColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "#d1d5db",
-                                                backgroundColor: isCorrect ? "#22c55e" : isStudentPick ? "#2563eb" : "transparent",
+                                                borderColor: isCorrect ? "#22c55e" : isStudentPick ? "#b5613d" : "#d1d5db",
+                                                backgroundColor: isCorrect ? "#22c55e" : isStudentPick ? "#b5613d" : "transparent",
                                                 color: isCorrect || isStudentPick ? "white" : "#6b7280",
                                               }}>
                                               {isCorrect ? '✓' : isStudentPick ? '●' : ''}
                                             </span>
                                             <span>{text}</span>
                                             {isCorrect && <span className="ml-auto text-[10px] font-bold text-emerald-600">Correct</span>}
-                                            {isStudentPick && !isCorrect && <span className="ml-auto text-[10px] font-bold text-blue-500">Your answer</span>}
+                                            {isStudentPick && !isCorrect && <span className="ml-auto text-[10px] font-bold text-clay">Your answer</span>}
                                           </div>
                                         );
                                       })}
@@ -1222,7 +1222,7 @@ export function Lessons() {
                           <div className="flex justify-end pt-2">
                             <button onClick={goNext} disabled={!nextActivity}
                               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white"
-                              style={{ fontSize: "13px", fontWeight: 600, backgroundColor: nextActivity ? "#2563eb" : "#94a3b8" }}>
+                              style={{ fontSize: "13px", fontWeight: 600, backgroundColor: nextActivity ? "#b5613d" : "#94a3b8" }}>
                               {nextActivity ? <>Continue <ArrowRight size={14} /></> : 'Completed'}
                             </button>
                           </div>
@@ -1269,7 +1269,7 @@ export function Lessons() {
                         <div>
                           <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Your answer</label>
                           <textarea value={assignText} onChange={e => setAssignText(e.target.value)} rows={6}
-                            className="w-full rounded-xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                            className="w-full rounded-xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-clay/30"
                             style={{ fontSize: "13px", borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
                             placeholder="Write your answer or reflection here..." />
                         </div>
@@ -1278,7 +1278,7 @@ export function Lessons() {
                         <div>
                           <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Attach file{both ? ' (optional)' : ''}</label>
                           <input type="file" onChange={e => setAssignFile(e.target.files?.[0] ?? null)}
-                            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-clay/10 file:text-clay hover:file:bg-clay/10" />
                           {assignFile && <p className="mt-1 flex items-center gap-1" style={{ fontSize: "11px", color: "#64748b" }}><Paperclip size={10} /> {assignFile.name}</p>}
                         </div>
                       )}
@@ -1286,7 +1286,7 @@ export function Lessons() {
                         <button onClick={() => { setAssignMode('idle'); setProcKey(null); setAssignDeadlineTs(null); }} className="px-4 py-2 rounded-xl border" style={{ fontSize: "13px", color: "#475569", borderColor: "#e2e8f0" }}>Cancel</button>
                         <button onClick={() => handleSubmitAssignment()} disabled={assignLoading || !canSubmit}
                           className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-white disabled:opacity-60"
-                          style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#2563eb" }}>
+                          style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#b5613d" }}>
                           {assignLoading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Submit
                         </button>
                       </div>
@@ -1303,7 +1303,7 @@ export function Lessons() {
                       <p style={{ fontSize: "13px", color: "#64748b" }}>Your work has been submitted successfully.</p>
                       <button onClick={goNext} disabled={!nextActivity}
                         className="mt-6 flex items-center gap-2 px-6 py-2.5 rounded-xl text-white mx-auto"
-                        style={{ fontSize: "13px", fontWeight: 600, backgroundColor: nextActivity ? "#2563eb" : "#94a3b8" }}>
+                        style={{ fontSize: "13px", fontWeight: 600, backgroundColor: nextActivity ? "#b5613d" : "#94a3b8" }}>
                         {nextActivity ? <>Continue <ArrowRight size={14} /></> : 'Completed'}
                       </button>
                     </div>
@@ -1326,7 +1326,7 @@ export function Lessons() {
                           </div>
                           <div className="px-5 py-4 space-y-4" style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}>
                             {forumPostsLoading ? (
-                              <div className="flex items-center justify-center py-8"><Loader2 size={20} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                              <div className="flex items-center justify-center py-8"><Loader2 size={20} className="animate-spin" style={{ color: "#b5613d" }} /></div>
                             ) : forumPosts.length === 0 ? (
                               <p className="text-center" style={{ fontSize: "13px", color: "#94a3b8" }}>No replies yet. Be the first!</p>
                             ) : forumPosts.map((post, pi) => {
@@ -1339,7 +1339,7 @@ export function Lessons() {
                                   {pAvatar ? (
                                     <img src={pAvatar} alt={pAuthor} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
                                   ) : (
-                                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: "#2563eb" }}>
+                                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: "#b5613d" }}>
                                       {pAuthor.slice(0, 2).toUpperCase()}
                                     </div>
                                   )}
@@ -1359,11 +1359,11 @@ export function Lessons() {
                             <div className="flex gap-2">
                               <input value={forumReplyText} onChange={e => setForumReplyText(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleForumReply(); } }}
-                                placeholder="Write a reply..." className="flex-1 rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                                placeholder="Write a reply..." className="flex-1 rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
                                 style={{ borderColor: "#e2e8f0", backgroundColor: "white" }} />
                               <button onClick={handleForumReply} disabled={forumReplying || !forumReplyText.trim()}
                                 className="px-3 py-2 rounded-xl text-white disabled:opacity-50 flex items-center gap-1"
-                                style={{ backgroundColor: "#2563eb", fontSize: "12px", fontWeight: 600 }}>
+                                style={{ backgroundColor: "#b5613d", fontSize: "12px", fontWeight: 600 }}>
                                 {forumReplying ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                               </button>
                             </div>
@@ -1375,7 +1375,7 @@ export function Lessons() {
                           <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "#f1f5f9" }}>
                             <span style={{ fontSize: "13px", fontWeight: 700, color: "#1e293b" }}>Discussions</span>
                             <button onClick={() => setForumComposerOpen(true)}
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white" style={{ fontSize: "11px", fontWeight: 600, backgroundColor: "#2563eb" }}>
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white" style={{ fontSize: "11px", fontWeight: 600, backgroundColor: "#b5613d" }}>
                               <Plus size={12} /> New Thread
                             </button>
                           </div>
@@ -1383,13 +1383,13 @@ export function Lessons() {
                             <div className="relative">
                               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                               <input value={forumSearch} onChange={e => setForumSearch(e.target.value)}
-                                placeholder="Search threads..." className="w-full pl-9 pr-3 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                                placeholder="Search threads..." className="w-full pl-9 pr-3 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
                                 style={{ borderColor: "#e2e8f0", fontSize: "12px" }} />
                             </div>
                           </div>
                           <div style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}>
                             {forumLoading ? (
-                              <div className="flex items-center justify-center py-12"><Loader2 size={22} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                              <div className="flex items-center justify-center py-12"><Loader2 size={22} className="animate-spin" style={{ color: "#b5613d" }} /></div>
                             ) : (() => {
                               const filtered = forumDiscussions.filter(d => {
                                 const s = String(d.subject ?? d.title ?? '').toLowerCase();
@@ -1422,13 +1422,13 @@ export function Lessons() {
                                     {avatar ? (
                                       <img src={avatar} alt={author} className="w-10 h-10 rounded-full object-cover flex-shrink-0 mt-0.5" />
                                     ) : (
-                                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5" style={{ backgroundColor: "#2563eb" }}>
+                                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5" style={{ backgroundColor: "#b5613d" }}>
                                         {author.slice(0, 2).toUpperCase()}
                                       </div>
                                     )}
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-1.5 mb-0.5">
-                                        {pinned && <Pin size={10} color="#2563eb" />}
+                                        {pinned && <Pin size={10} color="#b5613d" />}
                                         <span className="truncate" style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>{title}</span>
                                       </div>
                                       <p className="truncate" style={{ fontSize: "11px", color: "#64748b", lineHeight: "1.5" }}>{preview}</p>
@@ -1450,15 +1450,15 @@ export function Lessons() {
                             <div className="px-5 py-4 border-t" style={{ borderColor: "#f1f5f9", backgroundColor: "#fafafa" }}>
                               <div className="space-y-3">
                                 <input value={forumNewThread.title} onChange={e => setForumNewThread(prev => ({ ...prev, title: e.target.value }))}
-                                  placeholder="Thread title..." className="w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                                  placeholder="Thread title..." className="w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
                                   style={{ borderColor: "#e2e8f0", backgroundColor: "white" }} />
                                 <textarea value={forumNewThread.details} onChange={e => setForumNewThread(prev => ({ ...prev, details: e.target.value }))}
-                                  rows={3} placeholder="Details & context..." className="w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                                  rows={3} placeholder="Details & context..." className="w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
                                   style={{ borderColor: "#e2e8f0", backgroundColor: "white" }} />
                                 <div className="flex justify-end gap-2">
                                   <button onClick={() => setForumComposerOpen(false)} className="px-3 py-1.5 rounded-xl border" style={{ fontSize: "12px", color: "#475569", borderColor: "#e2e8f0" }}>Cancel</button>
                                   <button onClick={handleForumCreateThread} disabled={forumSubmitting || !forumNewThread.title.trim()}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-white disabled:opacity-60" style={{ fontSize: "12px", fontWeight: 600, backgroundColor: "#2563eb" }}>
+                                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-white disabled:opacity-60" style={{ fontSize: "12px", fontWeight: 600, backgroundColor: "#b5613d" }}>
                                     {forumSubmitting ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Publish
                                   </button>
                                 </div>
@@ -1491,19 +1491,19 @@ export function Lessons() {
                         )}
                         {isAudio && (
                           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4"><File size={32} style={{ color: "#2563eb" }} /></div>
+                            <div className="w-16 h-16 rounded-2xl bg-clay/10 flex items-center justify-center mb-4"><File size={32} style={{ color: "#b5613d" }} /></div>
                             <p className="text-base font-semibold text-gray-900 mb-6">{contentTitle}</p>
                             <audio controls className="w-full max-w-md mb-4">
                               <source src={resourceUrl} type={fileMimeType || undefined} />
                             </audio>
-                            <a href={resourceUrl} download className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1"><Download size={14} /> Download</a>
+                            <a href={resourceUrl} download className="text-sm text-clay hover:underline inline-flex items-center gap-1"><Download size={14} /> Download</a>
                           </div>
                         )}
                         {isImage && (
                           <div className="flex flex-col items-center p-4" style={{ backgroundColor: "#f8fafc" }}>
                             <img src={resourceUrl} alt={contentTitle} className="max-w-full rounded-lg" style={{ maxHeight: "calc(100vh - 300px)", objectFit: "contain" }} />
                             <div className="mt-3 flex gap-4">
-                              <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1"><ExternalLink size={14} /> Open full size</a>
+                              <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-clay hover:underline inline-flex items-center gap-1"><ExternalLink size={14} /> Open full size</a>
                               <a href={resourceUrl} download className="text-sm text-gray-600 hover:underline inline-flex items-center gap-1"><Download size={14} /> Download</a>
                             </div>
                           </div>
@@ -1513,11 +1513,11 @@ export function Lessons() {
                         )}
                         {!isVideo && !isAudio && !isImage && !needsDocViewer && (
                           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4"><File size={32} style={{ color: "#2563eb" }} /></div>
+                            <div className="w-16 h-16 rounded-2xl bg-clay/10 flex items-center justify-center mb-4"><File size={32} style={{ color: "#b5613d" }} /></div>
                             <p className="text-base font-semibold text-gray-900 mb-1">{contentTitle}</p>
                             <p className="text-sm text-gray-500 mb-6">Click below to open or download this file.</p>
                             <div className="flex flex-wrap justify-center gap-3">
-                              <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-all hover:opacity-90" style={{ backgroundColor: "#2563eb", fontSize: "14px" }}><ExternalLink size={16} /> Open in New Tab</a>
+                              <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-all hover:opacity-90" style={{ backgroundColor: "#b5613d", fontSize: "14px" }}><ExternalLink size={16} /> Open in New Tab</a>
                               <a href={resourceUrl} download className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium border transition-all hover:bg-gray-50" style={{ color: "#374151", borderColor: "#d1d5db", fontSize: "14px" }}><Download size={16} /> Download</a>
                             </div>
                           </div>
@@ -1545,7 +1545,7 @@ export function Lessons() {
                               onClick={() => goToLessonPage(i)}
                               className="flex-1 h-1.5 rounded-full transition-colors"
                               style={{
-                                backgroundColor: i === currentPageIndex ? "#2563eb" : p.is_viewed ? "#22c55e" : "#e2e8f0",
+                                backgroundColor: i === currentPageIndex ? "#b5613d" : p.is_viewed ? "#22c55e" : "#e2e8f0",
                               }}
                               title={p.title ?? `Page ${i + 1}`}
                             />
@@ -1556,7 +1556,7 @@ export function Lessons() {
                       {/* Current page content */}
                       <div className="px-6 py-5">
                         {lessonPagesLoading ? (
-                          <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                          <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: "#b5613d" }} /></div>
                         ) : (() => {
                           const page = lessonPages[currentPageIndex];
                           const content = String(page?.content ?? '');
@@ -1568,7 +1568,7 @@ export function Lessons() {
                               </h2>
                               {/* Media pages keep their original layout; text pages are personalized via the adaptive players. */}
                               {!mediaPage && pageChunksLoading ? (
-                                <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                                <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: "#b5613d" }} /></div>
                               ) : !mediaPage && pageChunks.length > 0 ? (
                                 <div className="space-y-4">
                                   {pageChunks.map(ch => (
@@ -1613,9 +1613,9 @@ export function Lessons() {
                               onClick={() => goToLessonPage(i)}
                               className="w-7 h-7 rounded-lg text-xs font-medium transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
                               style={{
-                                backgroundColor: i === currentPageIndex ? "#eff6ff" : "transparent",
-                                color: i === currentPageIndex ? "#2563eb" : p.is_viewed ? "#22c55e" : "#94a3b8",
-                                border: i === currentPageIndex ? "1px solid #bfdbfe" : "1px solid transparent",
+                                backgroundColor: i === currentPageIndex ? "#f3ece6" : "transparent",
+                                color: i === currentPageIndex ? "#b5613d" : p.is_viewed ? "#22c55e" : "#94a3b8",
+                                border: i === currentPageIndex ? "1px solid #e3cdbc" : "1px solid transparent",
                               }}
                             >
                               {p.is_viewed && i !== currentPageIndex ? <CheckCircle size={14} /> : i + 1}
@@ -1627,7 +1627,7 @@ export function Lessons() {
                           <button
                             onClick={goToNextPage}
                             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white"
-                            style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#2563eb" }}
+                            style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#b5613d" }}
                           >
                             Next →
                           </button>
@@ -1674,14 +1674,14 @@ export function Lessons() {
           return (
             <div className="flex items-center gap-3 min-w-0" style={{ maxWidth: "320px" }}>
               <div className="flex items-center gap-2 min-w-0">
-                <BookMarked size={14} color="#2563eb" />
+                <BookMarked size={14} color="#b5613d" />
                 <span className="truncate" style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b" }}>
                   {cname}
                 </span>
               </div>
-              <span style={{ fontSize: "12px", fontWeight: 700, color: pct === 100 ? "#16a34a" : "#2563eb", whiteSpace: "nowrap" }}>{pct}%</span>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: pct === 100 ? "#16a34a" : "#b5613d", whiteSpace: "nowrap" }}>{pct}%</span>
               <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#e2e8f0", minWidth: 60 }}>
-                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: pct === 100 ? "#22c55e" : "#2563eb" }} />
+                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: pct === 100 ? "#22c55e" : "#b5613d" }} />
               </div>
             </div>
           );
@@ -1699,10 +1699,10 @@ export function Lessons() {
           className="flex items-center gap-2 px-6 py-2 rounded-xl text-white transition-all"
           style={{
             fontSize: "13px", fontWeight: 600,
-            backgroundColor: nextActivity ? "#2563eb" : "#94a3b8",
+            backgroundColor: nextActivity ? "#b5613d" : "#94a3b8",
             opacity: nextActivity ? 1 : 0.5,
             cursor: nextActivity ? "pointer" : "not-allowed",
-            boxShadow: nextActivity ? "0 2px 8px rgba(37,99,235,0.3)" : "none",
+            boxShadow: nextActivity ? "0 2px 8px rgba(181,97,61,0.3)" : "none",
           }}
         >
           Next <ArrowRight size={15} />

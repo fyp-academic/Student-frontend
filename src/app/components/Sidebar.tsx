@@ -71,18 +71,18 @@ interface Notification {
 }
 
 const typeConfig: Record<NotifType, { icon: React.ElementType; color: string; bg: string }> = {
-  assignment:   { icon: IconFileText,   color: "#2563eb", bg: "#eff6ff" },
-  quiz:         { icon: IconHelpCircle, color: "#7c3aed", bg: "#fdf4ff" },
+  assignment:   { icon: IconFileText,   color: "#b5613d", bg: "#f3ece6" },
+  quiz:         { icon: IconHelpCircle, color: "#8c4a2f", bg: "#fdf4ff" },
   message:      { icon: IconMessageCircle, color: "#0891b2", bg: "#f0fdfa" },
   achievement:  { icon: Award,          color: "#f59e0b", bg: "#fffbeb" },
   reminder:     { icon: AlertCircle,    color: "#dc2626", bg: "#fef2f2" },
   announcement: { icon: Bell,           color: "#475569", bg: "#f8fafc" },
   grade:        { icon: CheckCircle,    color: "#16a34a", bg: "#f0fdf4" },
-  info:         { icon: Bell,           color: "#2563eb", bg: "#eff6ff" },
+  info:         { icon: Bell,           color: "#b5613d", bg: "#f3ece6" },
   warning:      { icon: AlertCircle,    color: "#f59e0b", bg: "#fffbeb" },
   success:      { icon: CheckCircle,    color: "#16a34a", bg: "#f0fdf4" },
   danger:       { icon: AlertCircle,    color: "#dc2626", bg: "#fef2f2" },
-  course_update:{ icon: Bell,           color: "#7c3aed", bg: "#fdf4ff" },
+  course_update:{ icon: Bell,           color: "#8c4a2f", bg: "#fdf4ff" },
 };
 
 const MAX_DROPDOWN_NOTIFICATIONS = 6;
@@ -263,6 +263,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
     return location.pathname.startsWith(path);
   };
 
+  // The rail stays a fixed dark "ink" surface in BOTH themes (using the --ink
+  // token would invert it to light in dark mode). Clay is the single accent.
+  const RAIL_BG = "#16140f";      // ink
+  const RAIL_BORDER = "rgba(255,255,255,0.08)";
+  const RAIL_MUTED = "#b0a89b";   // muted warm text/icons
+  const RAIL_TEXT = "#f3efe7";    // primary/active text
+  const ACCENT = "#d6885f";       // clay (legible on the dark rail)
+  const ACCENT_BG = "rgba(214,136,95,0.16)";
+  const CHEVRON = "#7a7266";
+
   return (
     <>
       {/* Mobile backdrop overlay */}
@@ -277,38 +287,39 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
         style={{
           width: collapsed ? "70px" : "268px",
-          backgroundColor: "#0c1e4a",
+          backgroundColor: RAIL_BG,
+          fontFamily: '"Inter Variable", Inter, system-ui, sans-serif',
         }}
       >
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-4 border-b"
-        style={{ borderColor: "rgba(255,255,255,0.08)" }}
+        style={{ borderColor: RAIL_BORDER }}
       >
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div
               className="flex items-center justify-center rounded-xl w-9 h-9 flex-shrink-0"
-              style={{ backgroundColor: "#22c55e" }}
+              style={{ backgroundColor: ACCENT }}
             >
               <GraduationCap size={20} color="white" />
             </div>
             <div>
-              <p className="text-white" style={{ fontSize: "13px", fontWeight: 700, lineHeight: "1.2" }}>
+              <p style={{ fontSize: "15px", fontWeight: 600, lineHeight: "1.2", color: RAIL_TEXT, fontFamily: '"Fraunces Variable", Fraunces, Georgia, serif' }}>
                 APES LMS
               </p>
-              <p style={{ fontSize: "10px", color: "#93c5fd" }}>University Portal</p>
+              <p style={{ fontSize: "10px", color: RAIL_MUTED }}>University Portal</p>
             </div>
           </div>
         )}
         {collapsed && (
-          <div className="mx-auto flex items-center justify-center rounded-xl w-9 h-9" style={{ backgroundColor: "#22c55e" }}>
+          <div className="mx-auto flex items-center justify-center rounded-xl w-9 h-9" style={{ backgroundColor: ACCENT }}>
             <GraduationCap size={20} color="white" />
           </div>
         )}
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <button onClick={onToggle} className="p-1 rounded-md hover:bg-white/10 text-blue-300 transition-colors">
+            <button onClick={onToggle} className="p-1 rounded-md hover:bg-white/10 transition-colors" style={{ color: RAIL_MUTED }}>
               <X size={18} />
             </button>
           </div>
@@ -320,7 +331,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
         <div className="flex flex-col items-center gap-2 mt-2">
           <button
             onClick={onToggle}
-            className="p-2 rounded-md hover:bg-white/10 text-blue-300 transition-colors"
+            className="p-2 rounded-md hover:bg-white/10 transition-colors"
+            style={{ color: RAIL_MUTED }}
           >
             <Menu size={18} />
           </button>
@@ -334,16 +346,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
             end
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
             style={({ isActive }) => ({
-              backgroundColor: isActive ? "rgba(34,197,94,0.18)" : "transparent",
-              borderLeft: isActive ? "2px solid #22c55e" : "2px solid transparent",
+              backgroundColor: isActive ? ACCENT_BG : "transparent",
+              borderLeft: isActive ? `2px solid ${ACCENT}` : "2px solid transparent",
               paddingLeft: isActive ? "10px" : "12px",
             })}
           >
             {({ isActive }) => (
               <>
-                <LayoutDashboard size={18} color={isActive ? "#22c55e" : "#93c5fd"} className="flex-shrink-0" />
+                <LayoutDashboard size={18} color={isActive ? ACCENT : RAIL_MUTED} className="flex-shrink-0" />
                 {!collapsed && (
-                  <span style={{ fontSize: "13px", color: isActive ? "#ffffff" : "#bfdbfe", fontWeight: isActive ? 600 : 400 }}>
+                  <span style={{ fontSize: "13px", color: isActive ? RAIL_TEXT : RAIL_MUTED, fontWeight: isActive ? 600 : 400 }}>
                     Dashboard
                   </span>
                 )}
@@ -358,16 +370,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
             to="/sessions"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
             style={({ isActive }) => ({
-              backgroundColor: isActive ? "rgba(34,197,94,0.18)" : "transparent",
-              borderLeft: isActive ? "2px solid #22c55e" : "2px solid transparent",
+              backgroundColor: isActive ? ACCENT_BG : "transparent",
+              borderLeft: isActive ? `2px solid ${ACCENT}` : "2px solid transparent",
               paddingLeft: isActive ? "10px" : "12px",
             })}
           >
             {({ isActive }) => (
               <>
-                <Video size={18} color={isActive ? "#22c55e" : "#93c5fd"} className="flex-shrink-0" />
+                <Video size={18} color={isActive ? ACCENT : RAIL_MUTED} className="flex-shrink-0" />
                 {!collapsed && (
-                  <span style={{ fontSize: "13px", color: isActive ? "#ffffff" : "#bfdbfe", fontWeight: isActive ? 600 : 400 }}>
+                  <span style={{ fontSize: "13px", color: isActive ? RAIL_TEXT : RAIL_MUTED, fontWeight: isActive ? 600 : 400 }}>
                     Live Sessions
                   </span>
                 )}
@@ -388,20 +400,20 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
             >
               <group.icon
                 size={16}
-                style={{ color: "#60a5fa", flexShrink: 0 }}
+                style={{ color: RAIL_MUTED, flexShrink: 0 }}
               />
               {!collapsed && (
                 <>
                   <span
                     className="flex-1 text-left truncate"
-                    style={{ fontSize: "11px", color: "#60a5fa", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}
+                    style={{ fontSize: "11px", color: RAIL_MUTED, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
                   >
                     {group.label}
                   </span>
                   {openGroups[group.id] ? (
-                    <ChevronDown size={13} color="#4b72b0" />
+                    <ChevronDown size={13} color={CHEVRON} />
                   ) : (
-                    <ChevronRight size={13} color="#4b72b0" />
+                    <ChevronRight size={13} color={CHEVRON} />
                   )}
                 </>
               )}
@@ -416,24 +428,24 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
                     to={item.path}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
                     style={({ isActive }) => ({
-                      backgroundColor: isActive ? "rgba(34,197,94,0.15)" : "transparent",
-                      borderLeft: isActive ? "2px solid #22c55e" : "2px solid transparent",
+                      backgroundColor: isActive ? ACCENT_BG : "transparent",
+                      borderLeft: isActive ? `2px solid ${ACCENT}` : "2px solid transparent",
                       paddingLeft: isActive ? "10px" : "12px",
                     })}
                   >
                     {({ isActive }) => (
                       <>
-                        <item.icon size={15} color={isActive ? "#22c55e" : "#93c5fd"} className="flex-shrink-0" />
+                        <item.icon size={15} color={isActive ? ACCENT : RAIL_MUTED} className="flex-shrink-0" />
                         <span
                           className="flex-1 truncate"
-                          style={{ fontSize: "13px", color: isActive ? "#ffffff" : "#bfdbfe", fontWeight: isActive ? 600 : 400 }}
+                          style={{ fontSize: "13px", color: isActive ? RAIL_TEXT : RAIL_MUTED, fontWeight: isActive ? 600 : 400 }}
                         >
                           {item.label}
                         </span>
                         {getDynamicBadge(item.path, item.badge) ? (
                           <span
                             className="flex-shrink-0 text-white rounded-full px-1.5 py-0.5"
-                            style={{ fontSize: "10px", backgroundColor: "#22c55e", fontWeight: 700, minWidth: "18px", textAlign: "center" }}
+                            style={{ fontSize: "10px", backgroundColor: ACCENT, fontWeight: 700, minWidth: "18px", textAlign: "center" }}
                           >
                             {getDynamicBadge(item.path, item.badge)}
                           </span>
@@ -455,16 +467,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
                     title={item.label}
                     className="flex items-center justify-center py-2 rounded-lg transition-all relative"
                     style={({ isActive }) => ({
-                      backgroundColor: isActive ? "rgba(34,197,94,0.15)" : "transparent",
+                      backgroundColor: isActive ? ACCENT_BG : "transparent",
                     })}
                   >
                     {({ isActive }) => (
                       <div className="relative">
-                        <item.icon size={17} color={isActive ? "#22c55e" : "#93c5fd"} />
+                        <item.icon size={17} color={isActive ? ACCENT : RAIL_MUTED} />
                         {getDynamicBadge(item.path, item.badge) ? (
                           <span
                             className="absolute -top-1 -right-1 text-white rounded-full flex items-center justify-center"
-                            style={{ fontSize: "8px", backgroundColor: "#22c55e", width: "13px", height: "13px" }}
+                            style={{ fontSize: "8px", backgroundColor: ACCENT, width: "13px", height: "13px" }}
                           >
                             {getDynamicBadge(item.path, item.badge)}
                           </span>
@@ -480,24 +492,25 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
       </nav>
 
       {/* User Footer */}
-      <div className="border-t p-3" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+      <div className="border-t p-3" style={{ borderColor: RAIL_BORDER }}>
         <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
           <img
-            src={String(user?.profile_image_url ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(String(user?.name ?? 'Student'))}&background=2563eb&color=fff&size=100`)}
+            src={String(user?.profile_image_url ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(String(user?.name ?? 'Student'))}&background=b5613d&color=fff&size=100`)}
             alt={String(user?.name ?? 'Student')}
             className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2"
-            style={{ borderColor: "#22c55e" }}
+            style={{ borderColor: ACCENT }}
           />
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="text-white truncate" style={{ fontSize: "12px", fontWeight: 600 }}>{user?.name ?? 'Student'}</p>
-              <p className="truncate" style={{ fontSize: "11px", color: "#60a5fa" }}>{user?.department ?? user?.role ?? 'Student'}</p>
+              <p className="truncate" style={{ fontSize: "12px", fontWeight: 600, color: RAIL_TEXT }}>{user?.name ?? 'Student'}</p>
+              <p className="truncate" style={{ fontSize: "11px", color: RAIL_MUTED }}>{user?.department ?? user?.role ?? 'Student'}</p>
             </div>
           )}
           <button
             onClick={handleLogout}
             title="Logout"
-            className="p-2 rounded-lg hover:bg-white/10 text-blue-300 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            style={{ color: RAIL_MUTED }}
           >
             <LogOut size={18} />
           </button>

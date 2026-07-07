@@ -70,7 +70,7 @@ export const GuidedStepsPlayer: React.FC<GuidedStepsPlayerProps> = ({ content, c
         className={cn(
           academicProse,
           // Numbered steps get a little more air and an indigo marker
-          '[&_ol]:space-y-4 [&_ol>li]:pl-2 [&_ol]:marker:text-indigo-500 [&_ol]:marker:font-semibold',
+          '[&_ol]:space-y-4 [&_ol>li]:pl-2 [&_ol]:marker:text-clay [&_ol]:marker:font-semibold',
           // Mayer's Signaling — make the cues unmistakable (guided player only):
           // key technical terms become amber keyword chips...
           '[&_strong]:!bg-amber-100 [&_strong]:!text-amber-900 [&_strong]:!font-bold [&_strong]:!rounded [&_strong]:!px-1 [&_strong]:!py-0.5 [&_strong]:!box-decoration-clone',

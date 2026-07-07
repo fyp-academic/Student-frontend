@@ -7,11 +7,11 @@ import { resolveAssetUrl } from "../components/ui/utils";
 
 const tabs = ["All", "In Progress", "Completed", "Not Started"];
 
-const COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#f59e0b", "#e11d48"];
+const COLORS = ["#b5613d", "#8c4a2f", "#059669", "#0891b2", "#f59e0b", "#e11d48"];
 
 const gradeColors: Record<string, string> = {
   "A+": "#16a34a", A: "#16a34a", "A-": "#22c55e",
-  "B+": "#2563eb", B: "#3b82f6", "B-": "#60a5fa",
+  "B+": "#b5613d", B: "#c07049", "B-": "#cf9270",
   "—": "#94a3b8",
 };
 
@@ -90,7 +90,7 @@ export function MyCourses() {
         <NavLink
           to="/catalog"
           className="px-4 py-2 rounded-xl text-white transition-all"
-          style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#2563eb", boxShadow: "0 2px 8px rgba(37,99,235,0.35)" }}
+          style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#b5613d", boxShadow: "0 2px 8px rgba(181,97,61,0.35)" }}
         >
           + Enroll New
         </NavLink>
@@ -99,7 +99,7 @@ export function MyCourses() {
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "In Progress", count: enriched.filter(c => c.status === "In Progress").length, color: "#2563eb", bg: "#eff6ff" },
+          { label: "In Progress", count: enriched.filter(c => c.status === "In Progress").length, color: "#b5613d", bg: "#f3ece6" },
           { label: "Completed",   count: enriched.filter(c => c.status === "Completed").length,   color: "#22c55e", bg: "#f0fdf4" },
           { label: "Not Started", count: enriched.filter(c => c.status === "Not Started").length, color: "#f59e0b", bg: "#fffbeb" },
         ].map((s) => (
@@ -123,9 +123,9 @@ export function MyCourses() {
               style={{
                 fontSize: "12px",
                 fontWeight: activeTab === tab ? 600 : 400,
-                backgroundColor: activeTab === tab ? "#2563eb" : "white",
+                backgroundColor: activeTab === tab ? "#b5613d" : "white",
                 color: activeTab === tab ? "white" : "#475569",
-                borderColor: activeTab === tab ? "#2563eb" : "#e2e8f0",
+                borderColor: activeTab === tab ? "#b5613d" : "#e2e8f0",
               }}
             >
               {tab}
@@ -135,12 +135,12 @@ export function MyCourses() {
         <div className="flex items-center gap-1 rounded-xl border p-0.5" style={{ borderColor: "#e2e8f0" }}>
           <button onClick={() => setViewMode('grid')} title="Grid view"
             className="p-1.5 rounded-lg transition-all"
-            style={{ backgroundColor: viewMode === 'grid' ? '#2563eb' : 'transparent', color: viewMode === 'grid' ? 'white' : '#64748b' }}>
+            style={{ backgroundColor: viewMode === 'grid' ? '#b5613d' : 'transparent', color: viewMode === 'grid' ? 'white' : '#64748b' }}>
             <LayoutGrid size={15} />
           </button>
           <button onClick={() => setViewMode('list')} title="List view"
             className="p-1.5 rounded-lg transition-all"
-            style={{ backgroundColor: viewMode === 'list' ? '#2563eb' : 'transparent', color: viewMode === 'list' ? 'white' : '#64748b' }}>
+            style={{ backgroundColor: viewMode === 'list' ? '#b5613d' : 'transparent', color: viewMode === 'list' ? 'white' : '#64748b' }}>
             <List size={15} />
           </button>
         </div>
@@ -149,7 +149,7 @@ export function MyCourses() {
       {/* Courses */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-blue-400" />
+          <Loader2 size={28} className="animate-spin text-clay" />
         </div>
       )}
       {!loading && filtered.length === 0 && (
@@ -207,7 +207,7 @@ export function MyCourses() {
                       <div ref={menuRef} className="absolute right-0 bottom-full mb-1 z-20 bg-white rounded-xl border py-1" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.1)", borderColor: "#e2e8f0", minWidth: "120px" }}>
                         <button onClick={() => { setOpenMenuId(''); navigate('/lessons', { state: { courseId: course.id } }); }}
                           className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 transition-colors" style={{ fontSize: "12px", color: "#1e293b", fontWeight: 500 }}>
-                          <PlayCircle size={13} color="#2563eb" /> Start
+                          <PlayCircle size={13} color="#b5613d" /> Start
                         </button>
                         <div className="mx-2" style={{ height: "1px", backgroundColor: "#f1f5f9" }} />
                         <button onClick={() => handleUnenroll(course.id)}
@@ -295,7 +295,7 @@ export function MyCourses() {
                           <div ref={menuRef} className="absolute right-0 bottom-full mb-1 z-20 bg-white rounded-xl border py-1" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.1)", borderColor: "#e2e8f0", minWidth: "120px" }}>
                             <button onClick={() => { setOpenMenuId(''); navigate('/lessons', { state: { courseId: course.id } }); }}
                               className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 transition-colors" style={{ fontSize: "12px", color: "#1e293b", fontWeight: 500 }}>
-                              <PlayCircle size={13} color="#2563eb" /> Start
+                              <PlayCircle size={13} color="#b5613d" /> Start
                             </button>
                             <div className="mx-2" style={{ height: "1px", backgroundColor: "#f1f5f9" }} />
                             <button onClick={() => handleUnenroll(course.id)}

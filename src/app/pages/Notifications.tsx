@@ -25,18 +25,18 @@ interface Notification {
 }
 
 const typeConfig: Record<NotifType, { icon: React.ElementType; color: string; bg: string }> = {
-  assignment:   { icon: FileText,       color: "#2563eb", bg: "#eff6ff" },
-  quiz:         { icon: HelpCircle,     color: "#7c3aed", bg: "#fdf4ff" },
+  assignment:   { icon: FileText,       color: "#b5613d", bg: "#f3ece6" },
+  quiz:         { icon: HelpCircle,     color: "#8c4a2f", bg: "#fdf4ff" },
   message:      { icon: MessageCircle,  color: "#0891b2", bg: "#f0fdfa" },
   achievement:  { icon: Award,          color: "#f59e0b", bg: "#fffbeb" },
   reminder:     { icon: AlertCircle,    color: "#dc2626", bg: "#fef2f2" },
   announcement: { icon: Bell,           color: "#475569", bg: "#f8fafc" },
   grade:        { icon: CheckCircle,    color: "#16a34a", bg: "#f0fdf4" },
-  info:         { icon: Bell,           color: "#2563eb", bg: "#eff6ff" },
+  info:         { icon: Bell,           color: "#b5613d", bg: "#f3ece6" },
   warning:      { icon: AlertCircle,    color: "#f59e0b", bg: "#fffbeb" },
   success:      { icon: CheckCircle,    color: "#16a34a", bg: "#f0fdf4" },
   danger:       { icon: AlertCircle,    color: "#dc2626", bg: "#fef2f2" },
-  course_update:{ icon: Bell,           color: "#7c3aed", bg: "#fdf4ff" },
+  course_update:{ icon: Bell,           color: "#8c4a2f", bg: "#fdf4ff" },
 };
 
 // Initialize Echo for real-time notifications
@@ -186,9 +186,9 @@ export function Notifications() {
             style={{
               fontSize: "12px",
               fontWeight: filter === f ? 600 : 400,
-              backgroundColor: filter === f ? "#2563eb" : "white",
+              backgroundColor: filter === f ? "#b5613d" : "white",
               color: filter === f ? "white" : "#475569",
-              borderColor: filter === f ? "#2563eb" : "#e2e8f0",
+              borderColor: filter === f ? "#b5613d" : "#e2e8f0",
             }}
           >
             {f}
@@ -218,12 +218,12 @@ export function Notifications() {
                 className="bg-white rounded-2xl p-4 flex items-start gap-4 transition-all hover:shadow-md cursor-pointer group"
                 style={{
                   boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
-                  borderLeft: !notif.read ? "3px solid #2563eb" : "3px solid transparent",
+                  borderLeft: !notif.read ? "3px solid #b5613d" : "3px solid transparent",
                 }}
                 onClick={() => markRead(notif.id)}
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cfg?.bg ?? '#eff6ff' }}>
-                  <NIcon size={18} color={cfg?.color ?? '#2563eb'} />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cfg?.bg ?? '#f3ece6' }}>
+                  <NIcon size={18} color={cfg?.color ?? '#b5613d'} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
@@ -240,7 +240,7 @@ export function Notifications() {
                         </span>
                       )}
                       {!notif.read && (
-                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: "#2563eb" }} />
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: "#b5613d" }} />
                       )}
                     </div>
                   </div>

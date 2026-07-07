@@ -6,7 +6,7 @@ import { profileApi, coursesApi } from "../services/api";
 import { NotificationPreferences } from "../components/NotificationPreferences";
 import { AdaptiveLearningWidget } from "../components/student/AdaptiveLearningWidget";
 
-const COURSE_COLORS = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#22c55e", "#f59e0b"];
+const COURSE_COLORS = ["#b5613d", "#8c4a2f", "#059669", "#0891b2", "#22c55e", "#f59e0b"];
 
 export function LearnerProfile() {
   const { user } = useAuth();
@@ -110,7 +110,7 @@ export function LearnerProfile() {
         {/* Cover */}
         <div
           className="h-32 relative"
-          style={{ background: "linear-gradient(135deg, #0c1e4a 0%, #1e3a8a 50%, #2563eb 100%)" }}
+          style={{ background: "linear-gradient(135deg, #8c4a2f 0%, #8c4a2f 50%, #b5613d 100%)" }}
         >
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
         </div>
@@ -137,8 +137,8 @@ export function LearnerProfile() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingImage}
-                    className="absolute bottom-1 right-1 w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center disabled:opacity-50"
-                    style={{ boxShadow: "0 2px 6px rgba(37,99,235,0.4)" }}
+                    className="absolute bottom-1 right-1 w-7 h-7 rounded-lg bg-clay text-white flex items-center justify-center disabled:opacity-50"
+                    style={{ boxShadow: "0 2px 6px rgba(181,97,61,0.4)" }}
                   >
                     {uploadingImage ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
                   </button>
@@ -159,7 +159,7 @@ export function LearnerProfile() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>{String(u?.name ?? profile?.name ?? 'Student')}</h1>
-              <p style={{ fontSize: "14px", color: "#2563eb", fontWeight: 500 }}>{String(profile?.department ?? u?.department ?? '')}</p>
+              <p style={{ fontSize: "14px", color: "#b5613d", fontWeight: 500 }}>{String(profile?.department ?? u?.department ?? '')}</p>
               <div className="flex flex-wrap items-center gap-3 mt-2 text-slate-500" style={{ fontSize: "12px" }}>
                 {Boolean(profile?.year_level) && <div className="flex items-center gap-1"><GraduationCap size={13} />{String(profile?.year_level)}</div>}
                 {Boolean(profile?.institution) && <div className="flex items-center gap-1"><MapPin size={13} />{String(profile?.institution)}</div>}
@@ -172,17 +172,17 @@ export function LearnerProfile() {
                 {profile?.phone ? <div className="flex items-center gap-1 text-slate-500"><Phone size={12} />{String(profile.phone)}</div> : null}
               </div>
               <div className="flex items-center gap-3 mt-3">
-                <a href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><Github size={16} /></a>
-                <a href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><Linkedin size={16} /></a>
-                <a href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><Globe size={16} /></a>
+                <a href="#" className="text-slate-400 hover:text-clay-deep transition-colors"><Github size={16} /></a>
+                <a href="#" className="text-slate-400 hover:text-clay-deep transition-colors"><Linkedin size={16} /></a>
+                <a href="#" className="text-slate-400 hover:text-clay-deep transition-colors"><Globe size={16} /></a>
               </div>
             </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "Courses",  value: String(enrolledCourses.length || 0), icon: BookOpen, color: "#2563eb" },
-                { label: "Badges",   value: String(achievements.length || 0),   icon: Award,    color: "#7c3aed" },
+                { label: "Courses",  value: String(enrolledCourses.length || 0), icon: BookOpen, color: "#b5613d" },
+                { label: "Badges",   value: String(achievements.length || 0),   icon: Award,    color: "#8c4a2f" },
               ].map((s) => (
                 <div key={s.label} className="text-center p-3 rounded-xl" style={{ backgroundColor: "#f8fafc" }}>
                   <s.icon size={16} color={s.color} className="mx-auto mb-1" />
@@ -200,7 +200,7 @@ export function LearnerProfile() {
             </p>
           ) : (
             <textarea
-              className="mt-4 w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+              className="mt-4 w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-clay/30 transition-all"
               style={{ fontSize: "13px", color: "#475569", borderColor: "#e2e8f0", lineHeight: "1.6", resize: "none" }}
               rows={3}
               value={bio}
@@ -221,9 +221,9 @@ export function LearnerProfile() {
             style={{
               fontSize: "12px",
               fontWeight: activeTab === tab ? 600 : 400,
-              backgroundColor: activeTab === tab ? "#2563eb" : "white",
+              backgroundColor: activeTab === tab ? "#b5613d" : "white",
               color: activeTab === tab ? "white" : "#475569",
-              borderColor: activeTab === tab ? "#2563eb" : "#e2e8f0",
+              borderColor: activeTab === tab ? "#b5613d" : "#e2e8f0",
             }}
           >
             {tab}
@@ -265,7 +265,7 @@ export function LearnerProfile() {
               <RadarChart data={skillData}>
                 <PolarGrid stroke="#e2e8f0" />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748b" }} />
-                <Radar dataKey="value" stroke="#2563eb" fill="#2563eb" fillOpacity={0.15} strokeWidth={2} dot={{ fill: "#2563eb", r: 3 }} />
+                <Radar dataKey="value" stroke="#b5613d" fill="#b5613d" fillOpacity={0.15} strokeWidth={2} dot={{ fill: "#b5613d", r: 3 }} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -332,13 +332,13 @@ export function LearnerProfile() {
                     <button key={v.id} type="button" onClick={() => setVarkStyle(varkStyle === v.id ? "" : v.id)}
                       className="text-left p-3 rounded-xl border transition-all"
                       style={{
-                        borderColor: varkStyle === v.id ? "#2563eb" : "#e2e8f0",
-                        backgroundColor: varkStyle === v.id ? "#eff6ff" : "#f8fafc",
+                        borderColor: varkStyle === v.id ? "#b5613d" : "#e2e8f0",
+                        backgroundColor: varkStyle === v.id ? "#f3ece6" : "#f8fafc",
                       }}>
-                      <p style={{ fontSize: "13px", fontWeight: 600, color: varkStyle === v.id ? "#1d4ed8" : "#1e293b" }}>
+                      <p style={{ fontSize: "13px", fontWeight: 600, color: varkStyle === v.id ? "#a1542f" : "#1e293b" }}>
                         {v.icon} {v.label}
                       </p>
-                      <p style={{ fontSize: "11px", color: varkStyle === v.id ? "#3b82f6" : "#94a3b8" }}>{v.desc}</p>
+                      <p style={{ fontSize: "11px", color: varkStyle === v.id ? "#c07049" : "#94a3b8" }}>{v.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -356,11 +356,11 @@ export function LearnerProfile() {
                       <button type="button" key={mode.id} onClick={() => toggleMode(mode.id)}
                         className="text-left p-2.5 rounded-xl border transition-all"
                         style={{
-                          borderColor: active ? "#2563eb" : "#e2e8f0",
-                          backgroundColor: active ? "#eff6ff" : "white",
+                          borderColor: active ? "#b5613d" : "#e2e8f0",
+                          backgroundColor: active ? "#f3ece6" : "white",
                         }}>
-                        <p style={{ fontSize: "12px", fontWeight: 600, color: active ? "#1d4ed8" : "#475569" }}>{mode.label}</p>
-                        <p style={{ fontSize: "10px", color: active ? "#3b82f6" : "#94a3b8" }}>{mode.detail}</p>
+                        <p style={{ fontSize: "12px", fontWeight: 600, color: active ? "#a1542f" : "#475569" }}>{mode.label}</p>
+                        <p style={{ fontSize: "10px", color: active ? "#c07049" : "#94a3b8" }}>{mode.detail}</p>
                       </button>
                     );
                   })}
@@ -380,9 +380,9 @@ export function LearnerProfile() {
                       className="py-2 px-1 rounded-xl border text-center transition-all"
                       style={{
                         fontSize: "11px", fontWeight: 600,
-                        backgroundColor: pacePreference === p.id ? "#2563eb" : "#f8fafc",
+                        backgroundColor: pacePreference === p.id ? "#b5613d" : "#f8fafc",
                         color: pacePreference === p.id ? "white" : "#475569",
-                        borderColor: pacePreference === p.id ? "#2563eb" : "#e2e8f0",
+                        borderColor: pacePreference === p.id ? "#b5613d" : "#e2e8f0",
                       }}>
                       {p.label}
                     </button>
@@ -402,9 +402,9 @@ export function LearnerProfile() {
                       <button key={item} type="button" onClick={() => toggleInterest(item)}
                         className="px-3 py-1 rounded-full border text-xs font-medium transition-all"
                         style={{
-                          borderColor: active ? "#7c3aed" : "#e2e8f0",
-                          backgroundColor: active ? "#f5f3ff" : "white",
-                          color: active ? "#6d28d9" : "#64748b",
+                          borderColor: active ? "#8c4a2f" : "#e2e8f0",
+                          backgroundColor: active ? "#f4ece7" : "white",
+                          color: active ? "#8c4a2f" : "#64748b",
                         }}>
                         {item}
                       </button>
@@ -419,14 +419,14 @@ export function LearnerProfile() {
                   Note for AI advisor <span style={{ color: "#94a3b8", fontWeight: 400 }}>(optional)</span>
                 </p>
                 <textarea value={supportNotes} onChange={e => setSupportNotes(e.target.value)} rows={3}
-                  className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-clay/20"
                   style={{ fontSize: "12px", color: "#475569", borderColor: "#e2e8f0", backgroundColor: "#f8fafc", resize: "none" }}
                   placeholder="e.g. I struggle with abstract concepts — worked examples help me most." />
               </div>
 
               <button type="button" onClick={handleSaveStyle} disabled={styleSaving}
                 className="w-full py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}>
+                style={{ background: "linear-gradient(135deg, #a1542f, #b5613d)" }}>
                 {styleSaving ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
                 {styleSaving ? "Saving…" : "Save learning profile"}
               </button>
@@ -460,7 +460,7 @@ export function LearnerProfile() {
                     <span style={{ fontSize: "11px", color: "#94a3b8" }}>{progress}%</span>
                   </div>
                 </div>
-                <span style={{ fontSize: "14px", fontWeight: 700, color: progress >= 100 ? "#22c55e" : "#2563eb" }}>
+                <span style={{ fontSize: "14px", fontWeight: 700, color: progress >= 100 ? "#22c55e" : "#b5613d" }}>
                   {String(course.current_grade ?? '—')}
                 </span>
               </div>
@@ -485,7 +485,7 @@ export function LearnerProfile() {
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                style={{ backgroundColor: `${(ach as Record<string,unknown>).color ?? '#2563eb'}12` }}
+                style={{ backgroundColor: `${(ach as Record<string,unknown>).color ?? '#b5613d'}12` }}
               >
                 {String((ach as Record<string,unknown>).icon ?? '🏆')}
               </div>
@@ -507,7 +507,7 @@ export function LearnerProfile() {
               <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>No skills data yet</p>
             )}
             {skillData.map((s, idx) => {
-              const skillColors = ["#2563eb","#0891b2","#7c3aed","#22c55e","#f59e0b","#dc2626"];
+              const skillColors = ["#b5613d","#0891b2","#8c4a2f","#22c55e","#f59e0b","#dc2626"];
               const color = skillColors[idx % skillColors.length];
               return (
                 <div key={s.subject} className="mb-3">

@@ -67,7 +67,7 @@ const recColors: Record<string, { bg: string; border: string; icon: string; icon
   success: { bg: "bg-green-50", border: "border-green-200", icon: "text-green-600", iconComp: CheckCircle },
   warning: { bg: "bg-amber-50", border: "border-amber-200", icon: "text-amber-600", iconComp: AlertTriangle },
   danger:  { bg: "bg-red-50",   border: "border-red-200",   icon: "text-red-600",   iconComp: AlertTriangle },
-  info:    { bg: "bg-blue-50",  border: "border-blue-200",  icon: "text-blue-600",  iconComp: Info },
+  info:    { bg: "bg-clay/10",  border: "border-clay/30",  icon: "text-clay",  iconComp: Info },
 };
 
 const deviceIcon = (d: string) => d === "mobile" ? <Smartphone className="w-4 h-4" /> : d === "tablet" ? <Cpu className="w-4 h-4" /> : <Monitor className="w-4 h-4" />;
@@ -88,10 +88,10 @@ function resolveRecAction(rec: Recommendation): { path: string; state?: Record<s
 }
 
 const eventTypeBadge: Record<string, string> = {
-  content_view:     "bg-blue-100 text-blue-700",
+  content_view:     "bg-clay/10 text-clay",
   activity_complete:"bg-green-100 text-green-700",
-  quiz_start:       "bg-purple-100 text-purple-700",
-  quiz_submit:      "bg-indigo-100 text-indigo-700",
+  quiz_start:       "bg-clay/10 text-clay",
+  quiz_submit:      "bg-clay/10 text-clay",
   forum_post:       "bg-orange-100 text-orange-700",
   forum_reply:      "bg-amber-100 text-amber-700",
 };
@@ -208,7 +208,7 @@ export default function LearnerEngagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BarChart2 className="w-7 h-7 text-indigo-600" /> My Engagement
+            <BarChart2 className="w-7 h-7 text-clay" /> My Engagement
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Track your learning behaviour, activity history, and AI-powered tips.</p>
         </div>
@@ -224,7 +224,7 @@ export default function LearnerEngagement() {
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
         {(["overview", "logs", "ai"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? "bg-white shadow text-indigo-700" : "text-gray-500 hover:text-gray-700"}`}>
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? "bg-white shadow text-clay" : "text-gray-500 hover:text-gray-700"}`}>
             {t === "overview" ? "Overview" : t === "logs" ? "Activity Logs" : "AI Tips"}
           </button>
         ))}
@@ -235,7 +235,7 @@ export default function LearnerEngagement() {
         <div className="space-y-6">
           {loading ? (
             <div className="flex items-center justify-center h-48">
-              <RefreshCw className="w-6 h-6 text-indigo-400 animate-spin" />
+              <RefreshCw className="w-6 h-6 text-clay animate-spin" />
             </div>
           ) : (
             <>
@@ -251,7 +251,7 @@ export default function LearnerEngagement() {
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col justify-between">
                   <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Logins (30d)</p>
                   <div className="flex items-end gap-1 mt-2">
-                    <span className="text-4xl font-bold text-indigo-600">{loginCount}</span>
+                    <span className="text-4xl font-bold text-clay">{loginCount}</span>
                     <span className="text-gray-400 text-sm mb-1">sessions</span>
                   </div>
                   <p className="text-xs text-gray-400 mt-1">Consistency indicator</p>
@@ -279,7 +279,7 @@ export default function LearnerEngagement() {
                 {/* Weekly trend */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
                   <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-indigo-500" /> Weekly Engagement Trend
+                    <TrendingUp className="w-4 h-4 text-clay" /> Weekly Engagement Trend
                   </h3>
                   {weeklyTrend.length > 0 ? (
                     <ResponsiveContainer width="100%" height={160}>
@@ -288,7 +288,7 @@ export default function LearnerEngagement() {
                         <XAxis dataKey="week" tick={{ fontSize: 11 }} tickFormatter={w => `W${w}`} />
                         <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                         <Tooltip formatter={(v: number) => [`${v}`, "Score"]} labelFormatter={w => `Week ${w}`} />
-                        <Line type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                        <Line type="monotone" dataKey="score" stroke="#b5613d" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
@@ -306,7 +306,7 @@ export default function LearnerEngagement() {
                       <RadarChart data={radarData} cx="50%" cy="50%">
                         <PolarGrid />
                         <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} />
-                        <Radar dataKey="value" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
+                        <Radar dataKey="value" stroke="#b5613d" fill="#b5613d" fillOpacity={0.3} />
                       </RadarChart>
                     </ResponsiveContainer>
                   ) : (
@@ -347,7 +347,7 @@ export default function LearnerEngagement() {
               {Object.keys(deviceBreak).length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
                   <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <Laptop className="w-4 h-4 text-blue-500" /> Device Usage (Last 30 Days)
+                    <Laptop className="w-4 h-4 text-clay" /> Device Usage (Last 30 Days)
                   </h3>
                   <div className="flex gap-4 flex-wrap">
                     {Object.entries(deviceBreak).map(([device, count]) => (
@@ -372,10 +372,10 @@ export default function LearnerEngagement() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
               <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-indigo-500" /> Login History
+                <Clock className="w-4 h-4 text-clay" /> Login History
                 {loginTotal > 0 && <span className="text-xs text-gray-400">({loginTotal} total)</span>}
               </h3>
-              <button onClick={() => loadLoginHistory(loginPage)} className="text-gray-400 hover:text-indigo-500">
+              <button onClick={() => loadLoginHistory(loginPage)} className="text-gray-400 hover:text-clay-deep">
                 <RefreshCw className={`w-4 h-4 ${loginLoading ? "animate-spin" : ""}`} />
               </button>
             </div>
@@ -425,8 +425,8 @@ export default function LearnerEngagement() {
                             Bounced
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full bg-clay/10 text-clay border border-clay/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-clay" />
                             Completed
                           </span>
                         )}
@@ -472,7 +472,7 @@ export default function LearnerEngagement() {
             </div>
             {events.length === 0 && !evLoading ? (
               <div className="py-10 text-center text-gray-400 text-sm">
-                <button onClick={() => loadActivityLog(1)} className="flex items-center gap-1.5 mx-auto text-indigo-500 hover:underline">
+                <button onClick={() => loadActivityLog(1)} className="flex items-center gap-1.5 mx-auto text-clay hover:underline">
                   <RefreshCw className="w-4 h-4" /> Load activity log
                 </button>
               </div>
@@ -521,18 +521,18 @@ export default function LearnerEngagement() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-purple-500" /> AI-Powered Recommendations
+                <Zap className="w-5 h-5 text-clay" /> AI-Powered Recommendations
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">Personalised insights based on your engagement signals.</p>
             </div>
-            <button onClick={loadRecs} className="flex items-center gap-1.5 text-sm text-indigo-600 hover:underline">
+            <button onClick={loadRecs} className="flex items-center gap-1.5 text-sm text-clay hover:underline">
               <RefreshCw className={`w-4 h-4 ${recsLoading ? "animate-spin" : ""}`} /> Refresh
             </button>
           </div>
 
           {recsLoading ? (
             <div className="flex items-center justify-center h-48">
-              <RefreshCw className="w-6 h-6 text-purple-400 animate-spin" />
+              <RefreshCw className="w-6 h-6 text-clay animate-spin" />
             </div>
           ) : recs.length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-sm">

@@ -46,8 +46,8 @@ export function ConsentDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <Mic className="h-6 w-6 text-blue-600" />
+            <div className="w-12 h-12 bg-clay/10 rounded-full flex items-center justify-center">
+              <Mic className="h-6 w-6 text-clay" />
             </div>
             <div>
               <DialogTitle>Audio Transcription</DialogTitle>
@@ -72,8 +72,8 @@ export function ConsentDialog({
 
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center shrink-0">
-                <FileText className="h-4 w-4 text-blue-600" />
+              <div className="w-8 h-8 bg-clay/10 rounded-full flex items-center justify-center shrink-0">
+                <FileText className="h-4 w-4 text-clay" />
               </div>
               <div className="text-sm">
                 <p className="font-medium">What&apos;s captured</p>

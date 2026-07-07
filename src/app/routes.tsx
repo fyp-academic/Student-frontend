@@ -58,7 +58,7 @@ const ErrorFallback = () => {
             {error.message}
           </p>
         )}
-        <a href="/dashboard" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-white" style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#2563eb" }}>
+        <a href="/dashboard" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-white" style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#b5613d" }}>
           Go to Dashboard
         </a>
       </div>

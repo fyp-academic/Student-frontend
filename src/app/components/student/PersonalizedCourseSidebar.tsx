@@ -101,11 +101,11 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
           <button
             type="button"
             onClick={() => handleActivityClick(suggestedActivity as Activity, suggestedOverlay)}
-            className="w-full flex items-center gap-2.5 px-4 py-3 text-left border-b hover:bg-blue-50 transition-colors"
+            className="w-full flex items-center gap-2.5 px-4 py-3 text-left border-b hover:bg-clay/10 transition-colors"
             style={{ borderColor: '#e2e8f0', backgroundColor: '#f8fafc' }}
           >
-            <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: '#dbeafe' }}>
-              <ArrowRight size={14} color="#2563eb" />
+            <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: '#ecdccf' }}>
+              <ArrowRight size={14} color="#b5613d" />
             </div>
             <div className="min-w-0">
               <p style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>Continue where you left off</p>
@@ -115,7 +115,7 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
         )}
         {sectionsLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 size={20} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={20} className="animate-spin" style={{ color: '#b5613d' }} />
           </div>
         ) : sortedSections.length === 0 ? (
           <div className="px-4 py-8 text-center">
@@ -139,7 +139,7 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
               >
                 <div
                   className="flex-shrink-0 w-2 h-2 rounded-full"
-                  style={{ backgroundColor: secOverlay?.is_weak_topic ? '#f97316' : done === acts.length && acts.length > 0 ? '#22c55e' : '#2563eb' }}
+                  style={{ backgroundColor: secOverlay?.is_weak_topic ? '#f97316' : done === acts.length && acts.length > 0 ? '#22c55e' : '#b5613d' }}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -167,17 +167,17 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
                     type="button"
                     disabled={isLck}
                     onClick={() => handleActivityClick(act, overlay)}
-                    className={`w-full flex items-start gap-2.5 px-4 py-2 text-left transition-all ${isLck ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-50/60 cursor-pointer'}`}
+                    className={`w-full flex items-start gap-2.5 px-4 py-2 text-left transition-all ${isLck ? 'opacity-40 cursor-not-allowed' : 'hover:bg-clay/10/60 cursor-pointer'}`}
                     style={{
                       backgroundColor: isSel
-                        ? '#eff6ff'
+                        ? '#f3ece6'
                         : (!isLck && overlay?.annotation === 'recommended')
                           ? '#f0f7ff'
                           : 'transparent',
                       borderLeft: isSel
-                        ? '3px solid #2563eb'
+                        ? '3px solid #b5613d'
                         : (!isLck && overlay?.annotation === 'recommended')
-                          ? '3px solid #2563eb'
+                          ? '3px solid #b5613d'
                           : overlay?.is_weak_topic
                             ? '3px solid #f97316'
                             : '3px solid transparent',
@@ -186,17 +186,17 @@ export const PersonalizedCourseSidebar: React.FC<PersonalizedCourseSidebarProps>
                     <div className="flex-shrink-0 mt-0.5">
                       {sKey === 'completed' ? <CheckCircle size={14} color="#22c55e" />
                         : isSel ? (
-                          <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center" style={{ borderColor: '#2563eb', backgroundColor: '#2563eb' }}>
+                          <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center" style={{ borderColor: '#b5613d', backgroundColor: '#b5613d' }}>
                             <div className="w-1.5 h-1.5 rounded-full bg-white" />
                           </div>
                         ) : isLck ? <Lock size={14} color="#94a3b8" />
                           : <div
                               className="w-3.5 h-3.5 rounded-full border-2"
-                              style={{ borderColor: overlay?.annotation === 'recommended' ? '#2563eb' : overlay?.is_weak_topic ? '#f97316' : '#cbd5e1' }}
+                              style={{ borderColor: overlay?.annotation === 'recommended' ? '#b5613d' : overlay?.is_weak_topic ? '#f97316' : '#cbd5e1' }}
                             />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="truncate" style={{ fontSize: '14px', fontWeight: isSel ? 600 : 400, color: isSel ? '#1e40af' : '#1e293b' }}>
+                      <p className="truncate" style={{ fontSize: '14px', fontWeight: isSel ? 600 : 400, color: isSel ? '#8c4a2f' : '#1e293b' }}>
                         {ai + 1}. {aTitle}
                       </p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-0.5">

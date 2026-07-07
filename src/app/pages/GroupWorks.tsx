@@ -35,7 +35,7 @@ type CourseGroupWork = {
 };
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-  submitted:     { label: "Submitted",     color: "#2563eb", bg: "#eff6ff", icon: CheckCircle },
+  submitted:     { label: "Submitted",     color: "#b5613d", bg: "#f3ece6", icon: CheckCircle },
   graded:        { label: "Graded",        color: "#16a34a", bg: "#f0fdf4", icon: CheckCircle },
   not_submitted: { label: "Not submitted", color: "#f59e0b", bg: "#fffbeb", icon: Clock },
 };
@@ -70,8 +70,8 @@ function TaskCard({ task }: { task: GroupTask }) {
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left cursor-pointer hover:bg-slate-50 transition-colors rounded-xl"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#eff6ff" }}>
-            <FileText size={18} style={{ color: "#2563eb" }} />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#f3ece6" }}>
+            <FileText size={18} style={{ color: "#b5613d" }} />
           </div>
           <div className="min-w-0">
             <p className="truncate" style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>{task.title}</p>
@@ -105,7 +105,7 @@ function TaskCard({ task }: { task: GroupTask }) {
                 >
                   <div className="min-w-0">
                     <p className="truncate" style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>
-                      {s.student_name}{s.is_mine && <span style={{ color: "#2563eb", fontWeight: 500 }}> (You)</span>}
+                      {s.student_name}{s.is_mine && <span style={{ color: "#b5613d", fontWeight: 500 }}> (You)</span>}
                     </p>
                     <span style={{ fontSize: "11px", color: "#64748b" }}>
                       {s.submitted_at ? fmtDate(s.submitted_at) : "—"}
@@ -162,7 +162,7 @@ export function GroupWorks() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={24} className="animate-spin" style={{ color: "#2563eb" }} />
+          <Loader2 size={24} className="animate-spin" style={{ color: "#b5613d" }} />
         </div>
       ) : data.length === 0 ? (
         <div className="rounded-xl border p-10 text-center" style={{ borderColor: "#e2e8f0" }}>
@@ -184,7 +184,7 @@ export function GroupWorks() {
                 </div>
                 <span
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full flex-shrink-0"
-                  style={{ fontSize: "12px", fontWeight: 600, color: "#7c3aed", backgroundColor: "#f5f3ff" }}
+                  style={{ fontSize: "12px", fontWeight: 600, color: "#8c4a2f", backgroundColor: "#f4ece7" }}
                 >
                   <Users size={13} /> {course.group_name}
                 </span>

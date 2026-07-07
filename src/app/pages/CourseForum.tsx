@@ -15,7 +15,7 @@ const STATIC_CATEGORIES = ["All Topics", "General", "Q&A", "Study Groups", "Proj
 
 const catColors: Record<string, { bg: string; text: string }> = {
   Announcements: { bg: "#fef2f2", text: "#dc2626" },
-  "Q&A":         { bg: "#eff6ff", text: "#2563eb" },
+  "Q&A":         { bg: "#f3ece6", text: "#b5613d" },
   "Study Groups": { bg: "#f0fdf4", text: "#16a34a" },
   Projects:      { bg: "#fdf4ff", text: "#9333ea" },
   General:       { bg: "#f8fafc", text: "#475569" },
@@ -169,7 +169,7 @@ export function CourseForum() {
   });
 
   if (loading) {
-    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;
+    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} /></div>;
   }
 
   return (
@@ -185,7 +185,7 @@ export function CourseForum() {
           onClick={() => setShowComposer(true)}
           disabled={!selectedActivity}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-all disabled:opacity-50"
-          style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#2563eb", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}
+          style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#b5613d", boxShadow: "0 2px 8px rgba(181,97,61,0.3)" }}
         >
           <Plus size={15} />
           New Thread
@@ -197,7 +197,7 @@ export function CourseForum() {
         <select
           value={selectedCourse}
           onChange={e => setSelectedCourse(e.target.value)}
-          className="px-3 py-2 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="px-3 py-2 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-clay"
           style={{ borderColor: "#e2e8f0", color: "#1e293b" }}
         >
           {enrolledCourses.length === 0 && <option value="">No enrolled courses</option>}
@@ -211,7 +211,7 @@ export function CourseForum() {
           <select
             value={selectedActivity}
             onChange={e => setSelectedActivity(e.target.value)}
-            className="px-3 py-2 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="px-3 py-2 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-clay"
             style={{ borderColor: "#e2e8f0", color: "#1e293b" }}
           >
             {forumActivities.map((a, i) => (
@@ -231,7 +231,7 @@ export function CourseForum() {
           placeholder="Search forum threads..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
+          className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl border focus:outline-none focus:ring-2 focus:ring-clay/30 focus:border-clay transition-all"
           style={{ fontSize: "13px", borderColor: "#e2e8f0" }}
         />
       </div>
@@ -246,9 +246,9 @@ export function CourseForum() {
             style={{
               fontSize: "12px",
               fontWeight: activeCategory === cat ? 600 : 400,
-              backgroundColor: activeCategory === cat ? "#1e3a8a" : "white",
+              backgroundColor: activeCategory === cat ? "#8c4a2f" : "white",
               color: activeCategory === cat ? "white" : "#475569",
-              borderColor: activeCategory === cat ? "#1e3a8a" : "#e2e8f0",
+              borderColor: activeCategory === cat ? "#8c4a2f" : "#e2e8f0",
             }}
           >
             {cat}
@@ -258,7 +258,7 @@ export function CourseForum() {
 
       {/* Thread List */}
       {threadsLoading ? (
-        <div className="flex items-center justify-center py-12"><Loader2 size={22} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+        <div className="flex items-center justify-center py-12"><Loader2 size={22} className="animate-spin" style={{ color: "#b5613d" }} /></div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <MessageSquare size={32} style={{ color: "#cbd5e1", margin: "0 auto 12px" }} />
@@ -291,19 +291,19 @@ export function CourseForum() {
                 key={tid}
                 onClick={() => openThreadDetail(thread)}
                 className="bg-white rounded-2xl p-4 cursor-pointer transition-all hover:-translate-y-0.5"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)", borderLeft: pinned ? "3px solid #2563eb" : "none" }}
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)", borderLeft: pinned ? "3px solid #b5613d" : "none" }}
               >
                 <div className="flex items-start gap-4">
                   {avatar ? (
                     <img src={avatar} alt={author} className="w-10 h-10 rounded-full object-cover flex-shrink-0 mt-0.5" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: "#2563eb" }}>
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: "#b5613d" }}>
                       {author.slice(0, 2).toUpperCase()}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      {pinned && <span className="flex items-center gap-0.5 text-blue-600" style={{ fontSize: "10px", fontWeight: 600 }}><Pin size={10} /> Pinned</span>}
+                      {pinned && <span className="flex items-center gap-0.5 text-clay" style={{ fontSize: "10px", fontWeight: 600 }}><Pin size={10} /> Pinned</span>}
                       {resolved && <span className="flex items-center gap-0.5 text-green-600" style={{ fontSize: "10px", fontWeight: 600 }}><CheckCircle size={10} /> Resolved</span>}
                       <span className="px-2 py-0.5 rounded-md" style={{ fontSize: "10px", fontWeight: 600, ...catStyle }}>{cat}</span>
                       {course && <span className="px-2 py-0.5 rounded-md" style={{ fontSize: "10px", backgroundColor: "#f1f5f9", color: "#475569" }}>{course}</span>}
@@ -314,7 +314,7 @@ export function CourseForum() {
                       <span style={{ fontSize: "11px", color: "#94a3b8" }}>
                         by <span style={{ fontWeight: 500, color: "#475569" }}>{author}</span>
                         {authorRole.toLowerCase() === "instructor" && (
-                          <span className="ml-1 px-1.5 py-0.5 rounded text-blue-600" style={{ fontSize: "9px", fontWeight: 700, backgroundColor: "#eff6ff" }}>INSTRUCTOR</span>
+                          <span className="ml-1 px-1.5 py-0.5 rounded text-clay" style={{ fontSize: "9px", fontWeight: 700, backgroundColor: "#f3ece6" }}>INSTRUCTOR</span>
                         )}
                       </span>
                       <div className="flex items-center gap-1 text-slate-400" style={{ fontSize: "11px" }}><Clock size={11} />{timeLabel}</div>
@@ -343,7 +343,7 @@ export function CourseForum() {
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1" style={{ minHeight: "120px" }}>
               {postsLoading ? (
-                <div className="flex items-center justify-center py-8"><Loader2 size={20} className="animate-spin" style={{ color: "#2563eb" }} /></div>
+                <div className="flex items-center justify-center py-8"><Loader2 size={20} className="animate-spin" style={{ color: "#b5613d" }} /></div>
               ) : posts.length === 0 ? (
                 <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center", padding: "16px" }}>No posts yet.</p>
               ) : (
@@ -358,7 +358,7 @@ export function CourseForum() {
                   return (
                     <div key={String(p.id ?? pi)} className="rounded-2xl p-3" style={{ backgroundColor: "#f8fafc", marginLeft: depth > 0 ? `${Math.min(depth, 4) * 16}px` : 0 }}>
                       <div className="flex items-center gap-2 mb-1">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#2563eb" }}>{author.slice(0, 2).toUpperCase()}</div>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#b5613d" }}>{author.slice(0, 2).toUpperCase()}</div>
                         <span style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b" }}>{author}</span>
                         {when && <span style={{ fontSize: "10px", color: "#94a3b8" }}>{timeAgo(when)}</span>}
                       </div>
@@ -390,7 +390,7 @@ export function CourseForum() {
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
                       rows={2}
-                      className="flex-1 rounded-2xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className="flex-1 rounded-2xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-clay/30"
                       style={{ borderColor: "#e2e8f0", fontSize: "13px", backgroundColor: "#f8fafc" }}
                       placeholder="Write a reply…"
                     />
@@ -400,7 +400,7 @@ export function CourseForum() {
                       disabled={(!replyText.trim() && !replyAudio) || replying}
                       onClick={handleReply}
                       className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white disabled:opacity-60"
-                      style={{ fontSize: "12px", fontWeight: 600, background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
+                      style={{ fontSize: "12px", fontWeight: 600, background: "linear-gradient(135deg, #a1542f, #b5613d)" }}
                     >
                       {replying ? <Loader2 size={13} className="animate-spin" /> : null}
                       Reply
@@ -434,7 +434,7 @@ export function CourseForum() {
                   type="text"
                   value={newThread.title}
                   onChange={(e) => setNewThread(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full rounded-2xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  className="w-full rounded-2xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-clay/30"
                   style={{ borderColor: "#e2e8f0", fontSize: "13px" }}
                   placeholder="e.g. Need clarity on gradient descent intuition?"
                 />
@@ -449,9 +449,9 @@ export function CourseForum() {
                       onClick={() => setNewThread(prev => ({ ...prev, category: cat }))}
                       className="px-3 py-1.5 rounded-xl border transition-all"
                       style={{ fontSize: "11px", fontWeight: newThread.category === cat ? 600 : 500,
-                        backgroundColor: newThread.category === cat ? "#2563eb" : "white",
+                        backgroundColor: newThread.category === cat ? "#b5613d" : "white",
                         color: newThread.category === cat ? "white" : "#475569",
-                        borderColor: newThread.category === cat ? "#2563eb" : "#e2e8f0" }}
+                        borderColor: newThread.category === cat ? "#b5613d" : "#e2e8f0" }}
                     >{cat}</button>
                   ))}
                 </div>
@@ -469,7 +469,7 @@ export function CourseForum() {
                   value={newThread.details}
                   onChange={(e) => setNewThread(prev => ({ ...prev, details: e.target.value }))}
                   rows={4}
-                  className="w-full rounded-2xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  className="w-full rounded-2xl border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-clay/30"
                   style={{ borderColor: "#e2e8f0", fontSize: "12px", backgroundColor: "#f8fafc" }}
                   placeholder="Share what you've tried, links, or what kind of support you're after."
                 />
@@ -495,7 +495,7 @@ export function CourseForum() {
                   disabled={!newThread.title.trim() || submitting}
                   onClick={handlePublish}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white disabled:opacity-60"
-                  style={{ fontSize: "12px", fontWeight: 600, background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
+                  style={{ fontSize: "12px", fontWeight: 600, background: "linear-gradient(135deg, #a1542f, #b5613d)" }}
                 >
                   {submitting ? <Loader2 size={13} className="animate-spin" /> : null}
                   Publish Thread

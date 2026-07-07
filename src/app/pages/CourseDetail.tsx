@@ -85,7 +85,7 @@ export default function CourseDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export default function CourseDetail() {
         <button
           onClick={() => navigate(-1)}
           className="mt-4 px-4 py-2 rounded-xl text-white transition-all"
-          style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#2563eb" }}
+          style={{ fontSize: "13px", fontWeight: 600, backgroundColor: "#b5613d" }}
         >
           Go Back
         </button>
@@ -141,7 +141,7 @@ export default function CourseDetail() {
           ) : (
             <div
               className="w-full h-full flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #2563eb, #1d4ed8)" }}
+              style={{ background: "linear-gradient(135deg, #b5613d, #a1542f)" }}
             >
               <BookOpen size={48} color="rgba(255,255,255,0.6)" />
             </div>
@@ -156,7 +156,7 @@ export default function CourseDetail() {
               style={{
                 fontSize: "11px",
                 fontWeight: 700,
-                backgroundColor: "#2563eb",
+                backgroundColor: "#b5613d",
                 padding: "2px 8px",
                 borderRadius: "6px",
               }}
@@ -177,13 +177,13 @@ export default function CourseDetail() {
           <div className="flex flex-wrap items-center gap-4 mb-4">
             {duration && (
               <div className="flex items-center gap-1" style={{ fontSize: "13px", color: "#64748b" }}>
-                <Clock size={14} color="#2563eb" />
+                <Clock size={14} color="#b5613d" />
                 <span>{duration}</span>
               </div>
             )}
             {students > 0 && (
               <div className="flex items-center gap-1" style={{ fontSize: "13px", color: "#64748b" }}>
-                <Users size={14} color="#2563eb" />
+                <Users size={14} color="#b5613d" />
                 <span>{students.toLocaleString()} students</span>
               </div>
             )}
@@ -212,7 +212,7 @@ export default function CourseDetail() {
                 disabled={enrolling}
                 onClick={goToLessons}
                 className="w-full sm:w-auto px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60"
-                style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#2563eb", color: "#fff" }}
+                style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#b5613d", color: "#fff" }}
               >
                 <PlayCircle size={16} />
                 Continue Learning →
@@ -231,7 +231,7 @@ export default function CourseDetail() {
               disabled={enrolling}
               onClick={handleEnroll}
               className="mt-5 w-full sm:w-auto px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60"
-              style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#2563eb", color: "#fff", border: "none" }}
+              style={{ fontSize: "14px", fontWeight: 600, backgroundColor: "#b5613d", color: "#fff", border: "none" }}
             >
               {enrolling ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -256,7 +256,7 @@ export default function CourseDetail() {
             className="flex items-center gap-2 mb-4"
             style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b" }}
           >
-            <GraduationCap size={20} color="#2563eb" />
+            <GraduationCap size={20} color="#b5613d" />
             Course Content
           </h2>
           <div className="space-y-3">
@@ -268,9 +268,9 @@ export default function CourseDetail() {
               >
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "#eff6ff" }}
+                  style={{ backgroundColor: "#f3ece6" }}
                 >
-                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#2563eb" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#b5613d" }}>
                     {idx + 1}
                   </span>
                 </div>

@@ -39,7 +39,7 @@ export const DeepFocusPlayer: React.FC<DeepFocusPlayerProps> = ({ content, confi
         hasConnections ? (
           <button
             onClick={() => setShowConnections(v => !v)}
-            className="flex items-center gap-1.5 text-[12px] font-medium text-indigo-700 transition-colors hover:text-indigo-900"
+            className="flex items-center gap-1.5 text-[12px] font-medium text-clay transition-colors hover:text-clay-deep"
           >
             <Network className="h-3.5 w-3.5" />
             {showConnections ? 'Hide connections' : 'Key connections'}
@@ -48,14 +48,14 @@ export const DeepFocusPlayer: React.FC<DeepFocusPlayerProps> = ({ content, confi
       }
       banner={
         showConnections && hasConnections ? (
-          <div className="mx-6 mt-4 rounded-xl border border-indigo-200/70 bg-indigo-50/50 px-5 py-4 sm:mx-8">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-700">
+          <div className="mx-6 mt-4 rounded-xl border border-clay/30/70 bg-clay/10/50 px-5 py-4 sm:mx-8">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-clay">
               How the ideas connect
             </p>
             <ul className="space-y-2">
               {connectionSentences.map((s, i) => (
                 <li key={i} className="flex gap-2 text-sm leading-snug text-stone-700">
-                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-clay" />
                   <span>{s}</span>
                 </li>
               ))}

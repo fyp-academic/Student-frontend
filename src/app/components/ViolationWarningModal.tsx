@@ -81,7 +81,7 @@ export default function ViolationWarningModal({ violation, warningCount, onAckno
           <button
             onClick={onAcknowledge}
             className={`w-full py-3 rounded-xl font-bold text-white transition-colors ${
-              isCritical ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+              isCritical ? 'bg-red-600 hover:bg-red-700' : 'bg-clay hover:bg-clay-deep'
             }`}
           >
             I Understand — Continue

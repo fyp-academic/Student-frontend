@@ -237,7 +237,7 @@ export function NotificationPreferences() {
     return (
       <div className="bg-white rounded-2xl p-5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
         <div className="flex items-center justify-center py-8">
-          <Loader2 size={24} className="animate-spin text-blue-600" />
+          <Loader2 size={24} className="animate-spin text-clay" />
         </div>
       </div>
     );
@@ -251,7 +251,7 @@ export function NotificationPreferences() {
     return (
       <div
         key={type}
-        className="p-3 rounded-xl border transition-all hover:border-blue-200"
+        className="p-3 rounded-xl border transition-all hover:border-clay/30"
         style={{
           borderColor: '#e2e8f0',
           backgroundColor: globalMute ? '#f8fafc' : 'white',
@@ -261,9 +261,9 @@ export function NotificationPreferences() {
         <div className="flex items-start gap-3">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: '#eff6ff' }}
+            style={{ backgroundColor: '#f3ece6' }}
           >
-            <Icon size={16} color="#2563eb" />
+            <Icon size={16} color="#b5613d" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
@@ -280,14 +280,14 @@ export function NotificationPreferences() {
                       disabled={globalMute}
                       className="p-1.5 rounded-md transition-all"
                       style={{
-                        backgroundColor: enabled ? '#eff6ff' : 'transparent',
+                        backgroundColor: enabled ? '#f3ece6' : 'transparent',
                         opacity: globalMute ? 0.4 : 1,
                       }}
                       title={CHANNEL_LABELS[channel]}
                     >
                       <ChannelIcon
                         size={14}
-                        color={enabled ? '#2563eb' : '#94a3b8'}
+                        color={enabled ? '#b5613d' : '#94a3b8'}
                       />
                     </button>
                   );
@@ -306,7 +306,7 @@ export function NotificationPreferences() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Bell size={18} color="#2563eb" />
+          <Bell size={18} color="#b5613d" />
           <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b' }}>
             Notification Preferences
           </h3>
@@ -322,7 +322,7 @@ export function NotificationPreferences() {
             variant="ghost"
             size="sm"
             onClick={handleReset}
-            className="text-slate-500 hover:text-blue-600"
+            className="text-slate-500 hover:text-clay-deep"
           >
             <RotateCcw size={14} className="mr-1" />
             Reset
@@ -376,7 +376,7 @@ export function NotificationPreferences() {
       {/* Essential Notifications */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-3">
-          <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 text-xs">
+          <Badge variant="outline" className="text-clay border-clay/30 bg-clay/10 text-xs">
             Essential
           </Badge>
           <span style={{ fontSize: '12px', color: '#64748b' }}>Important alerts about your learning</span>
@@ -406,7 +406,7 @@ export function NotificationPreferences() {
         className="w-full"
         style={{
           background: hasChanges
-            ? 'linear-gradient(135deg, #1d4ed8, #2563eb)'
+            ? 'linear-gradient(135deg, #a1542f, #b5613d)'
             : 'linear-gradient(135deg, #94a3b8, #cbd5e1)',
         }}
       >

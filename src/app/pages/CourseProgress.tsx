@@ -7,7 +7,7 @@ import { useAiWidgetContext } from "../context/AiWidgetContext";
 
 type EnrollRow = Record<string, unknown>;
 
-const COLORS = ["#2563eb","#7c3aed","#059669","#0891b2","#22c55e","#f59e0b","#dc2626"];
+const COLORS = ["#b5613d","#8c4a2f","#059669","#0891b2","#22c55e","#f59e0b","#dc2626"];
 
 const gradeFromProgress = (p: number) =>
   p >= 97 ? "A+" : p >= 93 ? "A" : p >= 90 ? "A-" :
@@ -15,7 +15,7 @@ const gradeFromProgress = (p: number) =>
   p >= 70 ? "C" : p > 0 ? "D" : "—";
 
 const gradeColor = (g: string) =>
-  g.startsWith("A") ? "#16a34a" : g.startsWith("B") ? "#2563eb" : g === "—" ? "#94a3b8" : "#f59e0b";
+  g.startsWith("A") ? "#16a34a" : g.startsWith("B") ? "#b5613d" : g === "—" ? "#94a3b8" : "#f59e0b";
 
 export function CourseProgress() {
   const [enrollments, setEnrollments] = useState<EnrollRow[]>([]);
@@ -53,7 +53,7 @@ export function CourseProgress() {
   }, [refreshTrigger]);
 
   if (loading) {
-    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#2563eb" }} /></div>;
+    return <div className="flex items-center justify-center py-24"><Loader2 size={28} className="animate-spin" style={{ color: "#b5613d" }} /></div>;
   }
 
   const courseProgress = enrollments.map((e, i) => {
@@ -90,10 +90,10 @@ export function CourseProgress() {
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Overall Progress",  value: `${overallProgress}%`,        icon: TrendingUp, color: "#2563eb", bg: "#eff6ff", sub: undefined },
+          { label: "Overall Progress",  value: `${overallProgress}%`,        icon: TrendingUp, color: "#b5613d", bg: "#f3ece6", sub: undefined },
           { label: "Enrolled Courses",  value: `${courseProgress.length}`,   icon: BookOpen,   color: "#22c55e", bg: "#f0fdf4", sub: "courses" },
           { label: "Completed",          value: `${courseProgress.filter(c => c.progress >= 100).length}`, icon: Target, color: "#059669", bg: "#f0fdf4", sub: "100%" },
-          { label: "Avg. Progress",      value: `${overallProgress}%`,        icon: Award,      color: "#7c3aed", bg: "#fdf4ff", sub: undefined },
+          { label: "Avg. Progress",      value: `${overallProgress}%`,        icon: Award,      color: "#8c4a2f", bg: "#fdf4ff", sub: undefined },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl p-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
             <div className="flex items-center gap-3 mb-2">

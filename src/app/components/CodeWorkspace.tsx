@@ -98,7 +98,7 @@ export default function CodeWorkspace({
             onClick={() => setActive(t.key)}
             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
               active === t.key
-                ? 'bg-blue-600 text-white'
+                ? 'bg-clay text-white'
                 : 'text-gray-600 hover:bg-gray-200'
             }`}
           >

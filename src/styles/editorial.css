@@ -119,6 +119,63 @@
     font-weight: 560;
   }
 
+  /* ---- Dashboard surface helpers (editorial system, token-driven so they
+       flip automatically in dark mode). Keep the authed UI terse + consistent. ---- */
+  .ed-card {
+    background-color: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-1);
+  }
+
+  /* Primary pill button — ink surface, paper text, clay on hover. */
+  .ed-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--ink);
+    color: var(--paper);
+    padding: 0.5rem 1.1rem;
+    font-weight: 560;
+    line-height: 1;
+    transition: background-color 0.25s var(--ease-editorial), color 0.25s var(--ease-editorial);
+  }
+  .ed-btn:hover {
+    background-color: var(--clay-deep);
+    color: #fff;
+  }
+
+  /* Secondary / ghost pill — outlined, clay accent on hover. */
+  .ed-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    background-color: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 0.5rem 1.1rem;
+    font-weight: 560;
+    line-height: 1;
+    transition: border-color 0.25s var(--ease-editorial), color 0.25s var(--ease-editorial);
+  }
+  .ed-btn-ghost:hover {
+    border-color: var(--clay);
+    color: var(--clay);
+  }
+
+  /* Stat / KPI tile. */
+  .ed-stat {
+    background-color: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-1);
+    padding: 1.25rem;
+  }
+
   .link-underline {
     background-image: linear-gradient(currentColor, currentColor);
     background-size: 0% 1px;

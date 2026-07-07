@@ -16,7 +16,10 @@ import {
   Zap,
   ShieldCheck,
   AlertTriangle,
+  LayoutGrid,
+  List,
 } from "lucide-react";
+import { resolveAssetUrl } from "../components/ui/utils";
 import {
   BarChart,
   Bar,
@@ -34,13 +37,16 @@ import {
 // Warm editorial accent palette (clay + ochre + muted ink) for course tiles.
 const COLORS = ["#b5613d", "#8c4a2f", "#c98a2e", "#6b655c", "#a0553a"];
 
+// White surface matching the sidebar — plain white with a hairline border.
+const CARD = "bg-white border border-line rounded-[18px] shadow-editorial-1";
+
 const URL_RE = /(https?:\/\/[^\s→"'\]]+)/g;
 function linkifyBody(text: string) {
   const parts = text.split(URL_RE);
   return parts.map((part, i) =>
     URL_RE.test(part) ? (
       <a key={i} href={part} target="_blank" rel="noopener noreferrer"
-        style={{ color: "rgba(255,255,255,0.95)", textDecoration: "underline", wordBreak: "break-all" }}>
+        style={{ color: "#b5613d", textDecoration: "underline", wordBreak: "break-all" }}>
         {part}
       </a>
     ) : (
@@ -55,6 +61,7 @@ export function Dashboard() {
   const { refreshTrigger } = useRealtime();
   const [hub,     setHub]     = useState<Record<string, unknown> | null>(null);
   const [courses, setCourses] = useState<Record<string, unknown>[]>([]);
+  const [courseView, setCourseView] = useState<'grid' | 'list'>('grid');
 
   const loadDashboard = () => {
     dashboardApi.studentHub()
@@ -80,6 +87,7 @@ export function Dashboard() {
     id:         String(c.id),
     code:       String(c.short_name ?? c.shortName ?? ''),
     title:      String(c.name ?? ''),
+    image:      String(c.image ?? c.image_url ?? ''),
     instructor: String(c.instructor_name ?? c.instructor ?? ''),
     progress:   Number(c.completion_rate ?? 0),
     color:      COLORS[i % COLORS.length],
@@ -99,39 +107,36 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="bg-ink text-paper rounded-[18px] p-6 relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className={`${CARD} p-6`}>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <p className="eyebrow" style={{ color: "rgba(243,239,231,0.65)" }}>
+            <p className="eyebrow">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
-            <h1 className="font-display ed-display text-paper mt-2 text-step-5">
+            <h1 className="font-display ed-display text-ink mt-2 text-step-5">
               Welcome back, {firstName}!
             </h1>
-            <p className="text-step-2 mt-1" style={{ color: "rgba(243,239,231,0.8)" }}>
-              You have <span className="text-paper font-semibold">{pendingCount} pending tasks</span> across your enrolled courses.
+            <p className="text-step-2 mt-1 text-ink-2">
+              You have <span className="text-ink font-semibold">{pendingCount} pending tasks</span> across your enrolled courses.
             </p>
             {!!hub?.streak_days && (
               <div className="flex items-center gap-4 mt-3">
                 <div className="flex items-center gap-1.5">
                   <Flame size={15} className="text-clay" />
-                  <span className="text-step-1" style={{ color: "rgba(243,239,231,0.85)" }}>{String(hub.streak_days)}-day streak!</span>
+                  <span className="text-step-1 text-ink-2">{String(hub.streak_days)}-day streak!</span>
                 </div>
               </div>
             )}
           </div>
           <div className="flex gap-3">
-            <NavLink to="/my-courses" className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-paper text-ink text-step-1 font-semibold transition-colors hover:bg-clay hover:text-white">
+            <NavLink to="/my-courses" className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-clay text-white text-step-1 font-semibold transition-colors hover:bg-clay-deep">
               My Courses <ArrowRight size={14} />
             </NavLink>
-            <NavLink to="/assignments" className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-paper/30 text-paper text-step-1 transition-colors hover:bg-paper/10">
-              Tasks <span className="bg-paper/20 rounded-full px-1.5" style={{ fontSize: "11px" }}>{pendingCount}</span>
+            <NavLink to="/assignments" className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-line text-ink text-step-1 transition-colors hover:border-clay hover:text-clay">
+              Tasks <span className="bg-clay/15 text-clay rounded-full px-1.5" style={{ fontSize: "11px" }}>{pendingCount}</span>
             </NavLink>
           </div>
         </div>
-        {/* Decorative circles */}
-        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full opacity-[0.06]" style={{ backgroundColor: "#f6f3ee" }} />
-        <div className="absolute -right-4 -bottom-14 w-36 h-36 rounded-full opacity-[0.06]" style={{ backgroundColor: "#f6f3ee" }} />
       </div>
 
       {/* Main Content Grid */}
@@ -140,57 +145,123 @@ export function Dashboard() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-step-3 text-ink">Continue Learning</h2>
-            <NavLink to="/my-courses" className="flex items-center gap-1 text-clay hover:text-clay-deep transition-colors text-step-1">
-              View all <ChevronRight size={14} />
-            </NavLink>
-          </div>
-          <div className="space-y-3">
-            {recentCourses.map((course) => (
-              <div key={course.id} className="ed-card overflow-hidden flex transition-transform hover:-translate-y-0.5">
-                <div className="w-24 flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: `${course.color}1f` }}>
-                  <span className="font-bold" style={{ fontSize: "11px", color: course.color }}>{course.code || 'COURSE'}</span>
-                </div>
-                <div className="flex-1 p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span
-                        className="inline-block px-2 py-0.5 rounded-full text-white"
-                        style={{ fontSize: "10px", backgroundColor: course.color, fontWeight: 600 }}
-                      >
-                        {course.code}
-                      </span>
-                      <p className="mt-1 text-ink text-step-2" style={{ fontWeight: 600 }}>
-                        {course.title}
-                      </p>
-                      <p className="text-ink-2" style={{ fontSize: "12px" }}>{course.instructor}</p>
-                    </div>
-                    <span className="font-display" style={{ fontSize: "20px", fontWeight: 500, color: course.color, flexShrink: 0 }}>
-                      {course.progress}%
-                    </span>
-                  </div>
-                  <div className="mt-2.5">
-                    <div className="h-1.5 rounded-full overflow-hidden bg-line/60">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${course.progress}%`, backgroundColor: course.color }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-ink-2" style={{ fontSize: "11px" }}>
-                        {course.progress}% complete
-                      </span>
-                      <span className="text-ink-2/70" style={{ fontSize: "11px" }}>
-                        {course.lessonsLeft > 0 ? `${course.lessonsLeft} left` : 'Done'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            <div className="flex items-center gap-3">
+              {/* Grid / list layout toggle */}
+              <div className="flex items-center rounded-full border border-line overflow-hidden">
+                <button
+                  onClick={() => setCourseView('grid')}
+                  title="Grid view"
+                  aria-pressed={courseView === 'grid'}
+                  className={`p-1.5 transition-colors ${courseView === 'grid' ? 'bg-clay text-white' : 'text-ink-2 hover:bg-black/5'}`}
+                >
+                  <LayoutGrid size={15} />
+                </button>
+                <button
+                  onClick={() => setCourseView('list')}
+                  title="List view"
+                  aria-pressed={courseView === 'list'}
+                  className={`p-1.5 transition-colors ${courseView === 'list' ? 'bg-clay text-white' : 'text-ink-2 hover:bg-black/5'}`}
+                >
+                  <List size={15} />
+                </button>
               </div>
-            ))}
+              <NavLink to="/my-courses" className="flex items-center gap-1 text-clay hover:text-clay-deep transition-colors text-step-1">
+                View all <ChevronRight size={14} />
+              </NavLink>
+            </div>
           </div>
 
+          {recentCourses.length === 0 ? (
+            <div className={`${CARD} p-6 text-center text-ink-2 text-step-1`}>No courses yet.</div>
+          ) : courseView === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {recentCourses.map((course) => (
+                <div key={course.id} className={`${CARD} overflow-hidden flex flex-col transition-transform hover:-translate-y-0.5`}>
+                  {/* Course image */}
+                  <div className="h-28 w-full relative overflow-hidden" style={{ backgroundColor: `${course.color}1f` }}>
+                    {course.image ? (
+                      <img src={resolveAssetUrl(course.image)} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <BookOpen size={26} style={{ color: course.color }} />
+                      </div>
+                    )}
+                    <span
+                      className="absolute top-2 left-2 inline-block px-2 py-0.5 rounded-full text-white"
+                      style={{ fontSize: "10px", backgroundColor: course.color, fontWeight: 600 }}
+                    >
+                      {course.code || 'COURSE'}
+                    </span>
+                  </div>
+                  <div className="flex-1 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-ink text-step-2 truncate" style={{ fontWeight: 600 }}>{course.title}</p>
+                        <p className="text-ink-2 truncate" style={{ fontSize: "12px" }}>{course.instructor}</p>
+                      </div>
+                      <span className="font-display" style={{ fontSize: "18px", fontWeight: 500, color: course.color, flexShrink: 0 }}>
+                        {course.progress}%
+                      </span>
+                    </div>
+                    <div className="mt-2.5">
+                      <div className="h-1.5 rounded-full overflow-hidden bg-line/60">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${course.progress}%`, backgroundColor: course.color }} />
+                      </div>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <span className="text-ink-2" style={{ fontSize: "11px" }}>{course.progress}% complete</span>
+                        <span className="text-ink-2/70" style={{ fontSize: "11px" }}>{course.lessonsLeft > 0 ? `${course.lessonsLeft} left` : 'Done'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentCourses.map((course) => (
+                <div key={course.id} className={`${CARD} overflow-hidden flex transition-transform hover:-translate-y-0.5`}>
+                  <div className="w-28 flex-shrink-0 relative overflow-hidden" style={{ backgroundColor: `${course.color}1f` }}>
+                    {course.image ? (
+                      <img src={resolveAssetUrl(course.image)} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="font-bold" style={{ fontSize: "11px", color: course.color }}>{course.code || 'COURSE'}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span
+                          className="inline-block px-2 py-0.5 rounded-full text-white"
+                          style={{ fontSize: "10px", backgroundColor: course.color, fontWeight: 600 }}
+                        >
+                          {course.code}
+                        </span>
+                        <p className="mt-1 text-ink text-step-2 truncate" style={{ fontWeight: 600 }}>{course.title}</p>
+                        <p className="text-ink-2 truncate" style={{ fontSize: "12px" }}>{course.instructor}</p>
+                      </div>
+                      <span className="font-display" style={{ fontSize: "20px", fontWeight: 500, color: course.color, flexShrink: 0 }}>
+                        {course.progress}%
+                      </span>
+                    </div>
+                    <div className="mt-2.5">
+                      <div className="h-1.5 rounded-full overflow-hidden bg-line/60">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${course.progress}%`, backgroundColor: course.color }} />
+                      </div>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <span className="text-ink-2" style={{ fontSize: "11px" }}>{course.progress}% complete</span>
+                        <span className="text-ink-2/70" style={{ fontSize: "11px" }}>{course.lessonsLeft > 0 ? `${course.lessonsLeft} left` : 'Done'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Weekly Study Hours Chart */}
-          <div className="ed-card p-5">
+          <div className={`${CARD} p-5`}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-step-2 text-ink">Weekly Study Hours</h2>
               <span
@@ -219,17 +290,17 @@ export function Dashboard() {
         {/* Right Column */}
         <div className="space-y-4">
           {/* AI Nudge Card */}
-          <div className="bg-ink text-paper rounded-[18px] p-5 relative overflow-hidden">
-            <div className="relative">
+          <div className={`${CARD} p-5`}>
+            <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-clay">
                     <BookOpen size={15} color="white" />
                   </div>
                   <div>
-                    <p className="text-paper" style={{ fontSize: "13px", fontWeight: 700 }}>Message from Your Instructor</p>
+                    <p className="text-ink" style={{ fontSize: "13px", fontWeight: 700 }}>Message from Your Instructor</p>
                     {aiNudge?.sent_at && (
-                      <p style={{ fontSize: "10px", color: "rgba(243,239,231,0.6)" }}>{aiNudge.sent_at}</p>
+                      <p className="text-ink-2/70" style={{ fontSize: "10px" }}>{aiNudge.sent_at}</p>
                     )}
                   </div>
                 </div>
@@ -237,21 +308,20 @@ export function Dashboard() {
 
               {aiNudge ? (
                 <>
-                  <p style={{ fontSize: "12px", fontWeight: 600, color: "rgba(243,239,231,0.92)", marginBottom: "8px", lineHeight: "1.5" }}>
+                  <p className="text-ink" style={{ fontSize: "12px", fontWeight: 600, marginBottom: "8px", lineHeight: "1.5" }}>
                     {aiNudge.title}
                   </p>
-                  <p style={{ fontSize: "11px", color: "rgba(243,239,231,0.78)", lineHeight: "1.7", whiteSpace: "pre-line", maxHeight: "260px", overflowY: "auto", paddingRight: "4px" }}>
+                  <p className="text-ink-2" style={{ fontSize: "11px", lineHeight: "1.7", whiteSpace: "pre-line", maxHeight: "260px", overflowY: "auto", paddingRight: "4px" }}>
                     {linkifyBody(String(aiNudge.body ?? ""))}
                   </p>
                   <NavLink to="/profile"
-                    className="inline-flex items-center gap-1.5 mt-4 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors hover:bg-clay hover:border-clay"
-                    style={{ backgroundColor: "rgba(243,239,231,0.12)", color: "#f6f3ee", border: "1px solid rgba(243,239,231,0.2)" }}>
+                    className="inline-flex items-center gap-1.5 mt-4 px-3 py-1.5 rounded-full text-xs font-semibold border border-line text-ink transition-colors hover:border-clay hover:text-clay">
                     View my learning profile <ArrowRight size={11} />
                   </NavLink>
                 </>
               ) : (
                 <div className="py-4 text-center space-y-2">
-                  <p style={{ fontSize: "12px", color: "rgba(243,239,231,0.7)", lineHeight: "1.6" }}>
+                  <p className="text-ink-2" style={{ fontSize: "12px", lineHeight: "1.6" }}>
                     No messages yet. Your instructor will reach out here with personalised guidance based on your progress.
                   </p>
                 </div>
@@ -260,7 +330,7 @@ export function Dashboard() {
           </div>
 
           {/* Recent Activity */}
-          <div className="ed-card p-5">
+          <div className={`${CARD} p-5`}>
             <h2 className="font-display text-step-2 text-ink" style={{ marginBottom: "12px" }}>Recent Activity</h2>
             <div className="space-y-3">
 {recentActivity.length === 0 && (

@@ -94,20 +94,6 @@ export function Dashboard() {
   const pendingCount   = Number(hub?.pending_tasks      ?? 0);
   const riskSignal     = String(hub?.risk_signal        ?? 'active') as 'active' | 'inactive';
 
-  const stats = [
-    { label: "Enrolled Courses",  value: String(enrolledCount), icon: BookOpen,   color: "#b5613d", bg: "rgba(181,97,61,0.12)", trend: "This semester"         },
-    { label: "Lessons Completed", value: String(lessonsCount),  icon: CheckCircle, color: "#5c7f5c", bg: "rgba(92,127,92,0.14)", trend: "Total completed"       },
-    { label: "Pending Tasks",     value: String(pendingCount),  icon: Clock,       color: "#c98a2e", bg: "rgba(201,138,46,0.14)", trend: "Across all courses"     },
-    {
-      label: "At-Risk Check",
-      value: riskSignal === "active" ? "Active" : "Inactive",
-      icon:  riskSignal === "active" ? ShieldCheck : AlertTriangle,
-      color: riskSignal === "active" ? "#5c7f5c"  : "#b5493d",
-      bg:    riskSignal === "active" ? "rgba(92,127,92,0.14)"  : "rgba(181,73,61,0.14)",
-      trend: riskSignal === "active" ? "All signals normal" : "Review support plan",
-    },
-  ];
-
   const firstName = String((user as Record<string,unknown> | null)?.name ?? 'Student').split(' ')[0];
 
   return (
@@ -146,27 +132,6 @@ export function Dashboard() {
         {/* Decorative circles */}
         <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full opacity-[0.06]" style={{ backgroundColor: "#f6f3ee" }} />
         <div className="absolute -right-4 -bottom-14 w-36 h-36 rounded-full opacity-[0.06]" style={{ backgroundColor: "#f6f3ee" }} />
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="ed-card p-4 flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: stat.bg }}
-              >
-                <stat.icon size={18} color={stat.color} />
-              </div>
-              <span className="font-display text-ink" style={{ fontSize: "26px", fontWeight: 500 }}>{stat.value}</span>
-            </div>
-            <div>
-              <p className="text-step-1 text-ink-2">{stat.label}</p>
-              <p style={{ fontSize: "11px", color: stat.color, fontWeight: 500, marginTop: "2px" }}>{stat.trend}</p>
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* Main Content Grid */}

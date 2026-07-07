@@ -74,7 +74,7 @@ export function Layout() {
         }
       `}</style>
       <div
-        className="flex h-screen overflow-hidden bg-paper text-ink"
+        className="flex h-screen overflow-hidden bg-white text-ink"
         style={{ fontFamily: '"Inter Variable", Inter, system-ui, sans-serif' }}
       >
         {!isLessonPlayer && (
@@ -89,7 +89,7 @@ export function Layout() {
         <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top Header — hidden on Lesson Player */}
         {!isLessonPlayer && (
-        <header className="flex items-center justify-between px-6 py-3 bg-paper-2 border-b border-line flex-shrink-0">
+        <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-line flex-shrink-0">
           <div className="flex items-center gap-3">
             {/* Mobile hamburger - always visible on small screens */}
             <button
@@ -170,7 +170,7 @@ export function Layout() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-paper">
+        <main className="flex-1 overflow-y-auto bg-white">
           <div className={isLessonPlayer ? "" : "p-6"}>
             <Outlet />
           </div>

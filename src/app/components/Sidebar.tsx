@@ -263,15 +263,15 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
     return location.pathname.startsWith(path);
   };
 
-  // The rail stays a fixed dark "ink" surface in BOTH themes (using the --ink
-  // token would invert it to light in dark mode). Clay is the single accent.
-  const RAIL_BG = "#16140f";      // ink
-  const RAIL_BORDER = "rgba(255,255,255,0.08)";
-  const RAIL_MUTED = "#b0a89b";   // muted warm text/icons
-  const RAIL_TEXT = "#f3efe7";    // primary/active text
-  const ACCENT = "#d6885f";       // clay (legible on the dark rail)
-  const ACCENT_BG = "rgba(214,136,95,0.16)";
-  const CHEVRON = "#7a7266";
+  // White rail (fixed in both themes), separated from the white content by a
+  // hairline border. Clay is the single accent; ink/ink-2 for text.
+  const RAIL_BG = "#ffffff";
+  const RAIL_BORDER = "rgba(22,20,15,0.08)";
+  const RAIL_MUTED = "#6b655c";   // ink-2 (muted text/icons)
+  const RAIL_TEXT = "#16140f";    // ink (primary/active text)
+  const ACCENT = "#b5613d";       // clay
+  const ACCENT_BG = "rgba(181,97,61,0.12)";
+  const CHEVRON = "#9a9488";
 
   return (
     <>
@@ -288,6 +288,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
         style={{
           width: collapsed ? "70px" : "268px",
           backgroundColor: RAIL_BG,
+          borderRight: `1px solid ${RAIL_BORDER}`,
           fontFamily: '"Inter Variable", Inter, system-ui, sans-serif',
         }}
       >
@@ -319,7 +320,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
         )}
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <button onClick={onToggle} className="p-1 rounded-md hover:bg-white/10 transition-colors" style={{ color: RAIL_MUTED }}>
+            <button onClick={onToggle} className="p-1 rounded-md hover:bg-black/5 transition-colors" style={{ color: RAIL_MUTED }}>
               <X size={18} />
             </button>
           </div>
@@ -331,7 +332,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
         <div className="flex flex-col items-center gap-2 mt-2">
           <button
             onClick={onToggle}
-            className="p-2 rounded-md hover:bg-white/10 transition-colors"
+            className="p-2 rounded-md hover:bg-black/5 transition-colors"
             style={{ color: RAIL_MUTED }}
           >
             <Menu size={18} />
@@ -395,7 +396,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
             {/* Group Header */}
             <button
               onClick={() => !collapsed && toggleGroup(group.id)}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all hover:bg-white/5 mt-1"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all hover:bg-black/5 mt-1"
               title={collapsed ? group.label : undefined}
             >
               <group.icon
@@ -509,7 +510,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
           <button
             onClick={handleLogout}
             title="Logout"
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg hover:bg-black/5 transition-colors"
             style={{ color: RAIL_MUTED }}
           >
             <LogOut size={18} />
